@@ -45,6 +45,8 @@ const DropNumberBoard = () => {
   const [nextBlock, setNextBlock] = useState(getRandomBlockValue());
   const [gameOver, setGameOver] = useState(false);
   const [falling, setFalling] = useState(null); // {col, value, anim}
+  const [mergingTiles, setMergingTiles] = useState([]); // Array of merging tile animations
+  const [mergeResult, setMergeResult] = useState(null); // {row, col, value, anim}
 
   // Drop a block in a column
   const dropBlock = (col) => {
@@ -71,6 +73,8 @@ const DropNumberBoard = () => {
   const handleBlockLanded = (row, col, value) => {
     let newBoard = board.map(r => [...r]);
     let addScore = 0;
+    let lastMergePosition = { row, col }; // Track where the last merge happened
+    let hasAnimations = false;
     
     // Place the initial block
     newBoard[row][col] = value;
@@ -87,17 +91,29 @@ const DropNumberBoard = () => {
             // Check if there's a third block below
             if (r + 2 < ROWS && newBoard[r + 2][c] === newBoard[r][c]) {
               // Three blocks merge - multiply by 4
+              const originalValue = newBoard[r][c];
               newBoard[r][c] *= 4;
               addScore += newBoard[r][c];
               newBoard[r + 1][c] = 0;
               newBoard[r + 2][c] = 0;
+              lastMergePosition = { row: r, col: c };
               merged = true;
+              hasAnimations = true;
+              
+              // Create merge animation
+              createMergeAnimation(r, c, originalValue, 3, 'vertical');
             } else {
               // Two blocks merge - multiply by 2
+              const originalValue = newBoard[r][c];
               newBoard[r][c] *= 2;
               addScore += newBoard[r][c];
               newBoard[r + 1][c] = 0;
+              lastMergePosition = { row: r, col: c };
               merged = true;
+              hasAnimations = true;
+              
+              // Create merge animation
+              createMergeAnimation(r, c, originalValue, 2, 'vertical');
             }
           }
         }
@@ -110,17 +126,29 @@ const DropNumberBoard = () => {
             // Check if there's a third block to the right
             if (c + 2 < COLS && newBoard[r][c + 2] === newBoard[r][c]) {
               // Three blocks merge - multiply by 4
+              const originalValue = newBoard[r][c];
               newBoard[r][c] *= 4;
               addScore += newBoard[r][c];
               newBoard[r][c + 1] = 0;
               newBoard[r][c + 2] = 0;
+              lastMergePosition = { row: r, col: c };
               merged = true;
+              hasAnimations = true;
+              
+              // Create merge animation
+              createMergeAnimation(r, c, originalValue, 3, 'horizontal');
             } else {
               // Two blocks merge - multiply by 2
+              const originalValue = newBoard[r][c];
               newBoard[r][c] *= 2;
               addScore += newBoard[r][c];
               newBoard[r][c + 1] = 0;
+              lastMergePosition = { row: r, col: c };
               merged = true;
+              hasAnimations = true;
+              
+              // Create merge animation
+              createMergeAnimation(r, c, originalValue, 2, 'horizontal');
             }
           }
         }
@@ -143,15 +171,110 @@ const DropNumberBoard = () => {
       }
     }
     
+    // Show merge result animation at the last merge position
+    if (addScore > 0) {
+      showMergeResultAnimation(lastMergePosition.row, lastMergePosition.col, newBoard[lastMergePosition.row][lastMergePosition.col]);
+    }
+    
     setScore(s => {
       const newScore = s + addScore;
       if (newScore > record) setRecord(newScore);
       return newScore;
     });
-    setBoard(newBoard);
+    
+    // Update board immediately if no animations, otherwise delay
+    if (!hasAnimations) {
+      setBoard(newBoard);
+    } else {
+      // Delay board update to let animations complete
+      setTimeout(() => {
+        setBoard(newBoard);
+      }, 350); // Slightly longer than animation duration
+    }
+    
     setNextBlock(getRandomBlockValue());
     // Check for game over
     if (newBoard[0].every(cell => cell !== 0)) setGameOver(true);
+  };
+
+  // Create merge animation for tiles
+  const createMergeAnimation = (row, col, value, count, direction) => {
+    const mergeAnim = new Animated.Value(1);
+    const scaleAnim = new Animated.Value(1);
+    
+    const mergingTile = {
+      row,
+      col,
+      value,
+      count,
+      direction,
+      anim: mergeAnim,
+      scale: scaleAnim,
+      id: Date.now() + Math.random(),
+    };
+    
+    setMergingTiles(prev => [...prev, mergingTile]);
+    
+    // Animate the merging tiles
+    Animated.parallel([
+      Animated.timing(mergeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: false,
+      }),
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1.3,
+          duration: 150,
+          useNativeDriver: false,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: false,
+        }),
+      ]),
+    ]).start(() => {
+      setMergingTiles(prev => prev.filter(tile => tile.id !== mergingTile.id));
+    });
+  };
+
+  // Show merge result animation
+  const showMergeResultAnimation = (row, col, value) => {
+    const resultAnim = new Animated.Value(0);
+    const scaleAnim = new Animated.Value(0.5);
+    
+    setMergeResult({
+      row,
+      col,
+      value,
+      anim: resultAnim,
+      scale: scaleAnim,
+    });
+    
+    Animated.parallel([
+      Animated.timing(resultAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: false,
+      }),
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 1.2,
+          duration: 100,
+          useNativeDriver: false,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: false,
+        }),
+      ]),
+    ]).start(() => {
+      setTimeout(() => {
+        setMergeResult(null);
+      }, 500);
+    });
   };
 
   // UI rendering
@@ -183,36 +306,26 @@ const DropNumberBoard = () => {
           <Text style={styles.nextBlockText}>{nextBlock}</Text>
         </View>
       </View>
-      {/* Column Drop Arrows */}
-      <View style={styles.arrowRow}>
-        {Array(COLS).fill(0).map((_, col) => (
-          <TouchableOpacity
-            key={col}
-            style={styles.arrowButton}
-            onPress={() => dropBlock(col)}
-            disabled={gameOver || (falling && falling.col !== col)}
-          >
-            <Text style={styles.arrowText}>▼</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+
       {/* Board */}
       <View style={styles.board}>
         {board.map((row, rowIdx) => (
           <View key={rowIdx} style={styles.row}>
             {row.map((cell, colIdx) => (
-              <View
+              <TouchableOpacity
                 key={colIdx}
                 style={[
                   styles.cell,
                   { backgroundColor: COLORS[cell] || COLORS[0] },
                   cell !== 0 && styles.cellFilled,
                 ]}
+                onPress={() => dropBlock(colIdx)}
+                disabled={gameOver || falling !== null}
               >
                 {cell !== 0 && (
                   <Text style={styles.cellText}>{cell}</Text>
                 )}
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         ))}
@@ -230,6 +343,46 @@ const DropNumberBoard = () => {
             ]}
           >
             <Text style={styles.cellText}>{falling.value}</Text>
+          </Animated.View>
+        )}
+        
+        {/* Merging tiles animations */}
+        {mergingTiles.map((tile) => (
+          <Animated.View
+            key={tile.id}
+            style={[
+              styles.mergingTile,
+              {
+                left: tile.col * (CELL_SIZE + 8) + 8,
+                top: tile.row * (CELL_SIZE + 8) + 8,
+                backgroundColor: COLORS[tile.value] || COLORS[0],
+                opacity: tile.anim,
+                transform: [{ scale: tile.scale }],
+              },
+            ]}
+          >
+            <Text style={styles.cellText}>{tile.value}</Text>
+            {tile.count > 2 && (
+              <Text style={styles.mergeCountText}>×4</Text>
+            )}
+          </Animated.View>
+        ))}
+        
+        {/* Merge result animation */}
+        {mergeResult && (
+          <Animated.View
+            style={[
+              styles.mergeResult,
+              {
+                left: mergeResult.col * (CELL_SIZE + 8) + 8,
+                top: mergeResult.row * (CELL_SIZE + 8) + 8,
+                backgroundColor: COLORS[mergeResult.value] || COLORS[0],
+                opacity: mergeResult.anim,
+                transform: [{ scale: mergeResult.scale }],
+              },
+            ]}
+          >
+            <Text style={styles.cellText}>{mergeResult.value}</Text>
           </Animated.View>
         )}
       </View>
@@ -318,23 +471,6 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
   },
   nextBlockText: { color: '#222', fontWeight: 'bold', fontSize: 22 },
-  arrowRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    width: '95%',
-    marginBottom: 4,
-  },
-  arrowButton: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 2,
-  },
-  arrowText: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: 'bold',
-    opacity: 0.7,
-  },
   board: {
     backgroundColor: '#222',
     borderRadius: 12,
@@ -379,6 +515,46 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
+  },
+  mergingTile: {
+    position: 'absolute',
+    width: CELL_SIZE,
+    height: CELL_SIZE,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 15,
+    shadowColor: '#ffd700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  mergeResult: {
+    position: 'absolute',
+    width: CELL_SIZE,
+    height: CELL_SIZE,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 20,
+    shadowColor: '#ffd700',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  mergeCountText: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#ffd700',
+    color: '#222',
+    fontSize: 12,
+    fontWeight: 'bold',
+    borderRadius: 10,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
   },
   overlay: {
     position: 'absolute',

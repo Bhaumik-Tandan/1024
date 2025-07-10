@@ -70,23 +70,79 @@ const DropNumberBoard = () => {
   // Handle block landing and merging
   const handleBlockLanded = (row, col, value) => {
     let newBoard = board.map(r => [...r]);
-    let merged = false;
-    let currentRow = row;
-    let currentValue = value;
     let addScore = 0;
-    // Merge upwards as long as possible
-    while (
-      currentRow < ROWS - 1 &&
-      newBoard[currentRow + 1][col] === currentValue &&
-      currentValue !== 0
-    ) {
-      currentValue *= 2;
-      addScore += currentValue;
-      newBoard[currentRow + 1][col] = 0;
-      currentRow++;
-      merged = true;
+    
+    // Place the initial block
+    newBoard[row][col] = value;
+    
+    // Keep merging until no more merges are possible
+    let merged = true;
+    while (merged) {
+      merged = false;
+      
+      // Check for vertical merges (upwards)
+      for (let r = 0; r < ROWS - 1; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (newBoard[r][c] !== 0 && newBoard[r][c] === newBoard[r + 1][c]) {
+            // Check if there's a third block below
+            if (r + 2 < ROWS && newBoard[r + 2][c] === newBoard[r][c]) {
+              // Three blocks merge - multiply by 4
+              newBoard[r][c] *= 4;
+              addScore += newBoard[r][c];
+              newBoard[r + 1][c] = 0;
+              newBoard[r + 2][c] = 0;
+              merged = true;
+            } else {
+              // Two blocks merge - multiply by 2
+              newBoard[r][c] *= 2;
+              addScore += newBoard[r][c];
+              newBoard[r + 1][c] = 0;
+              merged = true;
+            }
+          }
+        }
+      }
+      
+      // Check for horizontal merges (left to right)
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS - 1; c++) {
+          if (newBoard[r][c] !== 0 && newBoard[r][c] === newBoard[r][c + 1]) {
+            // Check if there's a third block to the right
+            if (c + 2 < COLS && newBoard[r][c + 2] === newBoard[r][c]) {
+              // Three blocks merge - multiply by 4
+              newBoard[r][c] *= 4;
+              addScore += newBoard[r][c];
+              newBoard[r][c + 1] = 0;
+              newBoard[r][c + 2] = 0;
+              merged = true;
+            } else {
+              // Two blocks merge - multiply by 2
+              newBoard[r][c] *= 2;
+              addScore += newBoard[r][c];
+              newBoard[r][c + 1] = 0;
+              merged = true;
+            }
+          }
+        }
+      }
+      
+      // Apply gravity after each merge round
+      if (merged) {
+        for (let c = 0; c < COLS; c++) {
+          let writeRow = ROWS - 1;
+          for (let r = ROWS - 1; r >= 0; r--) {
+            if (newBoard[r][c] !== 0) {
+              if (writeRow !== r) {
+                newBoard[writeRow][c] = newBoard[r][c];
+                newBoard[r][c] = 0;
+              }
+              writeRow--;
+            }
+          }
+        }
+      }
     }
-    newBoard[currentRow][col] = currentValue;
+    
     setScore(s => {
       const newScore = s + addScore;
       if (newScore > record) setRecord(newScore);

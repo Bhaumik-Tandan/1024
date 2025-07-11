@@ -44,29 +44,52 @@ const DropNumberBoard = () => {
   const [coins, setCoins] = useState(0);
   const [nextBlock, setNextBlock] = useState(getRandomBlockValue());
   const [gameOver, setGameOver] = useState(false);
-  const [falling, setFalling] = useState(null); // {col, value, anim}
+  const [falling, setFalling] = useState(null); // {col, value, anim, toRow, fastDrop}
   const [mergingTiles, setMergingTiles] = useState([]); // Array of merging tile animations
   const [mergeResult, setMergeResult] = useState(null); // {row, col, value, anim}
+  const [showGuide, setShowGuide] = useState(true); // Show gesture guide for first tile only
 
-  // Drop a block in a column
-  const dropBlock = (col) => {
-    if (falling || gameOver) return;
-    // Find the lowest empty row
+  // Start a new slow-falling tile in the middle column
+  useEffect(() => {
+    if (!falling && !gameOver) {
+      const col = Math.floor(COLS / 2);
+      let row = ROWS - 1;
+      while (row >= 0 && board[row][col] !== 0) row--;
+      if (row < 0) return; // Column full
+      const anim = new Animated.Value(0);
+      setFalling({ col, value: nextBlock, anim, toRow: row, fastDrop: false });
+      Animated.timing(anim, {
+        toValue: row * (CELL_SIZE + 8),
+        duration: 7000, // slow fall
+        useNativeDriver: false,
+      }).start(({ finished }) => {
+        if (finished) {
+          handleBlockLanded(row, col, nextBlock);
+          setFalling(null);
+          setShowGuide(false); // Hide guide after first drop
+        }
+      });
+    }
+    // eslint-disable-next-line
+  }, [falling, gameOver]);
+
+  // User taps a column to fast-drop the tile
+  const handleColumnTap = (col) => {
+    if (!falling || falling.fastDrop || gameOver) return;
     let row = ROWS - 1;
     while (row >= 0 && board[row][col] !== 0) row--;
     if (row < 0) return; // Column full
-
-    // Animate falling
-    const anim = new Animated.Value(-CELL_SIZE);
-    setFalling({ col, value: nextBlock, anim, toRow: row });
-    Animated.timing(anim, {
+    falling.fastDrop = true;
+    Animated.timing(falling.anim, {
       toValue: row * (CELL_SIZE + 8),
-      duration: 200 + row * 60,
+      duration: 250,
       useNativeDriver: false,
     }).start(() => {
-      handleBlockLanded(row, col, nextBlock);
+      handleBlockLanded(row, col, falling.value);
       setFalling(null);
+      setShowGuide(false); // Hide guide after first drop
     });
+    setFalling({ ...falling, col, toRow: row, fastDrop: true });
   };
 
   // Handle block landing and merging
@@ -307,7 +330,7 @@ const DropNumberBoard = () => {
             style={[
               styles.nextBlockAbsolute,
               {
-                left: 8 + Math.floor(COLS / 2) * (CELL_SIZE + 8) + 4, // Center column by default
+                left: 8 + (falling ? falling.col : Math.floor(COLS / 2)) * (CELL_SIZE + 8) + 4,
                 backgroundColor: COLORS[nextBlock] || '#fff',
                 width: CELL_SIZE,
                 height: CELL_SIZE,
@@ -318,6 +341,14 @@ const DropNumberBoard = () => {
           </View>
         </View>
       </View>
+
+      {/* Gesture Guide Overlay (first tile only) */}
+      {showGuide && (
+        <View style={styles.guideOverlay} pointerEvents="none">
+          <Text style={styles.guideText}>Tap a column to drop!</Text>
+          {/* You can add an emoji or image for a hand here if you want */}
+        </View>
+      )}
 
       {/* Board */}
       <View style={styles.board}>
@@ -331,8 +362,8 @@ const DropNumberBoard = () => {
                   { backgroundColor: COLORS[cell] || COLORS[0] },
                   cell !== 0 && styles.cellFilled,
                 ]}
-                onPress={() => dropBlock(colIdx)}
-                disabled={gameOver || falling !== null}
+                onPress={() => handleColumnTap(colIdx)}
+                disabled={gameOver || !falling || falling.fastDrop}
               >
                 {cell !== 0 && (
                   <Text style={styles.cellText}>{cell}</Text>
@@ -407,6 +438,7 @@ const DropNumberBoard = () => {
             setScore(0);
             setGameOver(false);
             setNextBlock(getRandomBlockValue());
+            setShowGuide(true); // Show guide again on restart
           }}>
             <Text style={styles.restartText}>Restart</Text>
           </TouchableOpacity>
@@ -605,6 +637,24 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#fff',
     zIndex: 20,
+  },
+  guideOverlay: {
+    position: 'absolute',
+    top: 80,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  guideText: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: 'bold',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginTop: 12,
   },
 });
 

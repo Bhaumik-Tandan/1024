@@ -10,8 +10,12 @@ import {
 
 const COLS = 5;
 const ROWS = 7;
+const CELL_MARGIN = 4;
 const { width } = Dimensions.get('window');
-const CELL_SIZE = (width - 40) / COLS;
+const CELL_SIZE = Math.floor((width - 40 - (COLS - 1) * CELL_MARGIN) / COLS);
+
+const getCellLeft = (col) => col * (CELL_SIZE + CELL_MARGIN);
+const getCellTop = (row) => row * (CELL_SIZE + CELL_MARGIN);
 
 const COLORS = {
   0: '#3a3a3a',
@@ -49,6 +53,9 @@ const DropNumberBoard = () => {
   const [mergeResult, setMergeResult] = useState(null); // {row, col, value, anim}
   const [showGuide, setShowGuide] = useState(true); // Show gesture guide for first tile only
 
+  const BOARD_PADDING = 8;
+  const BOARD_WIDTH = width - 20;
+  const GRID_WIDTH = COLS * CELL_SIZE + COLS * 2 * CELL_MARGIN;
   // Start a new slow-falling tile in the middle column
   useEffect(() => {
     if (!falling && !gameOver) {
@@ -323,25 +330,6 @@ const DropNumberBoard = () => {
         </View>
       </View>
 
-      {/* Next Block Preview aligned with grid */}
-      <View style={{ height: 56, width: '100%' }}>
-        <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 56, zIndex: 20 }} pointerEvents="none">
-          <View
-            style={[
-              styles.nextBlockAbsolute,
-              {
-                left: 8 + (falling ? falling.col : Math.floor(COLS / 2)) * (CELL_SIZE + 8) + 4,
-                backgroundColor: COLORS[nextBlock] || '#fff',
-                width: CELL_SIZE,
-                height: CELL_SIZE,
-              },
-            ]}
-          >
-            <Text style={styles.nextBlockText}>{nextBlock}</Text>
-          </View>
-        </View>
-      </View>
-
       {/* Gesture Guide Overlay (first tile only) */}
       {showGuide && (
         <View style={styles.guideOverlay} pointerEvents="none">
@@ -352,35 +340,59 @@ const DropNumberBoard = () => {
 
       {/* Board */}
       <View style={styles.board}>
-        {board.map((row, rowIdx) => (
-          <View key={rowIdx} style={styles.row}>
-            {row.map((cell, colIdx) => (
-              <TouchableOpacity
-                key={colIdx}
-                style={[
-                  styles.cell,
-                  { backgroundColor: COLORS[cell] || COLORS[0] },
-                  cell !== 0 && styles.cellFilled,
-                ]}
-                onPress={() => handleColumnTap(colIdx)}
-                disabled={gameOver || !falling || falling.fastDrop}
-              >
-                {cell !== 0 && (
-                  <Text style={styles.cellText}>{cell}</Text>
-                )}
-              </TouchableOpacity>
-            ))}
+        {/* Preview tile above the board, perfectly aligned */}
+        {!falling && (
+          <View
+            style={[
+              styles.nextBlockAbsolute,
+              {
+                left: getCellLeft(Math.floor(COLS / 2)),
+                top: -CELL_SIZE - CELL_MARGIN,
+                backgroundColor: COLORS[nextBlock] || '#fff',
+                width: CELL_SIZE,
+                height: CELL_SIZE,
+              },
+            ]}
+          >
+            <Text style={styles.nextBlockText}>{nextBlock}</Text>
           </View>
-        ))}
+        )}
+        {/* Render all cells absolutely */}
+        {board.map((row, rowIdx) =>
+          row.map((cell, colIdx) => (
+            <TouchableOpacity
+              key={`${rowIdx}-${colIdx}`}
+              style={[
+                styles.cell,
+                {
+                  position: 'absolute',
+                  left: getCellLeft(colIdx),
+                  top: getCellTop(rowIdx),
+                  backgroundColor: COLORS[cell] || COLORS[0],
+                },
+                cell !== 0 && styles.cellFilled,
+              ]}
+              onPress={() => handleColumnTap(colIdx)}
+              disabled={gameOver || !falling || falling.fastDrop}
+            >
+              {cell !== 0 && (
+                <Text style={styles.cellText}>{cell}</Text>
+              )}
+            </TouchableOpacity>
+          ))
+        )}
         {/* Falling block animation */}
         {falling && (
           <Animated.View
             style={[
               styles.fallingBlock,
               {
-                left: 8 + falling.col * (CELL_SIZE + 8) + 4,
+                position: 'absolute',
+                left: getCellLeft(falling.col),
                 top: 0,
                 backgroundColor: COLORS[falling.value] || COLORS[0],
+                width: CELL_SIZE,
+                height: CELL_SIZE,
                 transform: [{ translateY: falling.anim }],
               },
             ]}
@@ -518,11 +530,11 @@ const styles = StyleSheet.create({
   board: {
     backgroundColor: '#222',
     borderRadius: 12,
-    padding: 8,
+    padding: 0,
     marginTop: 2,
     marginBottom: 10,
-    width: width - 20,
-    height: ROWS * (CELL_SIZE + 8),
+    width: COLS * (CELL_SIZE + CELL_MARGIN) - CELL_MARGIN,
+    height: ROWS * (CELL_SIZE + CELL_MARGIN) - CELL_MARGIN,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -533,7 +545,6 @@ const styles = StyleSheet.create({
   cell: {
     width: CELL_SIZE,
     height: CELL_SIZE,
-    margin: 4,
     borderRadius: 8,
     backgroundColor: '#3a3a3a',
     justifyContent: 'center',

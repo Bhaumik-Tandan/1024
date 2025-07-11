@@ -299,11 +299,23 @@ const DropNumberBoard = () => {
           <Text style={styles.coinsLabel}>Coins</Text>
         </View>
       </View>
-      {/* Next Block Preview */}
-      <View style={styles.nextBlockBar}>
-        <Text style={styles.nextBlockLabel}>Next Block</Text>
-        <View style={[styles.nextBlockPreview, { backgroundColor: COLORS[nextBlock] || '#fff' }]}> 
-          <Text style={styles.nextBlockText}>{nextBlock}</Text>
+
+      {/* Next Block Preview aligned with grid */}
+      <View style={{ height: 56, width: '100%' }}>
+        <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 56, zIndex: 20 }} pointerEvents="none">
+          <View
+            style={[
+              styles.nextBlockAbsolute,
+              {
+                left: 8 + Math.floor(COLS / 2) * (CELL_SIZE + 8) + 4, // Center column by default
+                backgroundColor: COLORS[nextBlock] || '#fff',
+                width: CELL_SIZE,
+                height: CELL_SIZE,
+              },
+            ]}
+          >
+            <Text style={styles.nextBlockText}>{nextBlock}</Text>
+          </View>
         </View>
       </View>
 
@@ -335,7 +347,7 @@ const DropNumberBoard = () => {
             style={[
               styles.fallingBlock,
               {
-                left: falling.col * (CELL_SIZE + 8) + 8,
+                left: 8 + falling.col * (CELL_SIZE + 8) + 4,
                 top: 0,
                 backgroundColor: COLORS[falling.value] || COLORS[0],
                 transform: [{ translateY: falling.anim }],
@@ -583,6 +595,16 @@ const styles = StyleSheet.create({
     color: '#222',
     fontWeight: 'bold',
     fontSize: 18,
+  },
+  nextBlockAbsolute: {
+    position: 'absolute',
+    top: 0,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+    zIndex: 20,
   },
 });
 

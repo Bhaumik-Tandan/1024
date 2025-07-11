@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Dimensions,
   TouchableOpacity,
   Animated,
+  PanResponder,
 } from 'react-native';
 
 const COLS = 5;
@@ -52,6 +53,49 @@ const DropNumberBoard = () => {
   const [mergingTiles, setMergingTiles] = useState([]); // Array of merging tile animations
   const [mergeResult, setMergeResult] = useState(null); // {row, col, value, anim}
   const [showGuide, setShowGuide] = useState(true); // Show gesture guide for first tile only
+
+  const boardRef = useRef(null);
+  const [boardLeft, setBoardLeft] = useState(0);
+  const panStartCol = useRef(null);
+
+  // PanResponder for drag-to-move
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => !!falling,
+      onMoveShouldSetPanResponder: () => !!falling,
+      onPanResponderGrant: (evt) => {
+        if (!falling) return;
+        const x = evt.nativeEvent.pageX - boardLeft;
+        const col = Math.max(0, Math.min(COLS - 1, Math.floor(x / (CELL_SIZE + CELL_MARGIN))));
+        if (col !== falling.col) updateFallingCol(col);
+      },
+      onPanResponderMove: (evt) => {
+        if (!falling) return;
+        const x = evt.nativeEvent.pageX - boardLeft;
+        const col = Math.max(0, Math.min(COLS - 1, Math.floor(x / (CELL_SIZE + CELL_MARGIN))));
+        console.log('Dragging, col:', col);
+        if (col !== falling.col) updateFallingCol(col);
+      },
+      onPanResponderRelease: () => {},
+      onPanResponderTerminate: () => {},
+    })
+  ).current;
+
+  // Helper to update falling tile's column and animate to new row if needed
+  const updateFallingCol = (col) => {
+    if (!falling) return;
+    let row = ROWS - 1;
+    while (row >= 0 && board[row][col] !== 0) row--;
+    if (row < 0) return; // Column full
+    falling.col = col;
+    falling.toRow = row;
+    Animated.timing(falling.anim, {
+      toValue: row * (CELL_SIZE + CELL_MARGIN),
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+    setFalling({ ...falling, col, toRow: row });
+  };
 
   const BOARD_PADDING = 8;
   const BOARD_WIDTH = width - 20;
@@ -342,7 +386,12 @@ const DropNumberBoard = () => {
       )}
 
       {/* Board */}
-      <View style={styles.board}>
+      <View
+        style={styles.board}
+        ref={boardRef}
+        onLayout={e => setBoardLeft(e.nativeEvent.layout.x)}
+        {...panResponder.panHandlers}
+      >
         {/* Preview tile above the board, perfectly aligned */}
         {!falling && (
           <View

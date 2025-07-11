@@ -62,7 +62,10 @@ const DropNumberBoard = () => {
       const col = Math.floor(COLS / 2);
       let row = ROWS - 1;
       while (row >= 0 && board[row][col] !== 0) row--;
-      if (row < 0) return; // Column full
+      if (row < 0) {
+        setGameOver(true);
+        return;
+      }
       const anim = new Animated.Value(0);
       setFalling({ col, value: nextBlock, anim, toRow: row, fastDrop: false });
       Animated.timing(anim, {

@@ -6,6 +6,8 @@ export const useAnimationManager = () => {
   const [falling, setFalling] = useState(null);
   const [mergingTiles, setMergingTiles] = useState([]);
   const [mergeResult, setMergeResult] = useState(null);
+  const [mergeAnimations, setMergeAnimations] = useState([]);
+  const [animationCounter, setAnimationCounter] = useState(0);
 
   const startFallingAnimation = (col, value, toRow, isFastDrop = false) => {
     const anim = new Animated.Value(0);
@@ -67,6 +69,7 @@ export const useAnimationManager = () => {
     const mergeAnim = new Animated.Value(1);
     const scaleAnim = new Animated.Value(1);
     
+    setAnimationCounter(prev => prev + 1);
     const mergingTile = {
       row,
       col,
@@ -75,7 +78,7 @@ export const useAnimationManager = () => {
       direction,
       anim: mergeAnim,
       scale: scaleAnim,
-      id: Date.now() + Math.random(),
+      id: `legacy-merge-${Date.now()}-${animationCounter}`,
     };
     
     setMergingTiles(prev => [...prev, mergingTile]);
@@ -103,52 +106,150 @@ export const useAnimationManager = () => {
     });
   };
 
-  const showMergeResultAnimation = (row, col, value) => {
-    const resultAnim = new Animated.Value(0);
-    const scaleAnim = new Animated.Value(0.5);
+  const showMergeResultAnimation = (row, col, value, mergingTilesPositions = [], isChainReaction = false) => {
+    // Generate unique IDs using counter
+    setAnimationCounter(prev => prev + 1);
+    const baseId = `merge-${Date.now()}-${animationCounter}`;
     
-    setMergeResult({
+    // Create animations for merging tiles
+    const mergingAnimations = mergingTilesPositions.map((pos, index) => {
+      const scaleAnim = new Animated.Value(1);
+      const opacityAnim = new Animated.Value(1);
+      const glowAnim = new Animated.Value(0);
+      
+      return {
+        id: `${baseId}-source-${index}`,
+        row: pos.row,
+        col: pos.col,
+        value: pos.value,
+        scale: scaleAnim,
+        opacity: opacityAnim,
+        glow: glowAnim,
+      };
+    });
+    
+    // Create the result tile animation
+    const resultScaleAnim = new Animated.Value(0);
+    const resultOpacityAnim = new Animated.Value(0);
+    const resultGlowAnim = new Animated.Value(0);
+    
+    const resultAnimation = {
+      id: `${baseId}-result`,
       row,
       col,
       value,
-      anim: resultAnim,
-      scale: scaleAnim,
-    });
+      scale: resultScaleAnim,
+      opacity: resultOpacityAnim,
+      glow: resultGlowAnim,
+    };
     
-    Animated.parallel([
-      Animated.timing(resultAnim, {
+    // Set all animations
+    setMergeAnimations([...mergingAnimations, resultAnimation]);
+    
+    // Adjust animation timing based on chain reaction
+    const baseDuration = isChainReaction ? 100 : 200; // Faster for chain reactions
+    
+    // Phase 1: Glow and scale up the merging tiles
+    const phase1Animations = mergingAnimations.map(anim => 
+      Animated.parallel([
+        Animated.timing(anim.glow, {
+          toValue: 1,
+          duration: baseDuration,
+          useNativeDriver: false,
+        }),
+        Animated.timing(anim.scale, {
+          toValue: 1.1,
+          duration: baseDuration,
+          useNativeDriver: false,
+        }),
+      ])
+    );
+    
+    // Phase 2: Fade out merging tiles and show result
+    const fadeOutDuration = baseDuration;
+    const resultDuration = isChainReaction ? 125 : 250;
+    
+    const phase2Animations = [
+      // First fade out old tiles
+      Animated.parallel(mergingAnimations.map(anim => 
+        Animated.parallel([
+          Animated.timing(anim.opacity, {
+            toValue: 0,
+            duration: fadeOutDuration,
+            useNativeDriver: false,
+          }),
+          Animated.timing(anim.scale, {
+            toValue: 0.8,
+            duration: fadeOutDuration,
+            useNativeDriver: false,
+          }),
+        ])
+      )),
+      // Then show result tile after a brief delay
+      Animated.parallel([
+        Animated.timing(resultAnimation.opacity, {
+          toValue: 1,
+          duration: resultDuration,
+          useNativeDriver: false,
+        }),
+        Animated.timing(resultAnimation.scale, {
+          toValue: 1.3,
+          duration: resultDuration,
+          useNativeDriver: false,
+        }),
+        Animated.timing(resultAnimation.glow, {
+          toValue: 1,
+          duration: resultDuration,
+          useNativeDriver: false,
+        }),
+      ])
+    ];
+    
+    // Phase 3: Stabilize result tile
+    const stabilizeDuration = isChainReaction ? 100 : 200;
+    const glowFadeDuration = isChainReaction ? 150 : 300;
+    
+    const phase3Animation = Animated.parallel([
+      Animated.timing(resultAnimation.scale, {
         toValue: 1,
-        duration: 200,
+        duration: stabilizeDuration,
         useNativeDriver: false,
       }),
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1.2,
-          duration: 100,
-          useNativeDriver: false,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: 100,
-          useNativeDriver: false,
-        }),
-      ]),
+      Animated.timing(resultAnimation.glow, {
+        toValue: 0,
+        duration: glowFadeDuration,
+        useNativeDriver: false,
+      }),
+    ]);
+    
+    // Execute animation sequence
+    Animated.sequence([
+      Animated.parallel(phase1Animations),
+      Animated.sequence(phase2Animations), // Sequential fade out then show
+      phase3Animation,
     ]).start(() => {
       setTimeout(() => {
-        setMergeResult(null);
-      }, 500);
+        setMergeAnimations(prev => prev.filter(anim => !anim.id.startsWith(baseId)));
+      }, 100);
     });
+  };
+
+  const clearMergeAnimations = () => {
+    setMergeAnimations([]);
+    setAnimationCounter(0); // Reset counter when clearing animations
   };
 
   return {
     falling,
     mergingTiles,
     mergeResult,
+    mergeAnimations,
     startFallingAnimation,
     updateFallingCol,
     fastDropAnimation,
     clearFalling,
     createMergeAnimation,
     showMergeResultAnimation,
+    clearMergeAnimations,
   };
 }; 

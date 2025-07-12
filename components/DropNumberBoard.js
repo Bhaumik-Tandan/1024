@@ -73,11 +73,13 @@ const DropNumberBoard = () => {
     falling,
     mergingTiles,
     mergeResult,
+    mergeAnimations,
     startFallingAnimation,
     updateFallingCol,
     fastDropAnimation,
     clearFalling,
     showMergeResultAnimation,
+    clearMergeAnimations,
   } = useAnimationManager();
 
   // PanResponder for drag-to-move
@@ -243,6 +245,7 @@ const DropNumberBoard = () => {
     setNextBlock(getRandomBlockValue());
     setShowGuide(true);
     clearFalling();
+    clearMergeAnimations();
     
     // Reset game statistics
     setGameStats({
@@ -279,6 +282,7 @@ const DropNumberBoard = () => {
           falling={falling}
           mergingTiles={mergingTiles}
           mergeResult={mergeResult}
+          mergeAnimations={mergeAnimations}
           onColumnTap={handleColumnTap}
           gameOver={gameOver}
           nextBlock={nextBlock}

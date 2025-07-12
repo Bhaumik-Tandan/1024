@@ -61,7 +61,7 @@ export const applyGravity = (board, col) => {
  * @param {Function} showMergeResultAnimation - Animation callback function
  * @returns {number} - Score gained from the merge (0 if no merge)
  */
-export const checkAndMergeAdjacent = async (board, row, col, showMergeResultAnimation) => {
+export const checkAndMergeAdjacent = async (board, row, col, showMergeResultAnimation, isChainReaction = false) => {
   // Validate inputs
   if (!GameValidator.isValidBoard(board)) {
     return 0;
@@ -99,20 +99,27 @@ export const checkAndMergeAdjacent = async (board, row, col, showMergeResultAnim
       const newValue = currentValue + neighborValue; // Sum the values
       const scoreGained = newValue;
       
-      // Clear both tiles
+      // Prepare positions for animation  
+      const mergingTilePositions = [
+        { row: row, col: col, value: currentValue },
+        { row: newRow, col: newCol, value: neighborValue }
+      ];
+      
+      // Clear both tiles from board immediately (animation will show them)
       board[row][col] = 0;
       board[newRow][newCol] = 0;
       
-      // Place new merged tile at the first position
-      board[row][col] = newValue;
-      
-      // Show merge animation
+      // Show merge animation with different timing for chain reactions
       if (showMergeResultAnimation) {
-        showMergeResultAnimation(row, col, newValue);
+        showMergeResultAnimation(row, col, newValue, mergingTilePositions, isChainReaction);
+        const animationDelay = isChainReaction ? 400 : 1200; // Much faster for chain reactions
         await new Promise(resolve => {
-          setTimeout(resolve, GAME_CONFIG.TIMING.MERGE_ANIMATION_DURATION);
+          setTimeout(resolve, animationDelay);
         });
       }
+      
+      // Place merged tile ONLY after animation completes
+      board[row][col] = newValue;
       
       return scoreGained;
     }
@@ -175,7 +182,8 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
       newBoard, 
       finalRow, 
       col, 
-      showMergeResultAnimation
+      showMergeResultAnimation,
+      false // Not a chain reaction - full animation
     );
     totalScore += initialMergeScore;
   }
@@ -201,7 +209,8 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
             newBoard, 
             r, 
             c, 
-            showMergeResultAnimation
+            showMergeResultAnimation,
+            true // This is a chain reaction - faster animation
           );
           
           if (mergeScore > 0) {

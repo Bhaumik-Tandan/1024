@@ -7,6 +7,7 @@ const GameGrid = ({
   falling, 
   mergingTiles, 
   mergeResult, 
+  mergeAnimations,
   onColumnTap, 
   gameOver,
   nextBlock,
@@ -35,27 +36,35 @@ const GameGrid = ({
 
       {/* Render all cells */}
       {board.map((row, rowIdx) =>
-        row.map((cell, colIdx) => (
-          <TouchableOpacity
-            key={`${rowIdx}-${colIdx}`}
-            style={[
-              styles.cell,
-              {
-                position: 'absolute',
-                left: getCellLeft(colIdx),
-                top: getCellTop(rowIdx),
-                backgroundColor: COLORS[cell] || COLORS[0],
-              },
-              cell !== 0 && styles.cellFilled,
-            ]}
-            onPress={() => onColumnTap(colIdx)}
-            disabled={gameOver || !falling || falling.fastDrop}
-          >
-            {cell !== 0 && (
-              <Text style={styles.cellText}>{cell}</Text>
-            )}
-          </TouchableOpacity>
-        ))
+        row.map((cell, colIdx) => {
+          // Check if this cell is currently being animated (hide it during merge)
+          const isAnimating = mergeAnimations.some(anim => 
+            anim.row === rowIdx && anim.col === colIdx
+          );
+          
+          return (
+            <TouchableOpacity
+              key={`${rowIdx}-${colIdx}`}
+              style={[
+                styles.cell,
+                {
+                  position: 'absolute',
+                  left: getCellLeft(colIdx),
+                  top: getCellTop(rowIdx),
+                  backgroundColor: COLORS[cell] || COLORS[0],
+                  opacity: isAnimating ? 0 : 1, // Hide tiles during animation
+                },
+                cell !== 0 && styles.cellFilled,
+              ]}
+              onPress={() => onColumnTap(colIdx)}
+              disabled={gameOver || !falling || falling.fastDrop}
+            >
+              {cell !== 0 && !isAnimating && (
+                <Text style={styles.cellText}>{cell}</Text>
+              )}
+            </TouchableOpacity>
+          );
+        })
       )}
 
       {/* Falling block animation */}
@@ -120,6 +129,48 @@ const GameGrid = ({
           <Text style={styles.cellText}>{mergeResult.value}</Text>
         </Animated.View>
       )}
+
+      {/* Enhanced merge animations with glow effect */}
+      {mergeAnimations.map((anim) => (
+        <Animated.View
+          key={anim.id}
+          style={[
+            styles.mergeAnimationTile,
+            {
+              position: 'absolute',
+              left: getCellLeft(anim.col),
+              top: getCellTop(anim.row),
+              width: CELL_SIZE,
+              height: CELL_SIZE,
+              opacity: anim.opacity,
+              transform: [{ scale: anim.scale }],
+            },
+          ]}
+        >
+          {/* Glow effect */}
+          <Animated.View
+            style={[
+              styles.glowEffect,
+              {
+                opacity: anim.glow,
+                backgroundColor: COLORS[anim.value] || COLORS[0],
+              },
+            ]}
+          />
+          
+          {/* Main tile */}
+          <View
+            style={[
+              styles.mainTile,
+              {
+                backgroundColor: COLORS[anim.value] || COLORS[0],
+              },
+            ]}
+          >
+            <Text style={styles.cellText}>{anim.value}</Text>
+          </View>
+        </Animated.View>
+      ))}
 
       {/* Gesture Guide Overlay */}
       {showGuide && (
@@ -211,6 +262,34 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  mergeAnimationTile: {
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  glowEffect: {
+    position: 'absolute',
+    top: -4,
+    left: -4,
+    right: -4,
+    bottom: -4,
+    borderRadius: 8,
+    shadowColor: '#fff',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  mainTile: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#666',
+    zIndex: 1,
   },
 });
 

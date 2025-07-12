@@ -40,6 +40,49 @@ function getRandomBlockValue() {
   return values[Math.floor(Math.random() * Math.min(5, values.length))]; // More likely to get small numbers
 }
 
+// Helper to apply gravity to a column, making all tiles fall down as far as possible
+const applyGravity = (board, col) => {
+  for (let row = ROWS - 2; row >= 0; row--) {
+    if (board[row][col] !== 0) {
+      let fallRow = row;
+      while (fallRow < ROWS - 1 && board[fallRow + 1][col] === 0) {
+        board[fallRow + 1][col] = board[fallRow][col];
+        board[fallRow][col] = 0;
+        fallRow++;
+      }
+    }
+  }
+};
+
+// Helper to merge 3+ identical tiles in a row into double value (e.g., 4+4+4 = 16), with animation and returns merge info
+const mergeRowTilesWithAnim = async (board, rowIdx, showMergeResultAnimation) => {
+  let row = board[rowIdx];
+  let merged = false;
+  for (let start = 0; start < COLS;) {
+    if (row[start] === 0) {
+      start++;
+      continue;
+    }
+    // Find the length of the run of identical tiles
+    let end = start + 1;
+    while (end < COLS && row[end] === row[start]) end++;
+    let count = end - start;
+    if (count >= 3) {
+      // Merge all into a single tile with double value at the rightmost position
+      row[end - 1] = row[start] * 2;
+      for (let i = start; i < end - 1; i++) row[i] = 0;
+      merged = true;
+      // Animation for merge result
+      await new Promise(res => {
+        showMergeResultAnimation(rowIdx, end - 1, row[end - 1]);
+        setTimeout(res, 250); // 250ms delay for animation
+      });
+    }
+    start = end;
+  }
+  return merged;
+};
+
 const DropNumberBoard = () => {
   const [board, setBoard] = useState(
     Array.from({ length: ROWS }, () => Array(COLS).fill(0))
@@ -147,128 +190,75 @@ const DropNumberBoard = () => {
   };
 
   // Handle block landing and merging
-  const handleBlockLanded = (row, col, value) => {
+  const handleBlockLanded = async (row, col, value) => {
     let newBoard = board.map(r => [...r]);
     let addScore = 0;
-    let lastMergePosition = { row, col }; // Track where the last merge happened
-    let hasAnimations = false;
-    
-    // Place the initial block
-    newBoard[row][col] = value;
-    
-    // Keep merging until no more merges are possible
-    let merged = true;
-    while (merged) {
-      merged = false;
-      
-      // Check for vertical merges (upwards)
-      for (let r = 0; r < ROWS - 1; r++) {
-        for (let c = 0; c < COLS; c++) {
-          if (newBoard[r][c] !== 0 && newBoard[r][c] === newBoard[r + 1][c]) {
-            // Check if there's a third block below
-            if (r + 2 < ROWS && newBoard[r + 2][c] === newBoard[r][c]) {
-              // Three blocks merge - multiply by 4
-              const originalValue = newBoard[r][c];
-              newBoard[r][c] *= 4;
-              addScore += newBoard[r][c];
-              newBoard[r + 1][c] = 0;
-              newBoard[r + 2][c] = 0;
-              lastMergePosition = { row: r, col: c };
-              merged = true;
-              hasAnimations = true;
-              
-              // Create merge animation
-              createMergeAnimation(r, c, originalValue, 3, 'vertical');
-            } else {
-              // Two blocks merge - multiply by 2
-              const originalValue = newBoard[r][c];
-              newBoard[r][c] *= 2;
-              addScore += newBoard[r][c];
-              newBoard[r + 1][c] = 0;
-              lastMergePosition = { row: r, col: c };
-              merged = true;
-              hasAnimations = true;
-              
-              // Create merge animation
-              createMergeAnimation(r, c, originalValue, 2, 'vertical');
-            }
-          }
+    let merged = false;
+    let currentValue = value;
+
+    // Initial merge check (vertical and horizontal)
+    if (row < ROWS - 1 && newBoard[row + 1][col] === value) {
+      currentValue = value * 2;
+      addScore += currentValue;
+      newBoard[row + 1][col] = 0;
+      merged = true;
+    }
+    if (col > 0 && newBoard[row][col - 1] === currentValue) {
+      currentValue = currentValue * 2;
+      addScore += currentValue;
+      newBoard[row][col - 1] = 0;
+      merged = true;
+    } else if (col < COLS - 1 && newBoard[row][col + 1] === currentValue) {
+      currentValue = currentValue * 2;
+      addScore += currentValue;
+      newBoard[row][col + 1] = 0;
+      merged = true;
+    }
+    newBoard[row][col] = currentValue;
+
+    // Repeat: apply gravity, then merge, until no more merges are possible
+    let repeat = true;
+    let totalScore = addScore;
+    while (repeat) {
+      repeat = false;
+      // Apply gravity to all columns
+      for (let c = 0; c < COLS; c++) {
+        applyGravity(newBoard, c);
+      }
+      // Scan for merges from bottom up (vertical)
+      for (let r = ROWS - 1; r > 0; r--) {
+        if (
+          newBoard[r][col] !== 0 &&
+          newBoard[r][col] === newBoard[r - 1][col]
+        ) {
+          newBoard[r][col] *= 2;
+          totalScore += newBoard[r][col];
+          newBoard[r - 1][col] = 0;
+          showMergeResultAnimation(r, col, newBoard[r][col]);
+          await new Promise(res => setTimeout(res, 250));
+          repeat = true;
         }
       }
-      
-      // Check for horizontal merges (left to right)
-      for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS - 1; c++) {
-          if (newBoard[r][c] !== 0 && newBoard[r][c] === newBoard[r][c + 1]) {
-            // Check if there's a third block to the right
-            if (c + 2 < COLS && newBoard[r][c + 2] === newBoard[r][c]) {
-              // Three blocks merge - multiply by 4
-              const originalValue = newBoard[r][c];
-              newBoard[r][c] *= 4;
-              addScore += newBoard[r][c];
-              newBoard[r][c + 1] = 0;
-              newBoard[r][c + 2] = 0;
-              lastMergePosition = { row: r, col: c };
-              merged = true;
-              hasAnimations = true;
-              
-              // Create merge animation
-              createMergeAnimation(r, c, originalValue, 3, 'horizontal');
-            } else {
-              // Two blocks merge - multiply by 2
-              const originalValue = newBoard[r][c];
-              newBoard[r][c] *= 2;
-              addScore += newBoard[r][c];
-              newBoard[r][c + 1] = 0;
-              lastMergePosition = { row: r, col: c };
-              merged = true;
-              hasAnimations = true;
-              
-              // Create merge animation
-              createMergeAnimation(r, c, originalValue, 2, 'horizontal');
-            }
-          }
-        }
-      }
-      
-      // Apply gravity after each merge round
-      if (merged) {
-        for (let c = 0; c < COLS; c++) {
-          let writeRow = ROWS - 1;
-          for (let r = ROWS - 1; r >= 0; r--) {
-            if (newBoard[r][c] !== 0) {
-              if (writeRow !== r) {
-                newBoard[writeRow][c] = newBoard[r][c];
-                newBoard[r][c] = 0;
-              }
-              writeRow--;
-            }
-          }
+      // Scan for 3+ merges in each row (horizontal), repeat until no more
+      let horizontalRepeat = true;
+      while (horizontalRepeat) {
+        horizontalRepeat = false;
+        for (let r = 0; r < ROWS; r++) {
+          // Await animation for each merge
+          const merged = await mergeRowTilesWithAnim(newBoard, r, showMergeResultAnimation);
+          if (merged) horizontalRepeat = true;
         }
       }
     }
-    
-    // Show merge result animation at the last merge position
-    if (addScore > 0) {
-      showMergeResultAnimation(lastMergePosition.row, lastMergePosition.col, newBoard[lastMergePosition.row][lastMergePosition.col]);
+    if (totalScore > 0) {
+      setScore(s => {
+        const newScore = s + totalScore;
+        if (newScore > record) setRecord(newScore);
+        return newScore;
+      });
     }
-    
-    setScore(s => {
-      const newScore = s + addScore;
-      if (newScore > record) setRecord(newScore);
-      return newScore;
-    });
-    
-    // Update board immediately if no animations, otherwise delay
-    if (!hasAnimations) {
-      setBoard(newBoard);
-    } else {
-      // Delay board update to let animations complete
-      setTimeout(() => {
-        setBoard(newBoard);
-      }, 350); // Slightly longer than animation duration
-    }
-    
+
+    setBoard(newBoard);
     setNextBlock(getRandomBlockValue());
     // Check for game over
     if (newBoard[0].every(cell => cell !== 0)) setGameOver(true);

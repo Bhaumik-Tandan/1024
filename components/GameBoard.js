@@ -41,6 +41,8 @@ const GameBoard = () => {
     return () => clearInterval(autoSlideInterval);
   }, [gameOver, won]);
 
+  // Update all logic to use BOARD_SIZE for rows and GRID_SIZE for columns
+  // Board initialization
   const initializeBoard = () => {
     const newBoard = Array(BOARD_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
     addRandomTile(newBoard);
@@ -142,39 +144,38 @@ const GameBoard = () => {
     }
   };
 
+  // Helper: Chain merge for a row (left to right)
+  function chainMergeRow(rowArr, updateScore) {
+    let merged = true;
+    while (merged) {
+      // Compact row before checking for merges
+      let compacted = rowArr.filter(v => v !== 0);
+      while (compacted.length < rowArr.length) compacted.push(0);
+      for (let i = 0; i < rowArr.length; i++) rowArr[i] = compacted[i];
+
+      merged = false;
+      for (let i = 0; i < rowArr.length - 1; i++) {
+        if (rowArr[i] !== 0 && rowArr[i] === rowArr[i + 1]) {
+          rowArr[i] *= 2;
+          updateScore(rowArr[i]);
+          rowArr[i + 1] = 0;
+          merged = true;
+          // After a merge, break to re-compact and re-check from the start
+          break;
+        }
+      }
+    }
+  }
+
+  // In moveLeft and moveRight, use GRID_SIZE for columns
   const moveLeft = (boardState) => {
     let moved = false;
     let newScore = score;
 
     for (let row = 0; row < BOARD_SIZE; row++) {
-      const newRow = [];
-      let lastValue = 0;
-      
-      // Move all non-zero values to the left
-      for (let col = 0; col < GRID_SIZE; col++) {
-        if (boardState[row][col] !== 0) {
-          if (lastValue === boardState[row][col]) {
-            newRow[newRow.length - 1] *= 2;
-            newScore += newRow[newRow.length - 1];
-            lastValue = 0;
-          } else {
-            if (lastValue !== 0) {
-              newRow.push(lastValue);
-            }
-            lastValue = boardState[row][col];
-          }
-        }
-      }
-      
-      if (lastValue !== 0) {
-        newRow.push(lastValue);
-      }
-      
-      // Fill remaining spaces with zeros
-      while (newRow.length < GRID_SIZE) {
-        newRow.push(0);
-      }
-      
+      let newRow = boardState[row].slice(0, GRID_SIZE); // Always use GRID_SIZE columns
+      // Chain merge (handles all compaction and merging)
+      chainMergeRow(newRow, val => { newScore += val; });
       // Check if the row changed
       for (let col = 0; col < GRID_SIZE; col++) {
         if (boardState[row][col] !== newRow[col]) {
@@ -183,7 +184,6 @@ const GameBoard = () => {
         boardState[row][col] = newRow[col];
       }
     }
-    
     setScore(newScore);
     return moved;
   };
@@ -193,34 +193,10 @@ const GameBoard = () => {
     let newScore = score;
 
     for (let row = 0; row < BOARD_SIZE; row++) {
-      const newRow = [];
-      let lastValue = 0;
-      
-      // Move all non-zero values to the right
-      for (let col = GRID_SIZE - 1; col >= 0; col--) {
-        if (boardState[row][col] !== 0) {
-          if (lastValue === boardState[row][col]) {
-            newRow[0] *= 2;
-            newScore += newRow[0];
-            lastValue = 0;
-          } else {
-            if (lastValue !== 0) {
-              newRow.unshift(lastValue);
-            }
-            lastValue = boardState[row][col];
-          }
-        }
-      }
-      
-      if (lastValue !== 0) {
-        newRow.unshift(lastValue);
-      }
-      
-      // Fill remaining spaces with zeros
-      while (newRow.length < GRID_SIZE) {
-        newRow.unshift(0);
-      }
-      
+      let newRow = boardState[row].slice(0, GRID_SIZE).reverse();
+      // Chain merge (handles all compaction and merging)
+      chainMergeRow(newRow, val => { newScore += val; });
+      newRow = newRow.reverse();
       // Check if the row changed
       for (let col = 0; col < GRID_SIZE; col++) {
         if (boardState[row][col] !== newRow[col]) {
@@ -229,11 +205,11 @@ const GameBoard = () => {
         boardState[row][col] = newRow[col];
       }
     }
-    
     setScore(newScore);
     return moved;
   };
 
+  // In moveUp and moveDown, use BOARD_SIZE for rows and GRID_SIZE for columns
   const moveUp = (boardState) => {
     let moved = false;
     let newScore = score;

@@ -17,6 +17,7 @@ const GameGrid = ({
   mergingTiles, 
   mergeResult, 
   mergeAnimations,
+  liquidBlobs, // Add liquid blobs prop
   onRowTap, 
   gameOver,
   nextBlock,
@@ -204,6 +205,186 @@ const GameGrid = ({
         </Animated.View>
       ))}
 
+      {/* Liquid blob animations */}
+      {liquidBlobs && liquidBlobs.map((blob) => {
+        // Calculate the dimensions for the liquid blob
+        const blobWidth = (blob.maxCol - blob.minCol + 1) * CELL_SIZE + (blob.maxCol - blob.minCol) * CELL_MARGIN;
+        const blobHeight = (blob.maxRow - blob.minRow + 1) * CELL_SIZE + (blob.maxRow - blob.minRow) * CELL_MARGIN;
+        const blobLeft = getCellLeft(blob.minCol);
+        const blobTop = getCellTop(blob.minRow);
+        
+        return (
+          <Animated.View
+            key={blob.id}
+            style={[
+              styles.liquidBlob,
+              {
+                position: 'absolute',
+                left: blobLeft,
+                top: blobTop,
+                width: blobWidth,
+                height: blobHeight,
+                opacity: blob.opacity,
+                transform: [{ scale: blob.scale }],
+              },
+            ]}
+          >
+            {/* Main liquid blob with enhanced morphing */}
+            <Animated.View
+              style={[
+                styles.liquidShape,
+                {
+                  backgroundColor: COLORS[blob.value] || COLORS[0],
+                  opacity: blob.opacity.interpolate({
+                    inputRange: [0, 0.3, 0.7, 1],
+                    outputRange: [0, 0.6, 0.9, 0.8],
+                  }),
+                  transform: [
+                    { scaleX: blob.morph.interpolate({
+                      inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1],
+                      outputRange: [1, 1.1, 1.4, 1.2, 1.1, 1],
+                    })},
+                    { scaleY: blob.morph.interpolate({
+                      inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1],
+                      outputRange: [1, 0.9, 0.7, 0.8, 0.9, 1],
+                    })},
+                    { rotateZ: blob.morph.interpolate({
+                      inputRange: [0, 0.3, 0.7, 1],
+                      outputRange: ['0deg', '2deg', '-1deg', '0deg'],
+                    })},
+                  ],
+                },
+              ]}
+            />
+            
+            {/* Secondary liquid wave */}
+            <Animated.View
+              style={[
+                styles.liquidWave,
+                {
+                  backgroundColor: COLORS[blob.value] || COLORS[0],
+                  opacity: blob.morph.interpolate({
+                    inputRange: [0, 0.3, 0.6, 1],
+                    outputRange: [0, 0.4, 0.6, 0],
+                  }),
+                  transform: [
+                    { scale: blob.morph.interpolate({
+                      inputRange: [0, 0.3, 0.6, 1],
+                      outputRange: [0.8, 1.2, 1.5, 1.8],
+                    })},
+                  ],
+                },
+              ]}
+            />
+            
+            {/* Enhanced liquid droplets/particles with more frames */}
+            {blob.mergingPositions.map((pos, index) => {
+              const dropletLeft = getCellLeft(pos.col) - blobLeft;
+              const dropletTop = getCellTop(pos.row) - blobTop;
+              const resultLeft = getCellLeft(blob.resultCol) - blobLeft;
+              const resultTop = getCellTop(blob.resultRow) - blobTop;
+              
+              // Create curved path for more natural flow
+              const midX = (dropletLeft + resultLeft) / 2 + Math.sin(index) * 20;
+              const midY = (dropletTop + resultTop) / 2 - 30; // Arc upward
+              
+              return (
+                <Animated.View
+                  key={`droplet-${index}`}
+                  style={[
+                    styles.liquidDroplet,
+                    {
+                      position: 'absolute',
+                      left: blob.progress.interpolate({
+                        inputRange: [0, 0.3, 0.7, 1],
+                        outputRange: [dropletLeft, midX, midX, resultLeft],
+                      }),
+                      top: blob.progress.interpolate({
+                        inputRange: [0, 0.3, 0.7, 1],
+                        outputRange: [dropletTop, midY, midY, resultTop],
+                      }),
+                      width: CELL_SIZE * blob.progress.interpolate({
+                        inputRange: [0, 0.2, 0.5, 0.8, 1],
+                        outputRange: [0.3, 0.4, 0.35, 0.25, 0.15],
+                      }),
+                      height: CELL_SIZE * blob.progress.interpolate({
+                        inputRange: [0, 0.2, 0.5, 0.8, 1],
+                        outputRange: [0.3, 0.4, 0.35, 0.25, 0.15],
+                      }),
+                      backgroundColor: COLORS[pos.value] || COLORS[0],
+                      opacity: blob.progress.interpolate({
+                        inputRange: [0, 0.1, 0.3, 0.7, 0.9, 1],
+                        outputRange: [1, 0.9, 0.8, 0.6, 0.3, 0],
+                      }),
+                      transform: [
+                        { scale: blob.progress.interpolate({
+                          inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1],
+                          outputRange: [1, 1.3, 1.1, 1.2, 0.8, 0.4],
+                        })},
+                        { rotateZ: blob.progress.interpolate({
+                          inputRange: [0, 0.5, 1],
+                          outputRange: ['0deg', `${index * 45}deg`, `${index * 90}deg`],
+                        })},
+                      ],
+                    },
+                  ]}
+                />
+              );
+            })}
+            
+            {/* Enhanced liquid splash effect with multiple waves */}
+            <Animated.View
+              style={[
+                styles.liquidSplash,
+                {
+                  position: 'absolute',
+                  left: getCellLeft(blob.resultCol) - blobLeft - CELL_SIZE * 0.3,
+                  top: getCellTop(blob.resultRow) - blobTop - CELL_SIZE * 0.3,
+                  width: CELL_SIZE * 1.6,
+                  height: CELL_SIZE * 1.6,
+                  backgroundColor: COLORS[blob.value] || COLORS[0],
+                  opacity: blob.progress.interpolate({
+                    inputRange: [0, 0.5, 0.7, 0.9, 1],
+                    outputRange: [0, 0, 0.5, 0.2, 0],
+                  }),
+                  transform: [
+                    { scale: blob.progress.interpolate({
+                      inputRange: [0, 0.5, 0.7, 0.9, 1],
+                      outputRange: [0, 0, 1.2, 1.8, 2.2],
+                    })},
+                  ],
+                },
+              ]}
+            />
+            
+            {/* Secondary splash ring */}
+            <Animated.View
+              style={[
+                styles.liquidSplash,
+                {
+                  position: 'absolute',
+                  left: getCellLeft(blob.resultCol) - blobLeft - CELL_SIZE * 0.1,
+                  top: getCellTop(blob.resultRow) - blobTop - CELL_SIZE * 0.1,
+                  width: CELL_SIZE * 1.2,
+                  height: CELL_SIZE * 1.2,
+                  backgroundColor: COLORS[blob.value] || COLORS[0],
+                  opacity: blob.progress.interpolate({
+                    inputRange: [0, 0.6, 0.8, 1],
+                    outputRange: [0, 0, 0.3, 0],
+                  }),
+                  transform: [
+                    { scale: blob.progress.interpolate({
+                      inputRange: [0, 0.6, 0.8, 1],
+                      outputRange: [0, 0, 1, 1.5],
+                    })},
+                  ],
+                },
+              ]}
+            />
+          </Animated.View>
+        );
+      })}
+
       {/* Gesture Guide Overlay */}
       {showGuide && (
         <View style={styles.guideOverlay} pointerEvents="none">
@@ -328,6 +509,50 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: 'transparent', // Make it invisible
     zIndex: 10, // Above cells but below animations
+  },
+  // Liquid blob animation styles
+  liquidBlob: {
+    zIndex: 15, // Above regular tiles, below result
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  liquidShape: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  liquidWave: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  liquidDroplet: {
+    borderRadius: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  liquidSplash: {
+    borderRadius: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 12,
   },
 });
 

@@ -7,6 +7,7 @@ export const useAnimationManager = () => {
   const [mergingTiles, setMergingTiles] = useState([]);
   const [mergeResult, setMergeResult] = useState(null);
   const [mergeAnimations, setMergeAnimations] = useState([]);
+  const [liquidBlobs, setLiquidBlobs] = useState([]); // New state for liquid animations
   const [animationCounter, setAnimationCounter] = useState(0);
 
   const startFallingAnimation = (col, value, toRow, isFastDrop = false) => {
@@ -106,6 +107,7 @@ export const useAnimationManager = () => {
     });
   };
 
+  // Enhanced liquid-like merging animation
   const showMergeResultAnimation = (row, col, value, mergingTilesPositions = [], isChainReaction = false) => {
     // Generate unique IDs using counter
     setAnimationCounter(prev => prev + 1);
@@ -128,6 +130,34 @@ export const useAnimationManager = () => {
       };
     });
     
+    // Create liquid blob animation
+    const liquidBlobAnim = new Animated.Value(0);
+    const liquidScaleAnim = new Animated.Value(0);
+    const liquidOpacityAnim = new Animated.Value(0);
+    const liquidMorphAnim = new Animated.Value(0);
+    
+    // Calculate the bounding box for the liquid blob
+    const minRow = Math.min(...mergingTilesPositions.map(p => p.row));
+    const maxRow = Math.max(...mergingTilesPositions.map(p => p.row));
+    const minCol = Math.min(...mergingTilesPositions.map(p => p.col));
+    const maxCol = Math.max(...mergingTilesPositions.map(p => p.col));
+    
+    const liquidBlob = {
+      id: `${baseId}-liquid`,
+      minRow,
+      maxRow,
+      minCol,
+      maxCol,
+      resultRow: row,
+      resultCol: col,
+      value: value,
+      scale: liquidScaleAnim,
+      opacity: liquidOpacityAnim,
+      morph: liquidMorphAnim,
+      progress: liquidBlobAnim,
+      mergingPositions: mergingTilesPositions,
+    };
+    
     // Create the result tile animation
     const resultScaleAnim = new Animated.Value(0);
     const resultOpacityAnim = new Animated.Value(0);
@@ -145,98 +175,133 @@ export const useAnimationManager = () => {
     
     // Set all animations
     setMergeAnimations([...mergingAnimations, resultAnimation]);
+    setLiquidBlobs(prev => [...prev, liquidBlob]);
     
-    // Adjust animation timing based on chain reaction - made slower for better visibility
-    const baseDuration = isChainReaction ? 300 : 600; // Slower for better visibility
+    // Adjust animation timing for liquid effect - faster with more frames
+    const baseDuration = isChainReaction ? 200 : 400;
+    const liquidDuration = isChainReaction ? 400 : 700;
+    const resultDuration = isChainReaction ? 200 : 350;
     
     // Phase 1: Glow and scale up the merging tiles
     const phase1Animations = mergingAnimations.map(anim => 
       Animated.parallel([
         Animated.timing(anim.glow, {
           toValue: 1,
-          duration: baseDuration,
+          duration: baseDuration * 0.6,
           useNativeDriver: false,
         }),
         Animated.timing(anim.scale, {
-          toValue: 1.2, // Slightly more scale for better visibility
-          duration: baseDuration,
+          toValue: 1.15,
+          duration: baseDuration * 0.6,
           useNativeDriver: false,
         }),
       ])
     );
     
-    // Phase 2: Fade out merging tiles and show result
-    const fadeOutDuration = baseDuration * 0.8; // Slightly faster fade out
-    const resultDuration = isChainReaction ? 400 : 800; // Much slower for better visibility
-    
-    const phase2Animations = [
-      // First fade out old tiles
-      Animated.parallel(mergingAnimations.map(anim => 
-        Animated.parallel([
-          Animated.timing(anim.opacity, {
-            toValue: 0,
-            duration: fadeOutDuration,
-            useNativeDriver: false,
-          }),
-          Animated.timing(anim.scale, {
-            toValue: 0.8,
-            duration: fadeOutDuration,
-            useNativeDriver: false,
-          }),
-        ])
-      )),
-      // Then show result tile after a brief delay
-      Animated.parallel([
-        Animated.timing(resultAnimation.opacity, {
-          toValue: 1,
-          duration: resultDuration,
-          useNativeDriver: false,
-        }),
-        Animated.timing(resultAnimation.scale, {
-          toValue: 1.3,
-          duration: resultDuration,
-          useNativeDriver: false,
-        }),
-        Animated.timing(resultAnimation.glow, {
-          toValue: 1,
-          duration: resultDuration,
-          useNativeDriver: false,
-        }),
-      ])
-    ];
-    
-    // Phase 3: Stabilize result tile
-    const stabilizeDuration = isChainReaction ? 200 : 400;
-    const glowFadeDuration = isChainReaction ? 300 : 600;
-    
-    const phase3Animation = Animated.parallel([
-      Animated.timing(resultAnimation.scale, {
+    // Phase 2: Create liquid blob effect
+    const liquidPhase = Animated.parallel([
+      // Show liquid blob
+      Animated.timing(liquidOpacityAnim, {
         toValue: 1,
-        duration: stabilizeDuration,
+        duration: liquidDuration * 0.3,
         useNativeDriver: false,
       }),
-      Animated.timing(resultAnimation.glow, {
-        toValue: 0,
-        duration: glowFadeDuration,
+      // Scale up liquid blob
+      Animated.timing(liquidScaleAnim, {
+        toValue: 1,
+        duration: liquidDuration * 0.4,
+        useNativeDriver: false,
+      }),
+      // Morph liquid blob
+      Animated.timing(liquidMorphAnim, {
+        toValue: 1,
+        duration: liquidDuration,
+        useNativeDriver: false,
+      }),
+      // Animate liquid progress
+      Animated.timing(liquidBlobAnim, {
+        toValue: 1,
+        duration: liquidDuration,
         useNativeDriver: false,
       }),
     ]);
     
-    // Execute animation sequence
+    // Phase 3: Fade out tiles as they "melt" into liquid
+    const meltPhase = Animated.parallel(mergingAnimations.map(anim => 
+      Animated.parallel([
+        Animated.timing(anim.opacity, {
+          toValue: 0,
+          duration: liquidDuration * 0.6,
+          useNativeDriver: false,
+        }),
+        Animated.timing(anim.scale, {
+          toValue: 0.7,
+          duration: liquidDuration * 0.6,
+          useNativeDriver: false,
+        }),
+      ])
+    ));
+    
+    // Phase 4: Result emerges from liquid
+    const resultPhase = Animated.parallel([
+      Animated.timing(resultOpacityAnim, {
+        toValue: 1,
+        duration: resultDuration,
+        useNativeDriver: false,
+      }),
+      Animated.timing(resultScaleAnim, {
+        toValue: 1.4,
+        duration: resultDuration * 0.7,
+        useNativeDriver: false,
+      }),
+      Animated.timing(resultGlowAnim, {
+        toValue: 1,
+        duration: resultDuration * 0.8,
+        useNativeDriver: false,
+      }),
+    ]);
+    
+    // Phase 5: Fade out liquid and stabilize result
+    const stabilizePhase = Animated.parallel([
+      Animated.timing(liquidOpacityAnim, {
+        toValue: 0,
+        duration: resultDuration * 0.8,
+        useNativeDriver: false,
+      }),
+      Animated.timing(resultScaleAnim, {
+        toValue: 1,
+        duration: resultDuration * 0.6,
+        useNativeDriver: false,
+      }),
+      Animated.timing(resultGlowAnim, {
+        toValue: 0,
+        duration: resultDuration,
+        useNativeDriver: false,
+      }),
+    ]);
+    
+    // Execute liquid animation sequence
     Animated.sequence([
+      // Phase 1: Highlight tiles
       Animated.parallel(phase1Animations),
-      Animated.sequence(phase2Animations), // Sequential fade out then show
-      phase3Animation,
+      // Phase 2 & 3: Create liquid and melt tiles (simultaneous)
+      Animated.parallel([liquidPhase, meltPhase]),
+      // Phase 4: Show result
+      resultPhase,
+      // Phase 5: Stabilize
+      stabilizePhase,
     ]).start(() => {
       setTimeout(() => {
         setMergeAnimations(prev => prev.filter(anim => !anim.id.startsWith(baseId)));
+        setLiquidBlobs(prev => prev.filter(blob => !blob.id.startsWith(baseId)));
       }, 100);
     });
   };
 
   const clearMergeAnimations = () => {
     setMergeAnimations([]);
-    setAnimationCounter(0); // Reset counter when clearing animations
+    setLiquidBlobs([]);
+    setAnimationCounter(0);
   };
 
   return {
@@ -245,6 +310,7 @@ export const useAnimationManager = () => {
     mergingTiles,
     mergeResult,
     mergeAnimations,
+    liquidBlobs, // Export liquid blobs for rendering
     startFallingAnimation,
     updateFallingCol,
     fastDropAnimation,

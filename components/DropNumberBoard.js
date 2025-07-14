@@ -75,6 +75,7 @@ const DropNumberBoard = () => {
     mergingTiles,
     mergeResult,
     mergeAnimations,
+    liquidBlobs, // Add liquid blobs
     updateFallingCol,
     fastDropAnimation,
     clearFalling,
@@ -305,6 +306,7 @@ const DropNumberBoard = () => {
           mergingTiles={mergingTiles}
           mergeResult={mergeResult}
           mergeAnimations={mergeAnimations}
+          liquidBlobs={liquidBlobs}
           onRowTap={handleRowTap}
           gameOver={gameOver}
           nextBlock={nextBlock}

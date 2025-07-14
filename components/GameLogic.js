@@ -164,7 +164,7 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   // Show merge animation with result appearing at RESULT position
   if (showMergeResultAnimation) {
     showMergeResultAnimation(finalResultRow, finalResultCol, newValue, mergingTilePositions, isChainReaction);
-    const animationDelay = isChainReaction ? 600 : 1800; // Slower animation delay
+    const animationDelay = isChainReaction ? 350 : 900; // Faster animation delay with more frames
     await new Promise(resolve => {
       setTimeout(resolve, animationDelay);
     });

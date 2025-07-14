@@ -241,6 +241,7 @@ export const useAnimationManager = () => {
 
   return {
     falling,
+    setFalling,
     mergingTiles,
     mergeResult,
     mergeAnimations,

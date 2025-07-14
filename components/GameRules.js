@@ -17,10 +17,10 @@ export const GAME_CONFIG = {
   
   // Timing settings
   TIMING: {
-    SLOW_FALL_DURATION: 7000,    // 7 seconds for normal fall
-    FAST_DROP_DURATION: 250,     // 0.25 seconds for fast drop
-    MERGE_ANIMATION_DURATION: 250, // Animation delay between merges
-    DRAG_ANIMATION_DURATION: 200,  // Time to animate drag movements
+    SLOW_FALL_DURATION: 7000,    // 7 seconds for normal fall (now unused)
+    FAST_DROP_DURATION: 150,     // 0.15 seconds for fast drop (increased speed)
+    MERGE_ANIMATION_DURATION: 200, // Animation delay between merges (slightly faster)
+    DRAG_ANIMATION_DURATION: 150,  // Time to animate drag movements (faster)
   },
   
   // Tile generation
@@ -340,6 +340,19 @@ export const GameHelpers = {
     return values[Math.floor(Math.random() * Math.min(maxIndex, values.length))];
   },
   
+  /**
+   * Find landing position for a tile with upward gravity
+   * (for bottom-to-top dropping)
+   */
+  findUpwardLandingPosition(board, col) {
+    for (let row = 0; row < GAME_CONFIG.BOARD.ROWS; row++) {
+      if (board[row][col] === 0) {
+        return row;
+      }
+    }
+    return -1; // Column is full
+  },
+
   /**
    * Find landing position for a tile
    */

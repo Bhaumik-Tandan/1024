@@ -19,6 +19,37 @@ export const getRandomBlockValue = () => {
 };
 
 /**
+ * Apply upward gravity to a specific column
+ * Makes all tiles fall up as far as possible following reversed physics rules
+ * 
+ * @param {Array[]} board - The game board (2D array)
+ * @param {number} col - Column index to apply gravity to
+ */
+export const applyUpwardGravity = (board, col) => {
+  // Validate input
+  if (!GameValidator.isValidBoard(board) || col < 0 || col >= COLS) {
+    console.warn('Invalid board or column for upward gravity application');
+    return;
+  }
+
+  // Start from second row and work downward
+  for (let row = 1; row < ROWS; row++) {
+    const tileValue = board[row][col];
+    
+    if (tileValue !== 0) {
+      let fallRow = row;
+      
+      // Find the highest empty position
+      while (fallRow > 0 && board[fallRow - 1][col] === 0) {
+        board[fallRow - 1][col] = tileValue;
+        board[fallRow][col] = 0;
+        fallRow--;
+      }
+    }
+  }
+};
+
+/**
  * Apply gravity to a specific column
  * Makes all tiles fall down as far as possible following physics rules
  * 
@@ -61,19 +92,19 @@ export const applyGravity = (board, col) => {
  * @param {Function} showMergeResultAnimation - Animation callback function
  * @returns {number} - Score gained from the merge (0 if no merge)
  */
-export const checkAndMergeAdjacent = async (board, row, col, showMergeResultAnimation, isChainReaction = false) => {
+export const checkAndMergeAdjacentTowards = async (board, targetRow, targetCol, showMergeResultAnimation, isChainReaction = false) => {
   // Validate inputs
   if (!GameValidator.isValidBoard(board)) {
-    return 0;
+    return { score: 0, merged: false };
   }
 
   // Check bounds
-  if (row < 0 || row >= ROWS || col < 0 || col >= COLS) {
-    return 0;
+  if (targetRow < 0 || targetRow >= ROWS || targetCol < 0 || targetCol >= COLS) {
+    return { score: 0, merged: false };
   }
 
-  const currentValue = board[row][col];
-  if (currentValue === 0) return 0;
+  const targetValue = board[targetRow][targetCol];
+  if (targetValue === 0) return { score: 0, merged: false };
 
   // Check all 4 adjacent directions
   const directions = [
@@ -84,48 +115,54 @@ export const checkAndMergeAdjacent = async (board, row, col, showMergeResultAnim
   ];
 
   for (let [dr, dc] of directions) {
-    const newRow = row + dr;
-    const newCol = col + dc;
+    const neighborRow = targetRow + dr;
+    const neighborCol = targetCol + dc;
     
     // Check bounds
-    if (newRow < 0 || newRow >= ROWS || newCol < 0 || newCol >= COLS) {
+    if (neighborRow < 0 || neighborRow >= ROWS || neighborCol < 0 || neighborCol >= COLS) {
       continue;
     }
     
-    const neighborValue = board[newRow][newCol];
+    const neighborValue = board[neighborRow][neighborCol];
     
-    // If adjacent tile has same value, merge them
-    if (neighborValue === currentValue && neighborValue > 0) {
-      const newValue = currentValue + neighborValue; // Sum the values
+    // If adjacent tile has same value, merge them TOWARDS the target
+    if (neighborValue === targetValue && neighborValue > 0) {
+      const newValue = targetValue + neighborValue; // Sum the values
       const scoreGained = newValue;
       
-      // Prepare positions for animation  
+      // Prepare positions for animation - target tile "pulls" neighbor towards it
       const mergingTilePositions = [
-        { row: row, col: col, value: currentValue },
-        { row: newRow, col: newCol, value: neighborValue }
+        { row: targetRow, col: targetCol, value: targetValue },
+        { row: neighborRow, col: neighborCol, value: neighborValue }
       ];
       
       // Clear both tiles from board immediately (animation will show them)
-      board[row][col] = 0;
-      board[newRow][newCol] = 0;
+      board[targetRow][targetCol] = 0;
+      board[neighborRow][neighborCol] = 0;
       
-      // Show merge animation with different timing for chain reactions
+      // Show merge animation with result appearing at TARGET position
       if (showMergeResultAnimation) {
-        showMergeResultAnimation(row, col, newValue, mergingTilePositions, isChainReaction);
+        showMergeResultAnimation(targetRow, targetCol, newValue, mergingTilePositions, isChainReaction);
         const animationDelay = isChainReaction ? 400 : 1200; // Much faster for chain reactions
         await new Promise(resolve => {
           setTimeout(resolve, animationDelay);
         });
       }
       
-      // Place merged tile ONLY after animation completes
-      board[row][col] = newValue;
+      // Place merged tile at TARGET position (where the merge was triggered)
+      board[targetRow][targetCol] = newValue;
       
-      return scoreGained;
+      return { 
+        score: scoreGained, 
+        merged: true, 
+        newRow: targetRow, 
+        newCol: targetCol,
+        newValue: newValue 
+      };
     }
   }
   
-  return 0; // No merge occurred
+  return { score: 0, merged: false };
 };
 
 /**
@@ -161,34 +198,44 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
   // STEP 1: Place the landing tile
   newBoard[row][col] = value;
   
-  // STEP 2: Apply physics - gravity affects all columns
+  // STEP 2: Apply physics - upward gravity affects all columns
   for (let c = 0; c < COLS; c++) {
-    applyGravity(newBoard, c);
+    applyUpwardGravity(newBoard, c);
   }
   
-  // STEP 3: Find where the tile settled after gravity
-  // Since we applied gravity, find the bottommost non-empty cell in the column
+  // STEP 3: Find where the tile settled after upward gravity
+  // Since we applied upward gravity, find the topmost non-empty cell in the column
   let finalRow = -1;
-  for (let r = ROWS - 1; r >= 0; r--) {
+  for (let r = 0; r < ROWS; r++) {
     if (newBoard[r][col] !== 0) {
       finalRow = r;
       break;
     }
   }
   
-  // STEP 4: Initial merge check for the landed tile
+  // STEP 4: Initial merge check for the landed tile (merge towards the landed position)
+  let currentMergePosition = null;
   if (finalRow !== -1) {
-    const initialMergeScore = await checkAndMergeAdjacent(
+    const initialMergeResult = await checkAndMergeAdjacentTowards(
       newBoard, 
       finalRow, 
       col, 
       showMergeResultAnimation,
       false // Not a chain reaction - full animation
     );
-    totalScore += initialMergeScore;
+    totalScore += initialMergeResult.score;
+    
+    // Track the position of the newly created tile for chain reactions
+    if (initialMergeResult.merged) {
+      currentMergePosition = { 
+        row: initialMergeResult.newRow, 
+        col: initialMergeResult.newCol 
+      };
+    }
   }
   
   // STEP 5: Chain reaction loop - continue until no more merges possible
+  // Each chain reaction merges TOWARDS the position of the newest tile
   let chainReactionActive = true;
   let iterations = 0;
   
@@ -196,39 +243,73 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
     chainReactionActive = false;
     iterations++;
     
-    // Apply gravity after each merge
+    // Apply upward gravity after each merge
     for (let c = 0; c < COLS; c++) {
-      applyGravity(newBoard, c);
+      applyUpwardGravity(newBoard, c);
     }
     
-    // Check for adjacent tile merges across the entire board
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
-        if (newBoard[r][c] !== 0) {
-          const mergeScore = await checkAndMergeAdjacent(
-            newBoard, 
-            r, 
-            c, 
-            showMergeResultAnimation,
-            true // This is a chain reaction - faster animation
-          );
-          
-          if (mergeScore > 0) {
-            // Apply chain reaction bonus for subsequent merges
-            const bonusScore = iterations > 1 ? 
-              ScoringSystem.calculateMergeScore(mergeScore, 2, true) : 
-              mergeScore;
-            totalScore += bonusScore;
-            chainReactionActive = true;
-            chainReactionCount++;
+    // If we have a current merge position, check for chain reactions from there first
+    if (currentMergePosition) {
+      const chainMergeResult = await checkAndMergeAdjacentTowards(
+        newBoard, 
+        currentMergePosition.row, 
+        currentMergePosition.col, 
+        showMergeResultAnimation,
+        true // This is a chain reaction - faster animation
+      );
+      
+      if (chainMergeResult.merged) {
+        const bonusScore = iterations > 1 ? 
+          ScoringSystem.calculateMergeScore(chainMergeResult.score, 2, true) : 
+          chainMergeResult.score;
+        totalScore += bonusScore;
+        chainReactionActive = true;
+        chainReactionCount++;
+        
+        // Update the current merge position for next iteration
+        currentMergePosition = { 
+          row: chainMergeResult.newRow, 
+          col: chainMergeResult.newCol 
+        };
+        continue; // Continue the chain from this position
+      } else {
+        // No more merges from current position, clear it
+        currentMergePosition = null;
+      }
+    }
+    
+    // If no current merge position or no merge from it, check entire board
+    if (!chainReactionActive) {
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (newBoard[r][c] !== 0) {
+            const mergeResult = await checkAndMergeAdjacentTowards(
+              newBoard, 
+              r, 
+              c, 
+              showMergeResultAnimation,
+              true // This is a chain reaction - faster animation
+            );
             
-            // Break out of loops to restart the check from the beginning
-            // This ensures we don't miss merges that could be created by this merge
-            break;
+            if (mergeResult.merged) {
+              const bonusScore = iterations > 1 ? 
+                ScoringSystem.calculateMergeScore(mergeResult.score, 2, true) : 
+                mergeResult.score;
+              totalScore += bonusScore;
+              chainReactionActive = true;
+              chainReactionCount++;
+              
+              // Set this as the new merge position for chain reactions
+              currentMergePosition = { 
+                row: mergeResult.newRow, 
+                col: mergeResult.newCol 
+              };
+              break; // Break to restart chain from this position
+            }
           }
         }
+        if (chainReactionActive) break; // Break out of outer loop too
       }
-      if (chainReactionActive) break; // Break out of outer loop too
     }
   }
   

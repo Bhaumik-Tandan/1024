@@ -1,6 +1,15 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
-import { ROWS, COLS, CELL_SIZE, CELL_MARGIN, COLORS, getCellLeft, getCellTop } from './constants';
+import { 
+  ROWS, 
+  COLS, 
+  CELL_SIZE, 
+  CELL_MARGIN, 
+  COLORS, 
+  getCellLeft, 
+  getCellTop,
+  ANIMATION_CONFIG 
+} from './constants';
 
 const GameGrid = ({ 
   board, 
@@ -8,12 +17,14 @@ const GameGrid = ({
   mergingTiles, 
   mergeResult, 
   mergeAnimations,
-  onColumnTap, 
+  onRowTap, 
   gameOver,
   nextBlock,
   showGuide,
   panHandlers
 }) => {
+  const isDisabled = gameOver || !falling || (falling?.fastDrop && !falling?.static);
+  
   return (
     <View style={styles.board} {...panHandlers}>
       {/* Preview tile above the board */}
@@ -34,7 +45,30 @@ const GameGrid = ({
         </View>
       )}
 
-      {/* Render all cells */}
+      {/* Cell-based touch areas - tap any cell to place tile there */}
+      {board.map((row, rowIdx) =>
+        row.map((cell, colIdx) => (
+          <TouchableOpacity
+            key={`cell-${rowIdx}-${colIdx}`}
+            style={[
+              styles.cellTouchArea,
+              {
+                left: getCellLeft(colIdx),
+                top: getCellTop(rowIdx),
+                width: CELL_SIZE,
+                height: CELL_SIZE,
+              },
+            ]}
+            onPress={() => {
+              onRowTap(rowIdx, colIdx);
+            }}
+            disabled={isDisabled}
+            activeOpacity={0.3}
+          />
+        ))
+      )}
+
+      {/* Render all cells (visual only, no touch) */}
       {board.map((row, rowIdx) =>
         row.map((cell, colIdx) => {
           // Check if this cell is currently being animated (hide it during merge)
@@ -43,7 +77,7 @@ const GameGrid = ({
           );
           
           return (
-            <TouchableOpacity
+            <View
               key={`${rowIdx}-${colIdx}`}
               style={[
                 styles.cell,
@@ -56,13 +90,11 @@ const GameGrid = ({
                 },
                 cell !== 0 && styles.cellFilled,
               ]}
-              onPress={() => onColumnTap(colIdx)}
-              disabled={gameOver || !falling || falling.fastDrop}
             >
               {cell !== 0 && !isAnimating && (
                 <Text style={styles.cellText}>{cell}</Text>
               )}
-            </TouchableOpacity>
+            </View>
           );
         })
       )}
@@ -74,12 +106,12 @@ const GameGrid = ({
             styles.fallingBlock,
             {
               position: 'absolute',
-              left: getCellLeft(falling.col),
-              top: 0,
+              left: getCellLeft(falling.col), // Use the actual column of the falling tile
+              top: falling.static ? getCellTop(ROWS - 1) : getCellTop(0), // Use proper cell positioning
               backgroundColor: COLORS[falling.value] || COLORS[0],
               width: CELL_SIZE,
               height: CELL_SIZE,
-              transform: [{ translateY: falling.anim }],
+              transform: falling.static ? [] : [{ translateY: falling.anim }],
             },
           ]}
         >
@@ -175,7 +207,7 @@ const GameGrid = ({
       {/* Gesture Guide Overlay */}
       {showGuide && (
         <View style={styles.guideOverlay} pointerEvents="none">
-          <Text style={styles.guideText}>Tap a column to drop!</Text>
+          <Text style={styles.guideText}>Tap a row to drop!</Text>
         </View>
       )}
     </View>
@@ -290,6 +322,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#666',
     zIndex: 1,
+  },
+  cellTouchArea: {
+    position: 'absolute',
+    borderRadius: 4,
+    backgroundColor: 'transparent', // Make it invisible
+    zIndex: 10, // Above cells but below animations
   },
 });
 

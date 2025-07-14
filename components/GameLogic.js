@@ -145,23 +145,23 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   const newValue = targetValue * Math.pow(2, numberOfTiles - 1);
   const scoreGained = newValue;
   
-  // Find the latest position (highest row number, then rightmost column)
-  // This represents the most recently dropped/merged tile position
-  let latestRow = -1;
-  let latestCol = -1;
+  // Find the best position for the merge result
+  // With upward gravity, prefer the lowest row (closest to bottom) among connected tiles
+  let bestRow = -1;
+  let bestCol = -1;
   
   for (const tile of connectedTiles) {
-    if (tile.row > latestRow || (tile.row === latestRow && tile.col > latestCol)) {
-      latestRow = tile.row;
-      latestCol = tile.col;
+    if (bestRow === -1 || tile.row > bestRow || (tile.row === bestRow && tile.col > bestCol)) {
+      bestRow = tile.row;
+      bestCol = tile.col;
     }
   }
   
   // Determine where to place the result
   // If resultRow/resultCol are explicitly provided, use them
-  // Otherwise, use the latest position (most recently dropped/merged tile)
-  const finalResultRow = resultRow !== null ? resultRow : latestRow;
-  const finalResultCol = resultCol !== null ? resultCol : latestCol;
+  // Otherwise, use the best position (lowest row among connected tiles)
+  const finalResultRow = resultRow !== null ? resultRow : bestRow;
+  const finalResultCol = resultCol !== null ? resultCol : bestCol;
   
   // Prepare positions for animation
   const mergingTilePositions = connectedTiles.map(tile => ({
@@ -178,7 +178,7 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   // Show merge animation with result appearing at RESULT position
   if (showMergeResultAnimation) {
     showMergeResultAnimation(finalResultRow, finalResultCol, newValue, mergingTilePositions, isChainReaction);
-    const animationDelay = isChainReaction ? 350 : 900; // Faster animation delay with more frames
+    const animationDelay = isChainReaction ? 200 : 500; // Faster animation delay with more frames
     await new Promise(resolve => {
       setTimeout(resolve, animationDelay);
     });
@@ -247,7 +247,7 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
     }
   }
   
-  // STEP 4: Initial merge check for the landed tile (merge towards the landed position)
+  // STEP 4: Initial merge check for the landed tile (merge at the settled position)
   let currentMergePosition = null;
   if (finalRow !== -1) {
     const initialMergeResult = await checkAndMergeConnectedGroup(
@@ -256,8 +256,8 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
       col, 
       showMergeResultAnimation,
       false, // Not a chain reaction - full animation
-      row, // Result should appear at original landing position
-      col  // Result should appear at original landing position
+      null, // Let the merge result appear at the natural position (where tiles settled)
+      null  // Let the merge result appear at the natural position (where tiles settled)
     );
     totalScore += initialMergeResult.score;
     
@@ -282,6 +282,19 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
     // Apply upward gravity after each merge
     for (let c = 0; c < COLS; c++) {
       applyUpwardGravity(newBoard, c);
+    }
+    
+    // Update current merge position after gravity (find where the tile actually settled)
+    if (currentMergePosition) {
+      let settledRow = currentMergePosition.row;
+      // Find where the tile actually settled after gravity
+      for (let r = 0; r < ROWS; r++) {
+        if (newBoard[r][currentMergePosition.col] !== 0) {
+          settledRow = r;
+          break;
+        }
+      }
+      currentMergePosition.row = settledRow;
     }
     
     // If we have a current merge position, check for chain reactions from there first

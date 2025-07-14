@@ -19,7 +19,7 @@ export const GAME_CONFIG = {
   TIMING: {
     SLOW_FALL_DURATION: 7000,    // 7 seconds for normal fall (now unused)
     FAST_DROP_DURATION: 150,     // 0.15 seconds for fast drop (increased speed)
-    MERGE_ANIMATION_DURATION: 200, // Animation delay between merges (slightly faster)
+    MERGE_ANIMATION_DURATION: 120, // Animation delay between merges (faster)
     DRAG_ANIMATION_DURATION: 150,  // Time to animate drag movements (faster)
   },
   

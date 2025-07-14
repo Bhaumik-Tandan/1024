@@ -137,11 +137,11 @@ export const ANIMATION_CONFIG = {
     BOUNCE: 'bounce',
   },
   
-  // Common animation durations (from GameRules)
+  // Common animation durations (from GameRules) - Faster for better responsiveness
   DURATION: {
-    FAST: 150,
-    NORMAL: 250,
-    SLOW: 500,
+    FAST: 100,
+    NORMAL: 180,
+    SLOW: 350,
     FALL: GAME_CONFIG.TIMING.SLOW_FALL_DURATION,
     FAST_DROP: GAME_CONFIG.TIMING.FAST_DROP_DURATION,
   },

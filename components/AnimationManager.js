@@ -146,8 +146,8 @@ export const useAnimationManager = () => {
     // Set all animations
     setMergeAnimations([...mergingAnimations, resultAnimation]);
     
-    // Adjust animation timing based on chain reaction
-    const baseDuration = isChainReaction ? 100 : 200; // Faster for chain reactions
+    // Adjust animation timing based on chain reaction - made slower for better visibility
+    const baseDuration = isChainReaction ? 300 : 600; // Slower for better visibility
     
     // Phase 1: Glow and scale up the merging tiles
     const phase1Animations = mergingAnimations.map(anim => 
@@ -158,7 +158,7 @@ export const useAnimationManager = () => {
           useNativeDriver: false,
         }),
         Animated.timing(anim.scale, {
-          toValue: 1.1,
+          toValue: 1.2, // Slightly more scale for better visibility
           duration: baseDuration,
           useNativeDriver: false,
         }),
@@ -166,8 +166,8 @@ export const useAnimationManager = () => {
     );
     
     // Phase 2: Fade out merging tiles and show result
-    const fadeOutDuration = baseDuration;
-    const resultDuration = isChainReaction ? 125 : 250;
+    const fadeOutDuration = baseDuration * 0.8; // Slightly faster fade out
+    const resultDuration = isChainReaction ? 400 : 800; // Much slower for better visibility
     
     const phase2Animations = [
       // First fade out old tiles
@@ -206,8 +206,8 @@ export const useAnimationManager = () => {
     ];
     
     // Phase 3: Stabilize result tile
-    const stabilizeDuration = isChainReaction ? 100 : 200;
-    const glowFadeDuration = isChainReaction ? 150 : 300;
+    const stabilizeDuration = isChainReaction ? 200 : 400;
+    const glowFadeDuration = isChainReaction ? 300 : 600;
     
     const phase3Animation = Animated.parallel([
       Animated.timing(resultAnimation.scale, {

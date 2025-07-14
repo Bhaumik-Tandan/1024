@@ -92,9 +92,11 @@ export const applyGravity = (board, col) => {
  * @param {number} targetCol - Starting column position
  * @param {Function} showMergeResultAnimation - Animation callback function
  * @param {boolean} isChainReaction - Whether this is part of a chain reaction
+ * @param {number} resultRow - Where to place the merged result (defaults to targetRow)
+ * @param {number} resultCol - Where to place the merged result (defaults to targetCol)
  * @returns {Object} - { score: number, merged: boolean, newRow: number, newCol: number, newValue: number }
  */
-export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, showMergeResultAnimation, isChainReaction = false) => {
+export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, showMergeResultAnimation, isChainReaction = false, resultRow = null, resultCol = null) => {
   // Validate inputs
   if (!GameValidator.isValidBoard(board)) {
     return { score: 0, merged: false };
@@ -143,6 +145,10 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   const newValue = targetValue * Math.pow(2, numberOfTiles - 1);
   const scoreGained = newValue;
   
+  // Determine where to place the result
+  const finalResultRow = resultRow !== null ? resultRow : targetRow;
+  const finalResultCol = resultCol !== null ? resultCol : targetCol;
+  
   // Prepare positions for animation
   const mergingTilePositions = connectedTiles.map(tile => ({
     row: tile.row,
@@ -155,23 +161,23 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
     board[tile.row][tile.col] = 0;
   });
   
-  // Show merge animation with result appearing at TARGET position
+  // Show merge animation with result appearing at RESULT position
   if (showMergeResultAnimation) {
-    showMergeResultAnimation(targetRow, targetCol, newValue, mergingTilePositions, isChainReaction);
-    const animationDelay = isChainReaction ? 400 : 1200; // Much faster for chain reactions
+    showMergeResultAnimation(finalResultRow, finalResultCol, newValue, mergingTilePositions, isChainReaction);
+    const animationDelay = isChainReaction ? 600 : 1800; // Slower animation delay
     await new Promise(resolve => {
       setTimeout(resolve, animationDelay);
     });
   }
   
-  // Place merged tile at TARGET position
-  board[targetRow][targetCol] = newValue;
+  // Place merged tile at RESULT position
+  board[finalResultRow][finalResultCol] = newValue;
   
   return { 
     score: scoreGained, 
     merged: true, 
-    newRow: targetRow, 
-    newCol: targetCol,
+    newRow: finalResultRow, 
+    newCol: finalResultCol,
     newValue: newValue 
   };
 };
@@ -235,7 +241,9 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
       finalRow, 
       col, 
       showMergeResultAnimation,
-      false // Not a chain reaction - full animation
+      false, // Not a chain reaction - full animation
+      row, // Result should appear at original landing position
+      col  // Result should appear at original landing position
     );
     totalScore += initialMergeResult.score;
     
@@ -269,7 +277,9 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
         currentMergePosition.row, 
         currentMergePosition.col, 
         showMergeResultAnimation,
-        true // This is a chain reaction - faster animation
+        true, // This is a chain reaction - faster animation
+        null, // Use default position for chain reactions
+        null  // Use default position for chain reactions
       );
       
       if (chainMergeResult.merged) {
@@ -302,7 +312,9 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
               r, 
               c, 
               showMergeResultAnimation,
-              true // This is a chain reaction - faster animation
+              true, // This is a chain reaction - faster animation
+              null, // Use default position for chain reactions
+              null  // Use default position for chain reactions
             );
             
             if (mergeResult.merged) {

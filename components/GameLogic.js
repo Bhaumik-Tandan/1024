@@ -92,8 +92,8 @@ export const applyGravity = (board, col) => {
  * @param {number} targetCol - Starting column position
  * @param {Function} showMergeResultAnimation - Animation callback function
  * @param {boolean} isChainReaction - Whether this is part of a chain reaction
- * @param {number} resultRow - Where to place the merged result (defaults to targetRow)
- * @param {number} resultCol - Where to place the merged result (defaults to targetCol)
+ * @param {number} resultRow - Where to place the merged result (defaults to latest position)
+ * @param {number} resultCol - Where to place the merged result (defaults to latest position)
  * @returns {Object} - { score: number, merged: boolean, newRow: number, newCol: number, newValue: number }
  */
 export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, showMergeResultAnimation, isChainReaction = false, resultRow = null, resultCol = null) => {
@@ -145,9 +145,23 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   const newValue = targetValue * Math.pow(2, numberOfTiles - 1);
   const scoreGained = newValue;
   
+  // Find the latest position (highest row number, then rightmost column)
+  // This represents the most recently dropped/merged tile position
+  let latestRow = -1;
+  let latestCol = -1;
+  
+  for (const tile of connectedTiles) {
+    if (tile.row > latestRow || (tile.row === latestRow && tile.col > latestCol)) {
+      latestRow = tile.row;
+      latestCol = tile.col;
+    }
+  }
+  
   // Determine where to place the result
-  const finalResultRow = resultRow !== null ? resultRow : targetRow;
-  const finalResultCol = resultCol !== null ? resultCol : targetCol;
+  // If resultRow/resultCol are explicitly provided, use them
+  // Otherwise, use the latest position (most recently dropped/merged tile)
+  const finalResultRow = resultRow !== null ? resultRow : latestRow;
+  const finalResultCol = resultCol !== null ? resultCol : latestCol;
   
   // Prepare positions for animation
   const mergingTilePositions = connectedTiles.map(tile => ({

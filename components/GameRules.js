@@ -121,12 +121,12 @@ export const GAME_RULES = {
   
   /**
    * RULE 6: GAME OVER CONDITIONS
-   * - Game ends when top row is completely filled
-   * - No moves possible when all columns are full to the top
+   * - Game ends when bottom row is completely filled
+   * - No moves possible when all columns are full to the bottom
    */
   gameOver: {
-    condition: 'topRowFull',
-    checkRow: 0, // Top row index
+    condition: 'bottomRowFull',
+    checkRow: GAME_CONFIG.BOARD.ROWS - 1, // Bottom row index (row 6 for 7-row board)
     allowPartialFill: false,
   },
   

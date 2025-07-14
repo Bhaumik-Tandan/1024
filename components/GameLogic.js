@@ -83,16 +83,18 @@ export const applyGravity = (board, col) => {
 
 
 /**
- * SIMPLE ADJACENT MERGING: Check and merge adjacent pairs
- * Following classic 2048-style rules: adjacent identical tiles merge by summing
+ * CONNECTED GROUP MERGING: Find all connected tiles with same value and merge them
+ * Uses flood fill algorithm to find connected components
+ * Implements exponential merging rule: newValue = originalValue * 2^(numberOfTiles - 1)
  * 
  * @param {Array[]} board - The game board (2D array)
- * @param {number} row - Starting row position
- * @param {number} col - Starting column position
+ * @param {number} targetRow - Starting row position
+ * @param {number} targetCol - Starting column position
  * @param {Function} showMergeResultAnimation - Animation callback function
- * @returns {number} - Score gained from the merge (0 if no merge)
+ * @param {boolean} isChainReaction - Whether this is part of a chain reaction
+ * @returns {Object} - { score: number, merged: boolean, newRow: number, newCol: number, newValue: number }
  */
-export const checkAndMergeAdjacentTowards = async (board, targetRow, targetCol, showMergeResultAnimation, isChainReaction = false) => {
+export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, showMergeResultAnimation, isChainReaction = false) => {
   // Validate inputs
   if (!GameValidator.isValidBoard(board)) {
     return { score: 0, merged: false };
@@ -106,64 +108,76 @@ export const checkAndMergeAdjacentTowards = async (board, targetRow, targetCol, 
   const targetValue = board[targetRow][targetCol];
   if (targetValue === 0) return { score: 0, merged: false };
 
-  // Check all 4 adjacent directions
-  const directions = [
-    [-1, 0], // up
-    [1, 0],  // down
-    [0, -1], // left
-    [0, 1]   // right
-  ];
-
-  for (let [dr, dc] of directions) {
-    const neighborRow = targetRow + dr;
-    const neighborCol = targetCol + dc;
-    
+  // Find all connected tiles with the same value using flood fill
+  const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+  const connectedTiles = [];
+  
+  const floodFill = (row, col) => {
     // Check bounds
-    if (neighborRow < 0 || neighborRow >= ROWS || neighborCol < 0 || neighborCol >= COLS) {
-      continue;
-    }
+    if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return;
     
-    const neighborValue = board[neighborRow][neighborCol];
+    // Check if already visited or different value
+    if (visited[row][col] || board[row][col] !== targetValue) return;
     
-    // If adjacent tile has same value, merge them TOWARDS the target
-    if (neighborValue === targetValue && neighborValue > 0) {
-      const newValue = targetValue + neighborValue; // Sum the values
-      const scoreGained = newValue;
-      
-      // Prepare positions for animation - target tile "pulls" neighbor towards it
-      const mergingTilePositions = [
-        { row: targetRow, col: targetCol, value: targetValue },
-        { row: neighborRow, col: neighborCol, value: neighborValue }
-      ];
-      
-      // Clear both tiles from board immediately (animation will show them)
-      board[targetRow][targetCol] = 0;
-      board[neighborRow][neighborCol] = 0;
-      
-      // Show merge animation with result appearing at TARGET position
-      if (showMergeResultAnimation) {
-        showMergeResultAnimation(targetRow, targetCol, newValue, mergingTilePositions, isChainReaction);
-        const animationDelay = isChainReaction ? 400 : 1200; // Much faster for chain reactions
-        await new Promise(resolve => {
-          setTimeout(resolve, animationDelay);
-        });
-      }
-      
-      // Place merged tile at TARGET position (where the merge was triggered)
-      board[targetRow][targetCol] = newValue;
-      
-      return { 
-        score: scoreGained, 
-        merged: true, 
-        newRow: targetRow, 
-        newCol: targetCol,
-        newValue: newValue 
-      };
-    }
+    // Mark as visited and add to connected tiles
+    visited[row][col] = true;
+    connectedTiles.push({ row, col, value: targetValue });
+    
+    // Recursively check all 4 adjacent directions
+    floodFill(row - 1, col); // up
+    floodFill(row + 1, col); // down
+    floodFill(row, col - 1); // left
+    floodFill(row, col + 1); // right
+  };
+  
+  // Start flood fill from the target position
+  floodFill(targetRow, targetCol);
+  
+  // If we found less than 2 connected tiles, no merge is possible
+  if (connectedTiles.length < 2) {
+    return { score: 0, merged: false };
   }
   
-  return { score: 0, merged: false };
+  // Calculate new value using exponential rule: originalValue * 2^(numberOfTiles - 1)
+  const numberOfTiles = connectedTiles.length;
+  const newValue = targetValue * Math.pow(2, numberOfTiles - 1);
+  const scoreGained = newValue;
+  
+  // Prepare positions for animation
+  const mergingTilePositions = connectedTiles.map(tile => ({
+    row: tile.row,
+    col: tile.col,
+    value: tile.value
+  }));
+  
+  // Clear all connected tiles from board immediately (animation will show them)
+  connectedTiles.forEach(tile => {
+    board[tile.row][tile.col] = 0;
+  });
+  
+  // Show merge animation with result appearing at TARGET position
+  if (showMergeResultAnimation) {
+    showMergeResultAnimation(targetRow, targetCol, newValue, mergingTilePositions, isChainReaction);
+    const animationDelay = isChainReaction ? 400 : 1200; // Much faster for chain reactions
+    await new Promise(resolve => {
+      setTimeout(resolve, animationDelay);
+    });
+  }
+  
+  // Place merged tile at TARGET position
+  board[targetRow][targetCol] = newValue;
+  
+  return { 
+    score: scoreGained, 
+    merged: true, 
+    newRow: targetRow, 
+    newCol: targetCol,
+    newValue: newValue 
+  };
 };
+
+// Update the function name export for backward compatibility
+export const checkAndMergeAdjacentTowards = checkAndMergeConnectedGroup;
 
 /**
  * MAIN GAME ENGINE: Handle complete block landing and chain reactions
@@ -216,7 +230,7 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
   // STEP 4: Initial merge check for the landed tile (merge towards the landed position)
   let currentMergePosition = null;
   if (finalRow !== -1) {
-    const initialMergeResult = await checkAndMergeAdjacentTowards(
+    const initialMergeResult = await checkAndMergeConnectedGroup(
       newBoard, 
       finalRow, 
       col, 
@@ -250,7 +264,7 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
     
     // If we have a current merge position, check for chain reactions from there first
     if (currentMergePosition) {
-      const chainMergeResult = await checkAndMergeAdjacentTowards(
+      const chainMergeResult = await checkAndMergeConnectedGroup(
         newBoard, 
         currentMergePosition.row, 
         currentMergePosition.col, 
@@ -283,7 +297,7 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           if (newBoard[r][c] !== 0) {
-            const mergeResult = await checkAndMergeAdjacentTowards(
+            const mergeResult = await checkAndMergeConnectedGroup(
               newBoard, 
               r, 
               c, 

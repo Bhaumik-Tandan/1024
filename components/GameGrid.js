@@ -28,21 +28,23 @@ const GameGrid = ({
   
   return (
     <View style={styles.board} {...panHandlers}>
-      {/* Preview tile above the board */}
+      {/* Preview tile below the board */}
       {!falling && (
-        <View
-          style={[
-            styles.nextBlockAbsolute,
-            {
-              left: getCellLeft(Math.floor(COLS / 2)),
-              top: -CELL_SIZE - CELL_MARGIN,
-              backgroundColor: COLORS[nextBlock] || '#fff',
-              width: CELL_SIZE,
-              height: CELL_SIZE,
-            },
-          ]}
-        >
-          <Text style={styles.nextBlockText}>{nextBlock}</Text>
+        <View style={styles.nextBlockContainer}>
+          <View
+            style={[
+              styles.nextBlockBelow,
+              {
+                left: getCellLeft(Math.floor(COLS / 2)),
+                backgroundColor: COLORS[nextBlock] || '#fff',
+                width: CELL_SIZE,
+                height: CELL_SIZE,
+              },
+            ]}
+          >
+            <Text style={styles.nextBlockText}>{nextBlock}</Text>
+          </View>
+          <Text style={styles.nextBlockLabel}>Next Tile</Text>
         </View>
       )}
 
@@ -398,7 +400,7 @@ const GameGrid = ({
 const styles = StyleSheet.create({
   board: {
     width: COLS * CELL_SIZE + (COLS - 1) * CELL_MARGIN,
-    height: ROWS * CELL_SIZE + (ROWS - 1) * CELL_MARGIN,
+    height: ROWS * CELL_SIZE + (ROWS - 1) * CELL_MARGIN + CELL_SIZE + CELL_MARGIN * 2,
     backgroundColor: '#2c2c2c',
     borderRadius: 8,
     position: 'relative',
@@ -444,7 +446,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#666',
   },
-  nextBlockAbsolute: {
+  nextBlockContainer: {
+    position: 'absolute',
+    top: ROWS * CELL_SIZE + (ROWS - 1) * CELL_MARGIN + CELL_MARGIN,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  nextBlockBelow: {
     position: 'absolute',
     borderRadius: 4,
     justifyContent: 'center',
@@ -457,6 +466,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: Math.max(12, CELL_SIZE / 4),
     fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  nextBlockLabel: {
+    color: '#aaa',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: CELL_SIZE + CELL_MARGIN,
     textAlign: 'center',
   },
   guideOverlay: {

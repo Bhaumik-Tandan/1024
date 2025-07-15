@@ -50,7 +50,6 @@ const DropNumberBoard = () => {
   const [board, setBoard] = useState(() => GameHelpers.createEmptyBoard());
   const [score, setScore] = useState(0);
   const [record, setRecord] = useState(0);
-  const [coins, setCoins] = useState(0);
   const [nextBlock, setNextBlock] = useState(() => getRandomBlockValue());
   const [gameOver, setGameOver] = useState(false);
   const [hasWon, setHasWon] = useState(false);
@@ -293,7 +292,6 @@ const DropNumberBoard = () => {
       <GameHeader 
         score={score}
         record={record}
-        coins={coins}
       />
       
       <View

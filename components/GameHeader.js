@@ -1,13 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-const GameHeader = ({ score, record, coins, rank = '#234864th' }) => {
+const GameHeader = ({ score, record }) => {
   return (
     <View style={styles.topBar}>
-      <View style={styles.rankBox}>
-        <Text style={styles.rankLabel}>Rank</Text>
-        <Text style={styles.rankValue}>{rank}</Text>
-      </View>
       <View style={styles.scoreBox}>
         <Text style={styles.scoreValue}>{score}</Text>
         <Text style={styles.scoreLabel}>Score</Text>
@@ -15,10 +11,6 @@ const GameHeader = ({ score, record, coins, rank = '#234864th' }) => {
       <View style={styles.recordBox}>
         <Text style={styles.recordLabel}>Record</Text>
         <Text style={styles.recordValue}>{record}</Text>
-      </View>
-      <View style={styles.coinsBox}>
-        <Text style={styles.coinsValue}>{coins}</Text>
-        <Text style={styles.coinsLabel}>Coins</Text>
       </View>
     </View>
   );
@@ -34,25 +26,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a1a',
     borderBottomWidth: 1,
     borderBottomColor: '#333',
-  },
-  rankBox: {
-    backgroundColor: '#444',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    alignItems: 'center',
-    minWidth: 70,
-  },
-  rankLabel: {
-    color: '#aaa',
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  rankValue: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: 'bold',
-    marginTop: 2,
   },
   scoreBox: {
     backgroundColor: '#2a2a2a',
@@ -90,25 +63,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-    marginTop: 2,
-  },
-  coinsBox: {
-    backgroundColor: '#2a2a2a',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    alignItems: 'center',
-    minWidth: 70,
-  },
-  coinsValue: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  coinsLabel: {
-    color: '#aaa',
-    fontSize: 12,
-    fontWeight: '600',
     marginTop: 2,
   },
 });

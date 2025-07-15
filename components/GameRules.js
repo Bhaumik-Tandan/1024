@@ -10,9 +10,9 @@
 export const GAME_CONFIG = {
   // Board dimensions
   BOARD: {
-    ROWS: 7,
+    ROWS: 8,
     COLS: 5,
-    TOTAL_CELLS: 35,
+    TOTAL_CELLS: 40,
   },
   
   // Timing settings
@@ -126,7 +126,7 @@ export const GAME_RULES = {
    */
   gameOver: {
     condition: 'bottomRowFull',
-    checkRow: GAME_CONFIG.BOARD.ROWS - 1, // Bottom row index (row 6 for 7-row board)
+    checkRow: GAME_CONFIG.BOARD.ROWS - 1, // Bottom row index (row 7 for 8-row board)
     allowPartialFill: false,
   },
   

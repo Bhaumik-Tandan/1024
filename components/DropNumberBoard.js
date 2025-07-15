@@ -27,7 +27,6 @@ import {
 } from './GameLogic';
 import { 
   GameValidator, 
-  GameHelpers, 
   GAME_CONFIG, 
   GAME_RULES 
 } from './GameRules';
@@ -39,7 +38,8 @@ import {
   COLORS, 
   getCellLeft, 
   getCellTop,
-  ANIMATION_CONFIG 
+  ANIMATION_CONFIG,
+  getTextColor
 } from './constants';
 
 /**
@@ -47,10 +47,13 @@ import {
  */
 const DropNumberBoard = () => {
   // Core game state
-  const [board, setBoard] = useState(() => GameHelpers.createEmptyBoard());
+  const [board, setBoard] = useState(() => Array.from({ length: ROWS }, () => Array(COLS).fill(0)));
   const [score, setScore] = useState(0);
   const [record, setRecord] = useState(0);
   const [nextBlock, setNextBlock] = useState(() => getRandomBlockValue());
+  const [previewBlock, setPreviewBlock] = useState(() => getRandomBlockValue());
+  
+  // Remove debug logging
   const [gameOver, setGameOver] = useState(false);
   const [hasWon, setHasWon] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
@@ -110,7 +113,7 @@ const DropNumberBoard = () => {
         return;
       }
       
-      // Create static falling tile that stays at the bottom
+      // Create static falling tile that stays in preview (not on board)
       const fallingTile = {
         col: spawnCol,
         value: nextBlock,
@@ -118,10 +121,13 @@ const DropNumberBoard = () => {
         toRow: 0, // Will be updated when user taps a row
         fastDrop: false,
         static: true, // Add static flag to indicate it's not moving
-        startRow: ROWS - 1 // Starting from bottom row
+        startRow: ROWS - 1, // Starting from bottom row
+        inPreview: true // Flag to indicate it's in preview mode
       };
       
       setFalling(fallingTile);
+      // Generate new preview block for next turn
+      setPreviewBlock(getRandomBlockValue());
       // Don't automatically show guide for every new tile
       // setShowGuide(true); // Removed this line
     }
@@ -133,8 +139,6 @@ const DropNumberBoard = () => {
    * Implements bottom-to-top dropping mechanism with direct cell targeting
    */
   const handleRowTap = (targetRow, targetCol = null) => {
-    console.log('User tapped row:', targetRow, 'col:', targetCol);
-    
     // Validate tap conditions
     if (!falling || falling.fastDrop || gameOver || hasWon) {
       return;
@@ -142,7 +146,6 @@ const DropNumberBoard = () => {
     
     // If no column specified, use the falling tile's current column (old behavior)
     const col = targetCol !== null ? targetCol : falling.col;
-    console.log('Tile column:', col);
     
     // Direct cell targeting - go to the exact cell the user tapped
     let landingRow = targetRow;
@@ -150,11 +153,8 @@ const DropNumberBoard = () => {
     
     // Check if the target cell is available
     if (board[landingRow][landingCol] !== 0) {
-      console.log('Target cell', landingRow, landingCol, 'is occupied');
       return; // Can't place tile at occupied position
     }
-    
-    console.log('Final landing position:', landingRow, landingCol);
     
     // Hide guide overlay permanently
     setShowGuide(false);
@@ -165,7 +165,8 @@ const DropNumberBoard = () => {
       col: landingCol, // Update the column
       toRow: landingRow,
       fastDrop: true,
-      static: false
+      static: false,
+      inPreview: false // Remove preview mode when user taps
     };
     setFalling(updatedFalling);
     
@@ -173,7 +174,7 @@ const DropNumberBoard = () => {
     const startPosition = (ROWS - 1) * (CELL_SIZE + CELL_MARGIN); // Bottom position
     const endPosition = landingRow * (CELL_SIZE + CELL_MARGIN); // Target position
     
-    console.log('Animating from position:', startPosition, 'to position:', endPosition);
+
     
     falling.anim.setValue(startPosition);
     Animated.timing(falling.anim, {
@@ -235,7 +236,8 @@ const DropNumberBoard = () => {
 
       // Update board state
       setBoard(newBoard);
-      setNextBlock(getRandomBlockValue());
+      setNextBlock(previewBlock);
+      setPreviewBlock(getRandomBlockValue());
       
       // Check for winning condition
       if (!hasWon && GameValidator.hasWon(newBoard, score + totalScore)) {
@@ -260,11 +262,12 @@ const DropNumberBoard = () => {
    * Uses GameHelpers for consistent initialization
    */
   const resetGame = () => {
-    setBoard(GameHelpers.createEmptyBoard());
+    setBoard(Array.from({ length: ROWS }, () => Array(COLS).fill(0)));
     setScore(0);
     setGameOver(false);
     setHasWon(false);
     setNextBlock(getRandomBlockValue());
+    setPreviewBlock(getRandomBlockValue());
     setShowGuide(true);
     clearFalling();
     clearMergeAnimations();
@@ -283,7 +286,14 @@ const DropNumberBoard = () => {
    * Get current game difficulty based on board state
    */
   const getCurrentDifficulty = () => {
-    return GameHelpers.calculateDifficulty(board);
+    const emptyCells = board.flat().filter(cell => cell === 0).length;
+    const totalCells = ROWS * COLS;
+    const fillPercentage = 1 - (emptyCells / totalCells);
+    
+    if (fillPercentage < 0.3) return 'easy';
+    if (fillPercentage < 0.6) return 'medium';
+    if (fillPercentage < 0.8) return 'hard';
+    return 'extreme';
   };
 
   // UI rendering
@@ -307,11 +317,29 @@ const DropNumberBoard = () => {
           liquidBlobs={liquidBlobs}
           onRowTap={handleRowTap}
           gameOver={gameOver}
-          nextBlock={nextBlock}
           showGuide={showGuide}
           panHandlers={panResponder.panHandlers}
         />
       </View>
+      
+      {/* Next Block - centered and styled like tiles */}
+      <View style={styles.nextBlockContainer}>
+        <View style={[
+          styles.nextBlockTile,
+          {
+            backgroundColor: COLORS[nextBlock] || COLORS[0],
+          }
+        ]}>
+          <Text style={[
+            styles.nextBlockValue,
+            {
+              color: getTextColor(nextBlock),
+            }
+          ]}>{nextBlock}</Text>
+        </View>
+      </View>
+    
+      
       
       {/* Win Overlay */}
       {hasWon && !gameOver && (
@@ -359,6 +387,54 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#2d2d2d',
+  },
+  separator: {
+    height: 2,
+    backgroundColor: '#444',
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 1,
+  },
+  nextBlockArea: {
+    alignItems: 'center',
+    marginTop: 40,
+    paddingVertical: 25,
+    backgroundColor: '#2a2a2a',
+    borderRadius: 12,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#555',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  nextBlockContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  nextBlockTile: {
+    width: CELL_SIZE,
+    height: CELL_SIZE,
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#666',
+  },
+  nextBlockValue: {
+    fontSize: Math.max(14, CELL_SIZE / 3),
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  debugText: {
+    color: '#ff6b6b',
+    fontSize: 12,
+    marginTop: 10,
+    textAlign: 'center',
   },
   overlay: {
     position: 'absolute',

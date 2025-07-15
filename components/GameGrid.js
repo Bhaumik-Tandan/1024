@@ -20,7 +20,6 @@ const GameGrid = ({
   liquidBlobs, // Add liquid blobs prop
   onRowTap, 
   gameOver,
-  nextBlock,
   showGuide,
   panHandlers
 }) => {
@@ -28,25 +27,6 @@ const GameGrid = ({
   
   return (
     <View style={styles.board} {...panHandlers}>
-      {/* Preview tile below the board */}
-      {!falling && (
-        <View style={styles.nextBlockContainer}>
-          <View
-            style={[
-              styles.nextBlockBelow,
-              {
-                left: getCellLeft(Math.floor(COLS / 2)),
-                backgroundColor: COLORS[nextBlock] || '#fff',
-                width: CELL_SIZE,
-                height: CELL_SIZE,
-              },
-            ]}
-          >
-            <Text style={styles.nextBlockText}>{nextBlock}</Text>
-          </View>
-          <Text style={styles.nextBlockLabel}>Next Tile</Text>
-        </View>
-      )}
 
       {/* Cell-based touch areas - tap any cell to place tile there */}
       {board.map((row, rowIdx) =>
@@ -102,8 +82,8 @@ const GameGrid = ({
         })
       )}
 
-      {/* Falling block animation */}
-      {falling && (
+      {/* Falling block animation - only show when not in preview mode */}
+      {falling && !falling.inPreview && (
         <Animated.View
           style={[
             styles.fallingBlock,
@@ -400,12 +380,13 @@ const GameGrid = ({
 const styles = StyleSheet.create({
   board: {
     width: COLS * CELL_SIZE + (COLS - 1) * CELL_MARGIN,
-    height: ROWS * CELL_SIZE + (ROWS - 1) * CELL_MARGIN + CELL_SIZE + CELL_MARGIN * 2,
+    height: ROWS * CELL_SIZE + (ROWS - 1) * CELL_MARGIN,
     backgroundColor: '#2c2c2c',
     borderRadius: 8,
     position: 'relative',
     alignSelf: 'center',
-    marginTop: 20,
+    marginTop: 25,
+    marginBottom: 10,
   },
   cell: {
     width: CELL_SIZE,
@@ -421,7 +402,7 @@ const styles = StyleSheet.create({
   },
   cellText: {
     color: '#fff',
-    fontSize: Math.max(12, CELL_SIZE / 4),
+    fontSize: Math.max(14, CELL_SIZE / 3),
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -446,35 +427,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#666',
   },
-  nextBlockContainer: {
-    position: 'absolute',
-    top: ROWS * CELL_SIZE + (ROWS - 1) * CELL_MARGIN + CELL_MARGIN,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  nextBlockBelow: {
-    position: 'absolute',
-    borderRadius: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#666',
-    opacity: 0.7,
-  },
-  nextBlockText: {
-    color: '#fff',
-    fontSize: Math.max(12, CELL_SIZE / 4),
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  nextBlockLabel: {
-    color: '#aaa',
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: CELL_SIZE + CELL_MARGIN,
-    textAlign: 'center',
-  },
+
   guideOverlay: {
     position: 'absolute',
     top: 0,
@@ -488,7 +441,7 @@ const styles = StyleSheet.create({
   },
   guideText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: Math.max(16, CELL_SIZE / 2.5),
     fontWeight: 'bold',
     textAlign: 'center',
   },

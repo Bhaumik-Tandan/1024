@@ -146,20 +146,30 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   const scoreGained = newValue;
   
   // Find the best position for the merge result
-  // With upward gravity, prefer the lowest row (closest to bottom) among connected tiles
   let bestRow = -1;
   let bestCol = -1;
   
-  for (const tile of connectedTiles) {
-    if (bestRow === -1 || tile.row > bestRow || (tile.row === bestRow && tile.col > bestCol)) {
-      bestRow = tile.row;
-      bestCol = tile.col;
+  // Special handling for 3-tile merges: result should appear in the middle tile
+  if (numberOfTiles === 3) {
+    // Sort tiles by row (top to bottom) to find the middle one
+    const sortedTiles = [...connectedTiles].sort((a, b) => a.row - b.row);
+    const middleTile = sortedTiles[1]; // Middle tile (index 1 of 3)
+    bestRow = middleTile.row;
+    bestCol = middleTile.col;
+  } else {
+    // For other cases (2, 4, 5+ tiles), use the original logic
+    // With upward gravity, prefer the lowest row (closest to bottom) among connected tiles
+    for (const tile of connectedTiles) {
+      if (bestRow === -1 || tile.row > bestRow || (tile.row === bestRow && tile.col > bestCol)) {
+        bestRow = tile.row;
+        bestCol = tile.col;
+      }
     }
   }
   
   // Determine where to place the result
   // If resultRow/resultCol are explicitly provided, use them
-  // Otherwise, use the best position (lowest row among connected tiles)
+  // Otherwise, use the calculated best position
   const finalResultRow = resultRow !== null ? resultRow : bestRow;
   const finalResultCol = resultCol !== null ? resultCol : bestCol;
   

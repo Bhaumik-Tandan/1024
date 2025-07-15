@@ -21,9 +21,10 @@ const GameGrid = ({
   onRowTap, 
   gameOver,
   showGuide,
-  panHandlers
+  panHandlers,
+  isTouchEnabled = true
 }) => {
-  const isDisabled = gameOver || !falling || (falling?.fastDrop && !falling?.static);
+  const isDisabled = gameOver || !falling || (falling?.fastDrop && !falling?.static) || !isTouchEnabled;
   
   return (
     <View style={styles.board} {...panHandlers}>
@@ -46,7 +47,9 @@ const GameGrid = ({
               onRowTap(rowIdx, colIdx);
             }}
             disabled={isDisabled}
-            activeOpacity={0.3}
+            activeOpacity={0.7}
+            delayPressIn={50}
+            delayPressOut={50}
           />
         ))
       )}
@@ -370,7 +373,7 @@ const GameGrid = ({
       {/* Gesture Guide Overlay */}
       {showGuide && (
         <View style={styles.guideOverlay} pointerEvents="none">
-          <Text style={styles.guideText}>Tap a row to drop!</Text>
+          <Text style={styles.guideText}>Tap a column to drop!</Text>
         </View>
       )}
     </View>

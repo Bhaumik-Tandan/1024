@@ -58,6 +58,10 @@ const DropNumberBoard = () => {
   const [hasWon, setHasWon] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
   
+  // Touch sensitivity control
+  const [isTouchEnabled, setIsTouchEnabled] = useState(true);
+  const touchTimeoutRef = useRef(null);
+  
   // Game statistics
   const [gameStats, setGameStats] = useState({
     tilesPlaced: 0,
@@ -135,10 +139,27 @@ const DropNumberBoard = () => {
   }, [falling, gameOver, hasWon, board]);
 
   /**
-   * Handle user tapping a cell to drop the tile from bottom to that cell
-   * Implements bottom-to-top dropping mechanism with direct cell targeting
+   * Cleanup touch timeout on component unmount
+   */
+  useEffect(() => {
+    return () => {
+      if (touchTimeoutRef.current) {
+        clearTimeout(touchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  /**
+   * Handle user tapping a cell to drop the tile in that column
+   * Implements column-based dropping mechanism - finds first available cell in column
+   * Includes touch sensitivity controls to prevent rapid successive taps
    */
   const handleRowTap = (targetRow, targetCol = null) => {
+    // Touch sensitivity control - prevent rapid successive taps
+    if (!isTouchEnabled) {
+      return;
+    }
+    
     // Validate tap conditions
     if (!falling || falling.fastDrop || gameOver || hasWon) {
       return;
@@ -147,14 +168,35 @@ const DropNumberBoard = () => {
     // If no column specified, use the falling tile's current column (old behavior)
     const col = targetCol !== null ? targetCol : falling.col;
     
-    // Direct cell targeting - go to the exact cell the user tapped
-    let landingRow = targetRow;
+    // Column-based targeting - find the first available empty cell in the tapped column
     let landingCol = col;
+    let landingRow = -1;
     
-    // Check if the target cell is available
-    if (board[landingRow][landingCol] !== 0) {
-      return; // Can't place tile at occupied position
+    // Search from top to bottom for the first empty cell in the column
+    for (let row = 0; row < ROWS; row++) {
+      if (board[row][landingCol] === 0) {
+        landingRow = row;
+        break;
+      }
     }
+    
+    // If no empty cell found in the column, return (column is full)
+    if (landingRow === -1) {
+      return; // Column is full, can't place tile
+    }
+    
+    // Disable touch temporarily to prevent rapid successive taps
+    setIsTouchEnabled(false);
+    
+    // Clear any existing timeout
+    if (touchTimeoutRef.current) {
+      clearTimeout(touchTimeoutRef.current);
+    }
+    
+    // Re-enable touch after a delay (touch debounce)
+    touchTimeoutRef.current = setTimeout(() => {
+      setIsTouchEnabled(true);
+    }, 300); // 300ms debounce delay
     
     // Hide guide overlay permanently
     setShowGuide(false);
@@ -272,6 +314,12 @@ const DropNumberBoard = () => {
     clearFalling();
     clearMergeAnimations();
     
+    // Reset touch sensitivity
+    setIsTouchEnabled(true);
+    if (touchTimeoutRef.current) {
+      clearTimeout(touchTimeoutRef.current);
+    }
+    
     // Reset game statistics
     setGameStats({
       tilesPlaced: 0,
@@ -319,6 +367,7 @@ const DropNumberBoard = () => {
           gameOver={gameOver}
           showGuide={showGuide}
           panHandlers={panResponder.panHandlers}
+          isTouchEnabled={isTouchEnabled}
         />
       </View>
       

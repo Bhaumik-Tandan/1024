@@ -80,7 +80,296 @@ export const applyGravity = (board, col) => {
   }
 };
 
+/**
+ * Find all connected tiles with same value using flood fill algorithm
+ * 
+ * @param {Array[]} board - The game board (2D array)
+ * @param {number} targetRow - Starting row position
+ * @param {number} targetCol - Starting column position
+ * @returns {Array} - Array of connected tile positions
+ */
+export const findConnectedTiles = (board, targetRow, targetCol) => {
+  const targetValue = board[targetRow][targetCol];
+  if (targetValue === 0) return [];
 
+  const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+  const connectedTiles = [];
+  
+  const floodFill = (row, col) => {
+    // Check bounds
+    if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return;
+    
+    // Check if already visited or different value
+    if (visited[row][col] || board[row][col] !== targetValue) return;
+    
+    // Mark as visited and add to connected tiles
+    visited[row][col] = true;
+    connectedTiles.push({ row, col, value: targetValue });
+    
+    // Recursively check all 4 adjacent directions
+    floodFill(row - 1, col); // up
+    floodFill(row + 1, col); // down
+    floodFill(row, col - 1); // left
+    floodFill(row, col + 1); // right
+  };
+  
+  // Start flood fill from the target position
+  floodFill(targetRow, targetCol);
+  
+  return connectedTiles;
+};
+
+/**
+ * Merge connected tiles and return the result
+ * 
+ * @param {Array[]} board - The game board (2D array)
+ * @param {number} targetRow - Starting row position
+ * @param {number} targetCol - Starting column position
+ * @param {number} [preferredRow] - Preferred row for merge result (e.g., dropped tile)
+ * @param {number} [preferredCol] - Preferred col for merge result (e.g., dropped tile)
+ * @returns {Object|null} - Merge result or null if no merge possible
+ */
+export const mergeConnectedTiles = (board, targetRow, targetCol, preferredRow, preferredCol) => {
+  const connectedTiles = findConnectedTiles(board, targetRow, targetCol);
+  
+  // If we found less than 2 connected tiles, no merge is possible
+  if (connectedTiles.length < 2) {
+    return null;
+  }
+  
+  // Calculate new value using exponential rule: originalValue * 2^(numberOfTiles - 1)
+  const numberOfTiles = connectedTiles.length;
+  const targetValue = board[targetRow][targetCol];
+  const newValue = targetValue * Math.pow(2, numberOfTiles - 1);
+  
+  // Find the best position for the merge result
+  let bestRow = -1;
+  let bestCol = -1;
+
+  // If preferred position is part of the merge group, use it
+  if (
+    preferredRow !== undefined && preferredCol !== undefined &&
+    connectedTiles.some(tile => tile.row === preferredRow && tile.col === preferredCol)
+  ) {
+    bestRow = preferredRow;
+    bestCol = preferredCol;
+  } else if (numberOfTiles === 3) {
+    // Special handling for 3-tile merges: result should appear in the middle tile
+    // First check if tiles are in the same row (horizontal merge)
+    const sameRow = connectedTiles.every(tile => tile.row === connectedTiles[0].row);
+    const sameCol = connectedTiles.every(tile => tile.col === connectedTiles[0].col);
+    
+    if (sameRow) {
+      // Horizontal merge: sort by column and pick middle
+      const sortedTiles = [...connectedTiles].sort((a, b) => a.col - b.col);
+      const middleTile = sortedTiles[1]; // Middle tile (index 1 of 3)
+      bestRow = middleTile.row;
+      bestCol = middleTile.col;
+    } else if (sameCol) {
+      // Vertical merge: sort by row and pick middle
+      const sortedTiles = [...connectedTiles].sort((a, b) => a.row - b.row);
+      const middleTile = sortedTiles[1]; // Middle tile (index 1 of 3)
+      bestRow = middleTile.row;
+      bestCol = middleTile.col;
+    } else {
+      // Complex merge: find the center position
+      const avgRow = Math.round(connectedTiles.reduce((sum, tile) => sum + tile.row, 0) / numberOfTiles);
+      const avgCol = Math.round(connectedTiles.reduce((sum, tile) => sum + tile.col, 0) / numberOfTiles);
+      
+      // Find the tile closest to the center
+      let closestTile = connectedTiles[0];
+      let minDistance = Math.abs(avgRow - closestTile.row) + Math.abs(avgCol - closestTile.col);
+      
+      for (const tile of connectedTiles) {
+        const distance = Math.abs(avgRow - tile.row) + Math.abs(avgCol - tile.col);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestTile = tile;
+        }
+      }
+      
+      bestRow = closestTile.row;
+      bestCol = closestTile.col;
+    }
+  } else {
+    // For other cases (2, 4, 5+ tiles), prefer the lowest row (closest to bottom)
+    for (const tile of connectedTiles) {
+      if (bestRow === -1 || tile.row > bestRow || (tile.row === bestRow && tile.col > bestCol)) {
+        bestRow = tile.row;
+        bestCol = tile.col;
+      }
+    }
+  }
+  
+  // Clear all connected tiles from board
+  connectedTiles.forEach(tile => {
+    board[tile.row][tile.col] = 0;
+  });
+  
+  // Place merged tile at the best position, but only if it's empty. If not, find the next empty cell above.
+  let placeRow = bestRow;
+  while (placeRow > 0 && board[placeRow][bestCol] !== 0) {
+    placeRow--;
+  }
+  if (board[placeRow][bestCol] === 0) {
+    board[placeRow][bestCol] = newValue;
+  } else {
+    // If no empty cell found, put it back at bestRow (should not happen in normal gameplay)
+    board[bestRow][bestCol] = newValue;
+  }
+  
+  return { 
+    score: newValue, 
+    merged: true, 
+    newRow: placeRow, 
+    newCol: bestCol,
+    newValue: newValue,
+    tilesMerged: numberOfTiles
+  };
+};
+
+/**
+ * Process chain reactions after a merge
+ * 
+ * @param {Array[]} board - The game board (2D array)
+ * @returns {Object} - Chain reaction results
+ */
+export const processChainReactions = (board) => {
+  let totalScore = 0;
+  let chainReactionCount = 0;
+  let iterations = 0;
+  const maxIterations = 100; // Prevent infinite loops
+  
+  let chainReactionActive = true;
+  
+  while (chainReactionActive && iterations < maxIterations) {
+    chainReactionActive = false;
+    iterations++;
+    
+    // Apply upward gravity after each merge
+    for (let c = 0; c < COLS; c++) {
+      applyUpwardGravity(board, c);
+    }
+    
+    // Check entire board for possible merges
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        if (board[r][c] !== 0) {
+          const mergeResult = mergeConnectedTiles(board, r, c);
+          
+          if (mergeResult && mergeResult.merged) {
+            totalScore += mergeResult.score;
+            chainReactionActive = true;
+            chainReactionCount++;
+            break; // Break to restart chain from this position
+          }
+        }
+      }
+      if (chainReactionActive) break; // Break out of outer loop too
+    }
+  }
+  
+  return { 
+    totalScore, 
+    chainReactionCount, 
+    iterations 
+  };
+};
+
+/**
+ * Main function to process a tile drop - matches the test cases in example.js
+ * 
+ * @param {Array[]} board - Current board state (2D array)
+ * @param {number} value - Value of the tile to drop
+ * @param {number} column - Column where the tile should be dropped
+ * @returns {Object} - Result containing updated board and score
+ */
+export const processTileDrop = (board, value, column) => {
+  // Validate inputs
+  if (!board || !Array.isArray(board) || board.length === 0) {
+    throw new Error('Invalid board: must be a non-empty 2D array');
+  }
+  
+  if (column < 0 || column >= COLS) {
+    throw new Error(`Invalid column: must be between 0 and ${COLS - 1}`);
+  }
+  
+  if (value <= 0) {
+    throw new Error('Invalid value: must be greater than 0');
+  }
+  
+  // Create a deep copy of the board to avoid mutations
+  let newBoard = board.map(row => [...row]);
+  let totalScore = 0;
+  
+  // Find the landing position (topmost empty cell in the column)
+  let landingRow = -1;
+  for (let row = 0; row < ROWS; row++) {
+    if (newBoard[row][column] === 0) {
+      landingRow = row;
+      break;
+    }
+  }
+  
+  // If no empty cell found, the column is full
+  if (landingRow === -1) {
+    return {
+      board: newBoard,
+      score: 0,
+      success: false,
+      error: 'Column is full'
+    };
+  }
+  
+  // STEP 1: Place the landing tile
+  newBoard[landingRow][column] = value;
+  
+  // STEP 2: Apply physics - upward gravity affects all columns
+  for (let c = 0; c < COLS; c++) {
+    applyUpwardGravity(newBoard, c);
+  }
+  
+  // STEP 3: Find where the tile settled after upward gravity
+  let finalRow = -1;
+  for (let r = 0; r < ROWS; r++) {
+    if (newBoard[r][column] !== 0) {
+      finalRow = r;
+      break;
+    }
+  }
+  
+  // STEP 4: Initial merge check for the landed tile
+  if (finalRow !== -1) {
+    // For 3-tile merges, don't use preferred position to allow middle placement
+    // For other merges, prefer the dropped tile position
+    const connectedTiles = findConnectedTiles(newBoard, finalRow, column);
+    let initialMergeResult;
+    
+    if (connectedTiles.length === 3) {
+      // 3-tile merge: let the middle position logic handle placement
+      initialMergeResult = mergeConnectedTiles(newBoard, finalRow, column);
+    } else {
+      // Other merges: prefer the dropped tile position
+      initialMergeResult = mergeConnectedTiles(newBoard, finalRow, column, finalRow, column);
+    }
+    
+    if (initialMergeResult && initialMergeResult.merged) {
+      totalScore += initialMergeResult.score;
+    }
+  }
+  
+  // STEP 5: Process chain reactions
+  const chainResult = processChainReactions(newBoard);
+  totalScore += chainResult.totalScore;
+  
+  return {
+    board: newBoard,
+    score: Math.floor(totalScore),
+    success: true,
+    chainReactions: chainResult.chainReactionCount,
+    iterations: chainResult.iterations
+  };
+};
 
 /**
  * CONNECTED GROUP MERGING: Find all connected tiles with same value and merge them
@@ -111,29 +400,7 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   if (targetValue === 0) return { score: 0, merged: false };
 
   // Find all connected tiles with the same value using flood fill
-  const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
-  const connectedTiles = [];
-  
-  const floodFill = (row, col) => {
-    // Check bounds
-    if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return;
-    
-    // Check if already visited or different value
-    if (visited[row][col] || board[row][col] !== targetValue) return;
-    
-    // Mark as visited and add to connected tiles
-    visited[row][col] = true;
-    connectedTiles.push({ row, col, value: targetValue });
-    
-    // Recursively check all 4 adjacent directions
-    floodFill(row - 1, col); // up
-    floodFill(row + 1, col); // down
-    floodFill(row, col - 1); // left
-    floodFill(row, col + 1); // right
-  };
-  
-  // Start flood fill from the target position
-  floodFill(targetRow, targetCol);
+  const connectedTiles = findConnectedTiles(board, targetRow, targetCol);
   
   // If we found less than 2 connected tiles, no merge is possible
   if (connectedTiles.length < 2) {

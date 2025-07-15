@@ -130,8 +130,6 @@ const DropNumberBoard = () => {
       };
       
       setFalling(fallingTile);
-      // Generate new preview block for next turn
-      setPreviewBlock(getRandomBlockValue());
       // Don't automatically show guide for every new tile
       // setShowGuide(true); // Removed this line
     }
@@ -200,6 +198,10 @@ const DropNumberBoard = () => {
     
     // Hide guide overlay permanently
     setShowGuide(false);
+    
+    // Update next block immediately when user taps
+    setNextBlock(previewBlock);
+    setPreviewBlock(getRandomBlockValue());
     
     // Update falling tile with target position and start animation
     const updatedFalling = {
@@ -278,8 +280,6 @@ const DropNumberBoard = () => {
 
       // Update board state
       setBoard(newBoard);
-      setNextBlock(previewBlock);
-      setPreviewBlock(getRandomBlockValue());
       
       // Check for winning condition
       if (!hasWon && GameValidator.hasWon(newBoard, score + totalScore)) {

@@ -60,8 +60,7 @@ export const COLORS = {
  * Get appropriate text color for tile background
  */
 export const getTextColor = (value) => {
-  if (value <= 4) return '#776e65';  // Dark text for light backgrounds
-  return '#f9f6f2';                  // Light text for dark backgrounds
+  return '#fff';  // Always use white text for consistency
 };
 
 /**

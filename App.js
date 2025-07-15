@@ -1,19 +1,18 @@
+import Constants from 'expo-constants';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import DropNumberBoard from './components/DropNumberBoard';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <DropNumberBoard />
+    <SafeAreaProvider
+    style={{
+        paddingTop: Constants.statusBarHeight,
+    }}>
       <StatusBar style="auto" />
-    </View>
+        <DropNumberBoard />
+    </SafeAreaProvider>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#2d2d2d',
-  },
-});

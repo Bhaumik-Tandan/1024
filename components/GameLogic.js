@@ -220,7 +220,6 @@ export const mergeConnectedTiles = (board, targetRow, targetCol, preferredRow, p
   
   if (numberOfTiles === 2 && preferredRow !== undefined && preferredCol !== undefined) {
     // For 2-tile merges, place exactly at the preferred position
-    console.log(`2-tile merge: Placing at (${bestRow}, ${bestCol})`);
     board[bestRow][bestCol] = newValue;
     finalRow = bestRow;
     finalCol = bestCol;
@@ -442,7 +441,6 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   
   // For 2-tile merges, always prefer the dropped tile position if provided
   if (numberOfTiles === 2 && resultRow !== null && resultCol !== null) {
-    console.log(`2-tile merge (async): Using result position (${resultRow}, ${resultCol})`);
     bestRow = resultRow;
     bestCol = resultCol;
   } else if (numberOfTiles === 3) {
@@ -494,7 +492,6 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   }
   
   // Place merged tile at RESULT position
-  console.log(`2-tile merge (async): Placing at (${finalResultRow}, ${finalResultCol})`);
   board[finalResultRow][finalResultCol] = newValue;
   
   return { 

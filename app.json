@@ -20,10 +20,16 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "game1024.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f24f5cb5-20a6-4366-8cb3-5cad10095bcb"
+      }
     }
   }
 }

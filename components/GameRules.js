@@ -109,8 +109,9 @@ export const GAME_RULES = {
   /**
    * RULE 5: CHAIN REACTIONS
    * - After any merge, gravity is applied
-   * - New adjacent tiles may form and merge again
-   * - Process repeats until no more merges possible
+   * - New adjacent tiles may form around the merged result
+   * - Each merge is processed separately (2+3≠5, but 2→3 as separate merges)
+   * - Process repeats until no more merges are possible
    * - Scoring bonus applies for chain reactions
    */
   chainReactions: {

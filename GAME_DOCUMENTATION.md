@@ -51,8 +51,12 @@ Create larger numbered tiles by merging identical tiles, aiming to reach **2048*
 - **Example**: `[4][4][4]` becomes `[0][0][8]`
 
 #### **Rule 4: Chain Reactions**
-- **Trigger**: After any merge, gravity is applied and new merges may form
-- **Process**: Continues until no more merges are possible
+- **Trigger**: After any merge, gravity is applied and new adjacent tiles may form
+- **Process**: 
+  1. Drop tile → check for merges
+  2. If merge happens → place merged result → check around that new position for more merges
+  3. Repeat until no more merges are possible
+- **Behavior**: Each merge is separate (2+3≠5, but 2→3 as separate merges)
 - **Bonus**: Chain reactions provide scoring bonuses
 
 #### **Rule 5: Physics & Movement**

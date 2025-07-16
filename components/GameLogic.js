@@ -592,7 +592,7 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
   }
   
   // STEP 5: Chain reaction loop - continue until no more merges possible
-  // Each chain reaction merges TOWARDS the position of the newest tile
+  // Each chain reaction checks around the merged result for new adjacent tiles
   let chainReactionActive = true;
   let iterations = 0;
   
@@ -618,39 +618,56 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
       currentMergePosition.row = settledRow;
     }
     
-    // If we have a current merge position, check for chain reactions from there first
+    // Check for new merges around the current merge position
     if (currentMergePosition) {
-      const chainMergeResult = await checkAndMergeConnectedGroup(
-        newBoard, 
-        currentMergePosition.row, 
-        currentMergePosition.col, 
-        showMergeResultAnimation,
-        true, // This is a chain reaction - faster animation
-        null, // Use default position for chain reactions
-        null  // Use default position for chain reactions
-      );
+      // Check all 4 adjacent positions around the merged result
+      const adjacentPositions = [
+        { row: currentMergePosition.row - 1, col: currentMergePosition.col }, // up
+        { row: currentMergePosition.row + 1, col: currentMergePosition.col }, // down
+        { row: currentMergePosition.row, col: currentMergePosition.col - 1 }, // left
+        { row: currentMergePosition.row, col: currentMergePosition.col + 1 }  // right
+      ];
       
-      if (chainMergeResult.merged) {
-        const bonusScore = iterations > 1 ? 
-          ScoringSystem.calculateMergeScore(chainMergeResult.score, 2, true) : 
-          chainMergeResult.score;
-        totalScore += bonusScore;
-        chainReactionActive = true;
-        chainReactionCount++;
-        
-        // Update the current merge position for next iteration
-        currentMergePosition = { 
-          row: chainMergeResult.newRow, 
-          col: chainMergeResult.newCol 
-        };
-        continue; // Continue the chain from this position
-      } else {
-        // No more merges from current position, clear it
+      for (const pos of adjacentPositions) {
+        // Check bounds
+        if (pos.row >= 0 && pos.row < ROWS && pos.col >= 0 && pos.col < COLS) {
+          if (newBoard[pos.row][pos.col] !== 0) {
+            const chainMergeResult = await checkAndMergeConnectedGroup(
+              newBoard, 
+              pos.row, 
+              pos.col, 
+              showMergeResultAnimation,
+              true, // This is a chain reaction - faster animation
+              null, // Use default position for chain reactions
+              null  // Use default position for chain reactions
+            );
+            
+            if (chainMergeResult.merged) {
+              const bonusScore = iterations > 1 ? 
+                ScoringSystem.calculateMergeScore(chainMergeResult.score, 2, true) : 
+                chainMergeResult.score;
+              totalScore += bonusScore;
+              chainReactionActive = true;
+              chainReactionCount++;
+              
+              // Update the current merge position for next iteration
+              currentMergePosition = { 
+                row: chainMergeResult.newRow, 
+                col: chainMergeResult.newCol 
+              };
+              break; // Found a merge, continue the chain
+            }
+          }
+        }
+      }
+      
+      // If no merges found around the current position, clear it
+      if (!chainReactionActive) {
         currentMergePosition = null;
       }
     }
     
-    // If no current merge position or no merge from it, check entire board
+    // If no current merge position, check entire board for any possible merges
     if (!chainReactionActive) {
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {

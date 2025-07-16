@@ -196,9 +196,13 @@ export const mergeConnectedTiles = (board, targetRow, targetCol, preferredRow, p
     }
   } else {
     // For other cases (4, 5+ tiles), prefer the lowest row (closest to bottom)
+    // But don't prefer rightmost column for 2-tile merges
     for (const tile of connectedTiles) {
-      if (bestRow === -1 || tile.row > bestRow || (tile.row === bestRow && tile.col > bestCol)) {
+      if (bestRow === -1 || tile.row > bestRow) {
         bestRow = tile.row;
+        bestCol = tile.col;
+      } else if (tile.row === bestRow && numberOfTiles > 2 && tile.col > bestCol) {
+        // Only prefer rightmost column for 3+ tile merges, not 2-tile merges
         bestCol = tile.col;
       }
     }
@@ -209,23 +213,39 @@ export const mergeConnectedTiles = (board, targetRow, targetCol, preferredRow, p
     board[tile.row][tile.col] = 0;
   });
   
-  // Place merged tile at the best position, but only if it's empty. If not, find the next empty cell above.
-  let placeRow = bestRow;
-  while (placeRow > 0 && board[placeRow][bestCol] !== 0) {
-    placeRow--;
-  }
-  if (board[placeRow][bestCol] === 0) {
-    board[placeRow][bestCol] = newValue;
-  } else {
-    // If no empty cell found, put it back at bestRow (should not happen in normal gameplay)
+  // Place merged tile at the best position
+  // For 2-tile merges with preferred position, place exactly there
+  // For other merges, apply gravity logic
+  let finalRow, finalCol;
+  
+  if (numberOfTiles === 2 && preferredRow !== undefined && preferredCol !== undefined) {
+    // For 2-tile merges, place exactly at the preferred position
+    console.log(`2-tile merge: Placing at (${bestRow}, ${bestCol})`);
     board[bestRow][bestCol] = newValue;
+    finalRow = bestRow;
+    finalCol = bestCol;
+  } else {
+    // For other merges, apply gravity logic - find next empty cell above if occupied
+    let placeRow = bestRow;
+    while (placeRow > 0 && board[placeRow][bestCol] !== 0) {
+      placeRow--;
+    }
+    if (board[placeRow][bestCol] === 0) {
+      board[placeRow][bestCol] = newValue;
+      finalRow = placeRow;
+    } else {
+      // If no empty cell found, put it back at bestRow (should not happen in normal gameplay)
+      board[bestRow][bestCol] = newValue;
+      finalRow = bestRow;
+    }
+    finalCol = bestCol;
   }
   
   return { 
     score: newValue, 
     merged: true, 
-    newRow: placeRow, 
-    newCol: bestCol,
+    newRow: finalRow, 
+    newCol: finalCol,
     newValue: newValue,
     tilesMerged: numberOfTiles
   };
@@ -422,6 +442,7 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   
   // For 2-tile merges, always prefer the dropped tile position if provided
   if (numberOfTiles === 2 && resultRow !== null && resultCol !== null) {
+    console.log(`2-tile merge (async): Using result position (${resultRow}, ${resultCol})`);
     bestRow = resultRow;
     bestCol = resultCol;
   } else if (numberOfTiles === 3) {
@@ -432,11 +453,14 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
     bestRow = middleTile.row;
     bestCol = middleTile.col;
   } else {
-    // For other cases (4, 5+ tiles), use the original logic
-    // With upward gravity, prefer the lowest row (closest to bottom) among connected tiles
+    // For other cases (4, 5+ tiles), prefer the lowest row (closest to bottom) among connected tiles
+    // But don't prefer rightmost column for 2-tile merges
     for (const tile of connectedTiles) {
-      if (bestRow === -1 || tile.row > bestRow || (tile.row === bestRow && tile.col > bestCol)) {
+      if (bestRow === -1 || tile.row > bestRow) {
         bestRow = tile.row;
+        bestCol = tile.col;
+      } else if (tile.row === bestRow && numberOfTiles > 2 && tile.col > bestCol) {
+        // Only prefer rightmost column for 3+ tile merges, not 2-tile merges
         bestCol = tile.col;
       }
     }
@@ -470,6 +494,7 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   }
   
   // Place merged tile at RESULT position
+  console.log(`2-tile merge (async): Placing at (${finalResultRow}, ${finalResultCol})`);
   board[finalResultRow][finalResultCol] = newValue;
   
   return { 

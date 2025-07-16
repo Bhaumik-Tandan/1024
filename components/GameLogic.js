@@ -194,18 +194,22 @@ export const mergeConnectedTiles = (board, targetRow, targetCol, preferredRow, p
       bestRow = closestTile.row;
       bestCol = closestTile.col;
     }
-  } else {
-    // For other cases (4, 5+ tiles), prefer the lowest row (closest to bottom)
-    // But don't prefer rightmost column for 2-tile merges
+  } else if (numberOfTiles === 4) {
+    // For 4-tile merges, prefer the lowest row (closest to bottom)
     for (const tile of connectedTiles) {
       if (bestRow === -1 || tile.row > bestRow) {
         bestRow = tile.row;
         bestCol = tile.col;
-      } else if (tile.row === bestRow && numberOfTiles > 2 && tile.col > bestCol) {
-        // Only prefer rightmost column for 3+ tile merges, not 2-tile merges
+      } else if (tile.row === bestRow && tile.col > bestCol) {
+        // Prefer rightmost column for 4-tile merges
         bestCol = tile.col;
       }
     }
+  } else {
+    // For 5+ tile merges (theoretically impossible but handled for safety)
+    // Use the first tile position as fallback
+    bestRow = connectedTiles[0].row;
+    bestCol = connectedTiles[0].col;
   }
   
   // Clear all connected tiles from board

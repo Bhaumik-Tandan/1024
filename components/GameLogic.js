@@ -146,8 +146,11 @@ export const mergeConnectedTiles = (board, targetRow, targetCol, preferredRow, p
   let bestRow = -1;
   let bestCol = -1;
 
-  // If preferred position is part of the merge group, use it
-  if (
+  // For 2-tile merges, always prefer the dropped tile position if provided
+  if (numberOfTiles === 2 && preferredRow !== undefined && preferredCol !== undefined) {
+    bestRow = preferredRow;
+    bestCol = preferredCol;
+  } else if (
     preferredRow !== undefined && preferredCol !== undefined &&
     connectedTiles.some(tile => tile.row === preferredRow && tile.col === preferredCol)
   ) {
@@ -192,7 +195,7 @@ export const mergeConnectedTiles = (board, targetRow, targetCol, preferredRow, p
       bestCol = closestTile.col;
     }
   } else {
-    // For other cases (2, 4, 5+ tiles), prefer the lowest row (closest to bottom)
+    // For other cases (4, 5+ tiles), prefer the lowest row (closest to bottom)
     for (const tile of connectedTiles) {
       if (bestRow === -1 || tile.row > bestRow || (tile.row === bestRow && tile.col > bestCol)) {
         bestRow = tile.row;
@@ -341,7 +344,8 @@ export const processTileDrop = (board, value, column) => {
   // STEP 4: Initial merge check for the landed tile
   if (finalRow !== -1) {
     // For 3-tile merges, don't use preferred position to allow middle placement
-    // For other merges, prefer the dropped tile position
+    // For 2-tile merges, prefer the dropped tile position
+    // For other merges (4+ tiles), prefer the dropped tile position
     const connectedTiles = findConnectedTiles(newBoard, finalRow, column);
     let initialMergeResult;
     
@@ -349,7 +353,7 @@ export const processTileDrop = (board, value, column) => {
       // 3-tile merge: let the middle position logic handle placement
       initialMergeResult = mergeConnectedTiles(newBoard, finalRow, column);
     } else {
-      // Other merges: prefer the dropped tile position
+      // 2-tile and other merges: prefer the dropped tile position
       initialMergeResult = mergeConnectedTiles(newBoard, finalRow, column, finalRow, column);
     }
     
@@ -416,15 +420,19 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   let bestRow = -1;
   let bestCol = -1;
   
-  // Special handling for 3-tile merges: result should appear in the middle tile
-  if (numberOfTiles === 3) {
+  // For 2-tile merges, always prefer the dropped tile position if provided
+  if (numberOfTiles === 2 && resultRow !== null && resultCol !== null) {
+    bestRow = resultRow;
+    bestCol = resultCol;
+  } else if (numberOfTiles === 3) {
+    // Special handling for 3-tile merges: result should appear in the middle tile
     // Sort tiles by row (top to bottom) to find the middle one
     const sortedTiles = [...connectedTiles].sort((a, b) => a.row - b.row);
     const middleTile = sortedTiles[1]; // Middle tile (index 1 of 3)
     bestRow = middleTile.row;
     bestCol = middleTile.col;
   } else {
-    // For other cases (2, 4, 5+ tiles), use the original logic
+    // For other cases (4, 5+ tiles), use the original logic
     // With upward gravity, prefer the lowest row (closest to bottom) among connected tiles
     for (const tile of connectedTiles) {
       if (bestRow === -1 || tile.row > bestRow || (tile.row === bestRow && tile.col > bestCol)) {
@@ -527,14 +535,20 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
   // STEP 4: Initial merge check for the landed tile (merge at the settled position)
   let currentMergePosition = null;
   if (finalRow !== -1) {
+    // For 2-tile merges, prefer the dropped tile position
+    // For 3+ tile merges, let the natural position logic handle it
+    const connectedTiles = findConnectedTiles(newBoard, finalRow, col);
+    const resultRow = connectedTiles.length === 2 ? finalRow : null;
+    const resultCol = connectedTiles.length === 2 ? col : null;
+    
     const initialMergeResult = await checkAndMergeConnectedGroup(
       newBoard, 
       finalRow, 
       col, 
       showMergeResultAnimation,
       false, // Not a chain reaction - full animation
-      null, // Let the merge result appear at the natural position (where tiles settled)
-      null  // Let the merge result appear at the natural position (where tiles settled)
+      resultRow, // For 2-tile merges, use dropped tile position
+      resultCol  // For 2-tile merges, use dropped tile position
     );
     totalScore += initialMergeResult.score;
     

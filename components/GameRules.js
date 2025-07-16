@@ -81,7 +81,7 @@ export const GAME_RULES = {
    * - Examples:
    *   - 3 tiles of 4: 4 * 2^(3-1) = 4 * 4 = 16
    *   - 4 tiles of 4: 4 * 2^(4-1) = 4 * 8 = 32
-   *   - 5 tiles of 4: 4 * 2^(5-1) = 4 * 16 = 64
+   *   - 5+ tiles: Theoretically possible but practically impossible due to immediate merging
    */
   connectedMerging: {
     enabled: true,

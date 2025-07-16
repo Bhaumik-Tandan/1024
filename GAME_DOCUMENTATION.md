@@ -42,7 +42,7 @@ Create larger numbered tiles by merging identical tiles, aiming to reach **2048*
 - **Examples**:
   - 3 tiles of 4: `4 × 2^(3-1) = 4 × 4 = 16`
   - 4 tiles of 4: `4 × 2^(4-1) = 4 × 8 = 32`
-  - 5 tiles of 4: `4 × 2^(5-1) = 4 × 16 = 64`
+  - 5+ tiles: Theoretically possible but practically impossible due to immediate merging
 
 #### **Rule 3: Horizontal Row Merging**
 - **Trigger**: 3+ identical consecutive tiles in a horizontal row

@@ -9,6 +9,7 @@
 
 import { ROWS, COLS } from './constants';
 import { GAME_CONFIG, GAME_RULES, GameValidator, ScoringSystem, GameHelpers } from './GameRules';
+import { vibrateOnIntermediateMerge, vibrateOnMerge } from '../utils/vibration';
 
 /**
  * Generate a random tile value based on game rules
@@ -590,6 +591,15 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   connectedTiles.forEach(tile => {
     board[tile.row][tile.col] = 0;
   });
+
+  // Play appropriate merge sound
+  if (isChainReaction) {
+    // For chain reaction merges, play intermediate merge sound
+    vibrateOnIntermediateMerge().catch(err => {
+      // Intermediate merge sound/vibration error
+    });
+  }
+  // Note: For initial merges (isChainReaction = false), sound will be handled by the main game engine
   
   // Show merge animation with result appearing at RESULT position
   if (showMergeResultAnimation) {
@@ -642,6 +652,7 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
   let newBoard = board.map(r => [...r]);
   let totalScore = 0;
   let chainReactionCount = 0;
+  let hadInitialMerge = false;
   
   // STEP 1: Place the landing tile
   newBoard[row][col] = value;
@@ -684,6 +695,7 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
     
     // Track the position of the newly created tile for chain reactions
     if (initialMergeResult.merged) {
+      hadInitialMerge = true;
       currentMergePosition = { 
         row: initialMergeResult.newRow, 
         col: initialMergeResult.newCol 
@@ -815,7 +827,16 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
     totalScore += chainBonus;
   }
   
-  // STEP 7: Validate final board state
+  // STEP 7: Handle final merge sound
+  if (hadInitialMerge || chainReactionCount > 0) {
+    // Play final merge sound if there was any merge activity
+    // This covers both single merges and the final sound after chain reactions
+    vibrateOnMerge().catch(err => {
+      // Final merge sound/vibration error
+    });
+  }
+  
+  // STEP 8: Validate final board state
   if (!GameValidator.isValidBoard(newBoard)) {
     return { newBoard: board, totalScore: 0 };
   }

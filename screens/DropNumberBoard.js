@@ -43,7 +43,7 @@ import {
   getTextColor
 } from '../components/constants';
 import useGameStore from '../store/gameStore';
-import { vibrateOnMerge, vibrateOnTouch } from '../utils/vibration';
+import { vibrateOnTouch } from '../utils/vibration';
 
 /**
  * Main game component with enhanced architecture
@@ -391,10 +391,6 @@ const DropNumberBoard = ({ navigation, route }) => {
         
         // Update score and record
         if (totalScore > 0) {
-          // Vibrate and play sound when tiles merge (non-blocking)
-          vibrateOnMerge().catch(err => {
-            // Vibration/sound error
-          });
           setScore(currentScore => {
             const newScore = currentScore + totalScore;
             if (newScore > record) {

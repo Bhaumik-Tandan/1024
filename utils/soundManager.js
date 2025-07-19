@@ -4,6 +4,7 @@ import useGameStore from '../store/gameStore';
 class SoundManager {
   constructor() {
     this.mergeSound = null;
+    this.intermediateMergeSound = null;
     this.dropSound = null;
     this.isInitialized = false;
   }
@@ -24,6 +25,7 @@ class SoundManager {
       
       // Load sounds
       await this.loadMergeSound();
+      await this.loadIntermediateMergeSound();
       await this.loadDropSound();
       
       this.isInitialized = true;
@@ -46,6 +48,23 @@ class SoundManager {
       this.mergeSound = sound;
     } catch (error) {
       // Failed to load merge sound
+    }
+  }
+
+  async loadIntermediateMergeSound() {
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require('../assets/intermediateMerge.wav'),
+        { 
+          shouldPlay: false,
+          volume: 0.6,
+          isLooping: false,
+        }
+      );
+      
+      this.intermediateMergeSound = sound;
+    } catch (error) {
+      // Failed to load intermediate merge sound
     }
   }
 
@@ -84,6 +103,24 @@ class SoundManager {
     }
   }
 
+  async playIntermediateMergeSound() {
+    try {
+      const { soundEnabled, soundVolume } = useGameStore.getState();
+      
+      if (!soundEnabled || !this.intermediateMergeSound) {
+        return;
+      }
+      
+      // Update volume if needed (slightly lower volume for intermediate merge)
+      await this.intermediateMergeSound.setVolumeAsync(soundVolume * 0.85);
+      
+      // Play the sound
+      await this.intermediateMergeSound.replayAsync();
+    } catch (error) {
+      // Failed to play intermediate merge sound
+    }
+  }
+
   async playDropSound() {
     try {
       const { soundEnabled, soundVolume } = useGameStore.getState();
@@ -107,6 +144,9 @@ class SoundManager {
       if (this.mergeSound) {
         await this.mergeSound.setVolumeAsync(volume);
       }
+      if (this.intermediateMergeSound) {
+        await this.intermediateMergeSound.setVolumeAsync(volume * 0.85);
+      }
       if (this.dropSound) {
         await this.dropSound.setVolumeAsync(volume * 0.7);
       }
@@ -120,6 +160,10 @@ class SoundManager {
       if (this.mergeSound) {
         await this.mergeSound.unloadAsync();
         this.mergeSound = null;
+      }
+      if (this.intermediateMergeSound) {
+        await this.intermediateMergeSound.unloadAsync();
+        this.intermediateMergeSound = null;
       }
       if (this.dropSound) {
         await this.dropSound.unloadAsync();

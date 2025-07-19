@@ -139,7 +139,7 @@ export const GAME_RULES = {
    */
   winning: {
     scoreTarget: null,     // No score target by default
-    tileTarget: 2048,      // Reach 2048 tile (classic)
+    tileTarget: null,      // No tile target - infinite game!
     timeTarget: null,      // No time target by default
   },
 };

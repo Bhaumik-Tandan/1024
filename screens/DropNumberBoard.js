@@ -59,7 +59,6 @@ const DropNumberBoard = ({ navigation, route }) => {
   
   // Remove debug logging
   const [gameOver, setGameOver] = useState(false);
-  const [hasWon, setHasWon] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
   
@@ -195,7 +194,7 @@ const DropNumberBoard = ({ navigation, route }) => {
    * Uses timing configuration from GameRules
    */
   useEffect(() => {
-    if (!falling && !gameOver && !hasWon && !isPaused) {
+    if (!falling && !gameOver && !isPaused) {
       const spawnCol = Math.floor(COLS / 2); // Center column as per rules
       
       // Check for game over condition - check if top row is full
@@ -221,7 +220,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       // setShowGuide(true); // Removed this line
     }
     // eslint-disable-next-line
-  }, [falling, gameOver, hasWon, board]);
+  }, [falling, gameOver, board]);
 
   /**
    * Cleanup touch timeout on component unmount
@@ -403,11 +402,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         // Update board state
         setBoard(newBoard);
         
-        // Check for winning condition
-        if (!hasWon && GameValidator.hasWon(newBoard, score + totalScore)) {
-          setHasWon(true);
-          // Could show win animation or modal here
-        }
+        // No win condition - infinite game continues!
         
         // Check for game over condition
         if (GameValidator.isGameOver(newBoard)) {
@@ -429,7 +424,6 @@ const DropNumberBoard = ({ navigation, route }) => {
     setBoard(Array.from({ length: ROWS }, () => Array(COLS).fill(0)));
     setScore(0);
     setGameOver(false);
-    setHasWon(false);
     setNextBlock(getRandomBlockValue());
     setPreviewBlock(getRandomBlockValue());
     setShowGuide(true);
@@ -517,24 +511,7 @@ const DropNumberBoard = ({ navigation, route }) => {
     
       
       
-      {/* Win Overlay */}
-      {hasWon && !gameOver && (
-        <View style={styles.overlay}>
-          <Text style={styles.winText}>🎉 You Win! 🎉</Text>
-          <Text style={styles.winSubtext}>
-            You reached the {GAME_RULES.winning.tileTarget} tile!
-          </Text>
-          <Text style={styles.statsText}>
-            Score: {score} | Highest Tile: {gameStats.highestTile}
-          </Text>
-          <TouchableOpacity style={styles.continueBtn} onPress={() => setHasWon(false)}>
-            <Text style={styles.continueText}>Continue Playing</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.restartBtn} onPress={resetGame}>
-            <Text style={styles.restartText}>New Game</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+
 
       {/* Game Over Overlay */}
       {gameOver && (

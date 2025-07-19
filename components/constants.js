@@ -47,13 +47,37 @@ export const COLORS = {
   
   // High values (rare)
   1024: '#d84315',   // Dark red
-  2048: '#ad1457',   // Purple-red (WIN!)
+  2048: '#ad1457',   // Purple-red (no longer a win condition!)
   4096: '#6a1b9a',   // Purple
   
-  // Ultra high values (if achieved)
+  // Ultra high values (infinite game!)
   8192: '#1a237e',   // Deep blue
   16384: '#0d47a1',  // Navy
   32768: '#1565c0',  // Blue
+  65536: '#4527a0',  // Indigo
+  131072: '#2e7d32', // Green
+  262144: '#00695c', // Teal
+  524288: '#bf360c', // Deep orange
+  1048576: '#3e2723', // Brown
+  2097152: '#263238' // Blue grey
+};
+
+/**
+ * Get color for any tile value, including ultra-high values
+ */
+export const getTileColor = (value) => {
+  // Return predefined color if it exists
+  if (COLORS[value]) {
+    return COLORS[value];
+  }
+  
+  // For ultra-high values beyond our definitions, generate a color
+  // Use a simple algorithm to create consistent colors for any value
+  const hue = (Math.log2(value) * 30) % 360; // Cycle through hues
+  const saturation = Math.min(80, 50 + (Math.log2(value) * 2)); // Increase saturation
+  const lightness = Math.max(20, 60 - (Math.log2(value) * 2)); // Decrease lightness
+  
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 };
 
 /**

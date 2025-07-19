@@ -8,7 +8,7 @@ A React Native implementation of the classic 1024 sliding puzzle game with a 5x4
 - **Swipe Controls**: Use swipe gestures to move tiles in all four directions
 - **Block Combination**: Tiles with the same value combine when they collide
 - **Score Tracking**: Keep track of your score as you play
-- **Win Condition**: Reach the 1024 tile to win
+- **Infinite Gameplay**: No win condition - play infinitely beyond any tile value!
 - **Game Over Detection**: Automatic detection when no more moves are possible
 - **Restart Functionality**: Easy restart when game ends
 
@@ -17,8 +17,8 @@ A React Native implementation of the classic 1024 sliding puzzle game with a 5x4
 1. **Tap** the arrow buttons to move all tiles in that direction
 2. **Combine** tiles with the same value by moving them into each other
 3. **Score** points for each combination you make
-4. **Goal**: Reach the 1024 tile to win the game
-5. **Continue**: Keep playing even after winning to achieve higher scores
+4. **Goal**: Create the highest tile possible and achieve the highest score
+5. **Infinite**: Game continues forever - no win condition stops you!
 
 ## Controls
 

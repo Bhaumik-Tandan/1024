@@ -373,9 +373,7 @@ const GameBoard = () => {
         addRandomTile(newBoard);
       }, 300);
       
-      if (checkWin(newBoard) && !won) {
-        setWon(true);
-      }
+      // Win condition disabled - infinite game continues!
       
       if (checkGameOver(newBoard)) {
         setGameOver(true);

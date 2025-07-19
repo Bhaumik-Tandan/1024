@@ -13,7 +13,7 @@
 ## 🎯 Game Rules
 
 ### **Core Objective**
-Create larger numbered tiles by merging identical tiles, aiming to reach **2048** or achieve the highest score possible.
+Create larger numbered tiles by merging identical tiles, aiming to achieve the highest score possible. The game continues infinitely - there's no win condition!
 
 ### **🎮 How to Play**
 
@@ -77,10 +77,10 @@ Create larger numbered tiles by merging identical tiles, aiming to reach **2048*
 - **Large Merge Bonus**: +100% for merging 4+ tiles simultaneously
 - **Speed Bonus**: Faster moves may provide small bonuses
 
-#### **Winning Conditions**
-- **Primary Goal**: Create a 2048 tile
-- **Secondary Goal**: Achieve the highest score possible
-- **Endless Mode**: Continue playing after reaching 2048
+#### **Infinite Gameplay**
+- **No Win Condition**: Game continues indefinitely
+- **Goal**: Achieve the highest score and create the largest tiles possible
+- **Endless Fun**: Play as long as you can avoid filling the board completely!
 
 ---
 

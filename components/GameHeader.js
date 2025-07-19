@@ -1,17 +1,20 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import useGameStore from '../store/gameStore';
 
 const GameHeader = ({ score, record, onPause }) => {
+  const { darkMode } = useGameStore();
+
   return (
-    <View style={styles.topBar}>
-      <View style={styles.scoreBox}>
-        <Text style={styles.scoreValue}>{score}</Text>
-        <Text style={styles.scoreLabel}>Score</Text>
+    <View style={[styles.topBar, darkMode ? styles.topBarDark : styles.topBarLight]}>
+      <View style={[styles.scoreBox, darkMode ? styles.scoreBoxDark : styles.scoreBoxLight]}>
+        <Text style={[styles.scoreValue, darkMode ? styles.textLight : styles.textDark]}>{score}</Text>
+        <Text style={[styles.scoreLabel, darkMode ? styles.labelLight : styles.labelDark]}>Score</Text>
       </View>
       
-      <TouchableOpacity style={styles.pauseButton} onPress={onPause} activeOpacity={0.7}>
-        <Ionicons name="pause" size={24} color="#ffffff" />
+      <TouchableOpacity style={[styles.pauseButton, darkMode ? styles.pauseButtonDark : styles.pauseButtonLight]} onPress={onPause} activeOpacity={0.7}>
+        <Ionicons name="pause" size={24} color={darkMode ? "#ffffff" : "#000000"} />
       </TouchableOpacity>
       
       <View style={styles.recordBox}>
@@ -29,12 +32,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#1a1a1a',
     borderBottomWidth: 1,
+  },
+  topBarDark: {
+    backgroundColor: '#1a1a1a',
     borderBottomColor: '#333',
   },
+  topBarLight: {
+    backgroundColor: '#ffffff',
+    borderBottomColor: '#e0e0e0',
+  },
   scoreBox: {
-    backgroundColor: '#2a2a2a',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -46,22 +54,37 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  scoreBoxDark: {
+    backgroundColor: '#2a2a2a',
+  },
+  scoreBoxLight: {
+    backgroundColor: '#f8f8f8',
+  },
   scoreValue: {
-    color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
   },
+  textLight: {
+    color: '#fff',
+  },
+  textDark: {
+    color: '#000',
+  },
   scoreLabel: {
-    color: '#aaa',
     fontSize: 12,
     fontWeight: '600',
     marginTop: 2,
+  },
+  labelLight: {
+    color: '#aaa',
+  },
+  labelDark: {
+    color: '#666',
   },
   pauseButton: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#444',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -69,6 +92,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
+  },
+  pauseButtonDark: {
+    backgroundColor: '#444',
+  },
+  pauseButtonLight: {
+    backgroundColor: '#f0f0f0',
   },
   recordBox: {
     backgroundColor: '#4a90e2',

@@ -10,7 +10,7 @@ import {
 import useGameStore from '../store/gameStore';
 
 const HomeScreen = ({ navigation }) => {
-  const { highScore, highestBlock } = useGameStore();
+  const { highScore, highestBlock, darkMode } = useGameStore();
 
   const handlePlayPress = () => {
     navigation.navigate('Drop Number Board');
@@ -31,12 +31,15 @@ const HomeScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2c2c2c" />
+    <SafeAreaView style={[styles.container, darkMode ? styles.containerDark : styles.containerLight]}>
+      <StatusBar 
+        barStyle={darkMode ? "light-content" : "dark-content"} 
+        backgroundColor={darkMode ? "#2c2c2c" : "#ffffff"} 
+      />
       
       {/* Top Section - Score */}
       <View style={styles.topSection}>
-        <Text style={styles.scoreText}>{formatScore(highScore)}</Text>
+        <Text style={[styles.scoreText, darkMode ? styles.textLight : styles.textDark]}>{formatScore(highScore)}</Text>
       </View>
       
       {/* Middle Section - Game Info and Play Button */}
@@ -45,7 +48,7 @@ const HomeScreen = ({ navigation }) => {
           <View style={styles.highestBlock}>
             <Text style={styles.blockValue}>{formatBlock(highestBlock)}</Text>
           </View>
-          <Text style={styles.highestBlockText}>HIGHEST BLOCK</Text>
+          <Text style={[styles.highestBlockText, darkMode ? styles.textLight : styles.textDark]}>HIGHEST BLOCK</Text>
         </View>
         
         <TouchableOpacity style={styles.playButton} onPress={handlePlayPress}>
@@ -57,7 +60,7 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.bottomSection}>
         <View style={styles.navigationRow}>
           <TouchableOpacity style={styles.navButton} onPress={handleSettingsPress}>
-            <Text style={styles.navText}>SETTINGS</Text>
+            <Text style={[styles.navText, darkMode ? styles.textLight : styles.textDark]}>SETTINGS</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -68,7 +71,12 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  containerDark: {
     backgroundColor: '#2c2c2c',
+  },
+  containerLight: {
+    backgroundColor: '#ffffff',
   },
   
   // Top Section
@@ -78,9 +86,14 @@ const styles = StyleSheet.create({
   },
   
   scoreText: {
-    color: '#ffffff',
     fontSize: 24,
     fontWeight: 'bold',
+  },
+  textLight: {
+    color: '#ffffff',
+  },
+  textDark: {
+    color: '#000000',
   },
   
   // Middle Section
@@ -113,7 +126,6 @@ const styles = StyleSheet.create({
   },
   
   highestBlockText: {
-    color: '#ffffff',
     fontSize: 12,
     textAlign: 'center',
   },
@@ -149,7 +161,6 @@ const styles = StyleSheet.create({
   },
   
   navText: {
-    color: '#ffffff',
     fontSize: 14,
   },
 });

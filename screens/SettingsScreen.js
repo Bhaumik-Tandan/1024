@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -15,12 +15,16 @@ import useGameStore from '../store/gameStore';
 
 const SettingsScreen = ({ navigation }) => {
   const {
-    animationsEnabled,
     darkMode,
+    vibrationEnabled,
+    soundEnabled,
+    soundVolume,
     highScore,
     highestBlock,
-    toggleAnimations,
     toggleDarkMode,
+    toggleVibration,
+    toggleSound,
+    setSoundVolume,
     resetAllSettings,
   } = useGameStore();
 
@@ -42,13 +46,36 @@ const SettingsScreen = ({ navigation }) => {
     );
   };
 
+  const VolumeSlider = ({ value, onValueChange, title, enabled, icon }) => (
+    <View style={[styles.sliderContainer, darkMode ? styles.sliderContainerDark : styles.sliderContainerLight]}>
+      <View style={styles.sliderHeader}>
+        <Ionicons name={icon} size={20} color="#ffffff" />
+        <Text style={[styles.sliderTitle, darkMode ? styles.textLight : styles.textDark]}>{title}</Text>
+      </View>
+      <View style={styles.sliderTrack}>
+        {[0, 0.25, 0.5, 0.75, 1].map((step) => (
+          <TouchableOpacity
+            key={step}
+            style={[
+              styles.sliderStep,
+              value >= step && enabled && styles.sliderStepActive,
+            ]}
+            onPress={() => enabled && onValueChange(step)}
+            activeOpacity={0.7}
+          />
+        ))}
+      </View>
+      <Text style={[styles.volumeText, darkMode ? styles.textLight : styles.textDark]}>{Math.round(value * 100)}%</Text>
+    </View>
+  );
+
   const SettingRow = ({ icon, label, value, onToggle, color = "#4caf50" }) => (
-    <View style={styles.settingRow}>
+    <View style={[styles.settingRow, darkMode ? styles.settingRowDark : styles.settingRowLight]}>
       <View style={styles.settingLeft}>
         <View style={[styles.iconContainer, { backgroundColor: color }]}>
           <Ionicons name={icon} size={20} color="#ffffff" />
         </View>
-        <Text style={styles.settingLabel}>{label}</Text>
+        <Text style={[styles.settingLabel, darkMode ? styles.textLight : styles.textDark]}>{label}</Text>
       </View>
       <Switch
         value={value}
@@ -61,14 +88,14 @@ const SettingsScreen = ({ navigation }) => {
   );
 
   const StatRow = ({ icon, label, value, color = "#4caf50" }) => (
-    <View style={styles.statRow}>
+    <View style={[styles.statRow, darkMode ? styles.statRowDark : styles.statRowLight]}>
       <View style={styles.statLeft}>
         <View style={[styles.iconContainer, { backgroundColor: color }]}>
           <Ionicons name={icon} size={20} color="#ffffff" />
         </View>
-        <Text style={styles.statLabel}>{label}</Text>
+        <Text style={[styles.statLabel, darkMode ? styles.textLight : styles.textDark]}>{label}</Text>
       </View>
-      <Text style={styles.statValue}>{value}</Text>
+      <Text style={[styles.statValue, darkMode ? styles.textLight : styles.textDark]}>{value}</Text>
     </View>
   );
 
@@ -83,32 +110,56 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light-content" backgroundColor="#2c2c2c" />
+    <SafeAreaView style={[styles.container, darkMode ? styles.containerDark : styles.containerLight]}>
+      <StatusBar style={darkMode ? "light-content" : "dark-content"} backgroundColor={darkMode ? "#2c2c2c" : "#ffffff"} />
       
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#ffffff" />
+      <View style={[styles.header, darkMode ? styles.headerDark : styles.headerLight]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, darkMode ? styles.backButtonDark : styles.backButtonLight]}>
+          <Ionicons name="arrow-back" size={24} color={darkMode ? "#ffffff" : "#000000"} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={[styles.headerTitle, darkMode ? styles.textLight : styles.textDark]}>Settings</Text>
         <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Sound Settings */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="volume-high" size={24} color="#4caf50" />
+            <Text style={[styles.sectionTitle, darkMode ? styles.textLight : styles.textDark]}>Sound</Text>
+          </View>
+          
+          <SettingRow
+            icon="musical-notes"
+            label="Sound Effects"
+            value={soundEnabled}
+            onToggle={toggleSound}
+            color="#4caf50"
+          />
+
+          <VolumeSlider
+            title="Sound Volume"
+            value={soundVolume}
+            onValueChange={setSoundVolume}
+            enabled={soundEnabled}
+            icon="volume-high"
+          />
+        </View>
+
         {/* Game Settings */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="game-controller" size={24} color="#ff9800" />
-            <Text style={styles.sectionTitle}>Game</Text>
+            <Text style={[styles.sectionTitle, darkMode ? styles.textLight : styles.textDark]}>Game</Text>
           </View>
           
           <SettingRow
-            icon="flash"
-            label="Animations"
-            value={animationsEnabled}
-            onToggle={toggleAnimations}
-            color="#e91e63"
+            icon="phone-portrait"
+            label="Vibration"
+            value={vibrationEnabled}
+            onToggle={toggleVibration}
+            color="#ff9800"
           />
 
           <SettingRow
@@ -124,7 +175,7 @@ const SettingsScreen = ({ navigation }) => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="stats-chart" size={24} color="#ffd700" />
-            <Text style={styles.sectionTitle}>Statistics</Text>
+            <Text style={[styles.sectionTitle, darkMode ? styles.textLight : styles.textDark]}>Statistics</Text>
           </View>
           
           <StatRow
@@ -144,9 +195,9 @@ const SettingsScreen = ({ navigation }) => {
 
         {/* Reset Button */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.resetButton} onPress={handleResetSettings}>
-            <Ionicons name="refresh" size={20} color="#ffffff" />
-            <Text style={styles.resetButtonText}>Reset All Settings</Text>
+          <TouchableOpacity style={[styles.resetButton, darkMode ? styles.resetButtonDark : styles.resetButtonLight]} onPress={handleResetSettings}>
+            <Ionicons name="refresh" size={20} color={darkMode ? "#ffffff" : "#000000"} />
+            <Text style={[styles.resetButtonText, darkMode ? styles.textLight : styles.textDark]}>Reset All Settings</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -157,7 +208,12 @@ const SettingsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  containerDark: {
     backgroundColor: '#2c2c2c',
+  },
+  containerLight: {
+    backgroundColor: '#ffffff',
   },
   
   header: {
@@ -167,20 +223,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     borderBottomWidth: 1,
+  },
+  headerDark: {
     borderBottomColor: '#444',
+  },
+  headerLight: {
+    borderBottomColor: '#e0e0e0',
   },
   
   backButton: {
     padding: 8,
     borderRadius: 20,
+  },
+  backButtonDark: {
     backgroundColor: '#444',
+  },
+  backButtonLight: {
+    backgroundColor: '#f0f0f0',
   },
   
   headerTitle: {
-    color: '#ffffff',
     fontSize: 24,
     fontWeight: 'bold',
     letterSpacing: 0.5,
+  },
+  textLight: {
+    color: '#ffffff',
+  },
+  textDark: {
+    color: '#000000',
   },
   
   placeholder: {
@@ -203,7 +274,6 @@ const styles = StyleSheet.create({
   },
   
   sectionTitle: {
-    color: '#ffffff',
     fontSize: 20,
     fontWeight: 'bold',
     marginLeft: 12,
@@ -216,9 +286,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
-    backgroundColor: '#333',
     borderRadius: 12,
     marginBottom: 12,
+  },
+  settingRowDark: {
+    backgroundColor: '#333',
+  },
+  settingRowLight: {
+    backgroundColor: '#f8f8f8',
   },
   
   settingLeft: {
@@ -236,7 +311,6 @@ const styles = StyleSheet.create({
   },
   
   settingLabel: {
-    color: '#ffffff',
     fontSize: 16,
     fontWeight: '500',
   },
@@ -245,8 +319,13 @@ const styles = StyleSheet.create({
     marginVertical: 16,
     paddingHorizontal: 16,
     paddingVertical: 20,
-    backgroundColor: '#333',
     borderRadius: 12,
+  },
+  sliderContainerDark: {
+    backgroundColor: '#333',
+  },
+  sliderContainerLight: {
+    backgroundColor: '#f8f8f8',
   },
   
   sliderHeader: {
@@ -256,7 +335,6 @@ const styles = StyleSheet.create({
   },
   
   sliderTitle: {
-    color: '#ffffff',
     fontSize: 16,
     fontWeight: '500',
     marginLeft: 12,
@@ -281,7 +359,6 @@ const styles = StyleSheet.create({
   },
   
   volumeText: {
-    color: '#ffffff',
     fontSize: 14,
     textAlign: 'center',
     fontWeight: '500',
@@ -293,9 +370,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
-    backgroundColor: '#333',
     borderRadius: 12,
     marginBottom: 12,
+  },
+  statRowDark: {
+    backgroundColor: '#333',
+  },
+  statRowLight: {
+    backgroundColor: '#f8f8f8',
   },
   
   statLeft: {
@@ -304,37 +386,34 @@ const styles = StyleSheet.create({
   },
   
   statLabel: {
-    color: '#ffffff',
     fontSize: 16,
     fontWeight: '500',
   },
   
   statValue: {
-    color: '#4caf50',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   
   resetButton: {
-    backgroundColor: '#ff4444',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 18,
+    paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
-    marginTop: 20,
-    shadowColor: '#ff4444',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    marginTop: 16,
+  },
+  resetButtonDark: {
+    backgroundColor: '#444',
+  },
+  resetButtonLight: {
+    backgroundColor: '#f0f0f0',
   },
   
   resetButtonText: {
-    color: '#ffffff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     marginLeft: 8,
   },
 });

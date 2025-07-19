@@ -6,8 +6,10 @@ const useGameStore = create(
   persist(
     (set, get) => ({
       // Game settings
-      animationsEnabled: true,
       darkMode: true,
+      vibrationEnabled: true,
+      soundEnabled: true,
+      soundVolume: 0.7,
       
       // Game state - don't show 0 as default
       highScore: null,
@@ -15,8 +17,10 @@ const useGameStore = create(
       highestBlock: null,
       
       // Actions
-      toggleAnimations: () => set((state) => ({ animationsEnabled: !state.animationsEnabled })),
       toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
+      toggleVibration: () => set((state) => ({ vibrationEnabled: !state.vibrationEnabled })),
+      toggleSound: () => set((state) => ({ soundEnabled: !state.soundEnabled })),
+      setSoundVolume: (volume) => set({ soundVolume: Math.max(0, Math.min(1, volume)) }),
       
       updateScore: (score) => {
         const currentHighScore = get().highScore || 0;
@@ -37,8 +41,10 @@ const useGameStore = create(
       resetGame: () => set({ currentScore: 0 }),
       
       resetAllSettings: () => set({
-        animationsEnabled: true,
         darkMode: true,
+        vibrationEnabled: true,
+        soundEnabled: true,
+        soundVolume: 0.7,
         highScore: null,
         currentScore: 0,
         highestBlock: null,

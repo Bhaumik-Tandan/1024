@@ -43,9 +43,11 @@ import {
   getTextColor
 } from '../components/constants';
 import useGameStore from '../store/gameStore';
+import { vibrateOnMerge } from '../utils/vibration';
 
-/**r
- * Main game component using modern React patterns and centralized rules
+/**
+ * Main game component with enhanced architecture
+ * Uses centralized game rules and improved state management
  */
 const DropNumberBoard = ({ navigation }) => {
   // Core game state
@@ -78,7 +80,7 @@ const DropNumberBoard = ({ navigation }) => {
   const [boardLeft, setBoardLeft] = useState(0);
   
   // Zustand store
-  const { updateScore, updateHighestBlock } = useGameStore();
+  const { updateScore, updateHighestBlock, darkMode } = useGameStore();
   
   // Use the animation manager
   const {
@@ -314,6 +316,8 @@ const DropNumberBoard = ({ navigation }) => {
         
         // Update score and record
         if (totalScore > 0) {
+          // Vibrate and play sound when tiles merge (non-blocking)
+          vibrateOnMerge().catch(err => console.log('Vibration/sound error:', err));
           setScore(currentScore => {
             const newScore = currentScore + totalScore;
             if (newScore > record) {
@@ -391,7 +395,7 @@ const DropNumberBoard = ({ navigation }) => {
 
   // UI rendering
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, darkMode ? styles.containerDark : styles.containerLight]}>
       <GameHeader 
         score={score}
         record={record}
@@ -414,6 +418,7 @@ const DropNumberBoard = ({ navigation }) => {
           showGuide={showGuide}
           panHandlers={panResponder.panHandlers}
           isTouchEnabled={isTouchEnabled}
+          darkMode={darkMode}
         />
       </View>
       
@@ -489,7 +494,12 @@ const DropNumberBoard = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2d2d2d',
+  },
+  containerDark: {
+    backgroundColor: '#1a1a1a',
+  },
+  containerLight: {
+    backgroundColor: '#ffffff',
   },
   separator: {
     height: 2,

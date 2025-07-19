@@ -7,9 +7,16 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { vibrateOnButtonPress } from '../utils/vibration';
+import useGameStore from '../store/gameStore';
 
 const PauseModal = ({ visible, onResume, onHome, onClose }) => {
+  const { darkMode } = useGameStore();
+
   const handleButtonPress = (action) => {
+    // Vibrate on button press
+    vibrateOnButtonPress();
+    
     // Execute the action
     switch (action) {
       case 'resume':
@@ -38,15 +45,15 @@ const PauseModal = ({ visible, onResume, onHome, onClose }) => {
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, darkMode ? styles.modalContainerDark : styles.modalContainerLight]}>
           <View style={styles.header}>
-            <Text style={styles.title}>Game Paused</Text>
+            <Text style={[styles.title, darkMode ? styles.textLight : styles.textDark]}>Game Paused</Text>
             <TouchableOpacity 
-              style={styles.closeButton}
+              style={[styles.closeButton, darkMode ? styles.closeButtonDark : styles.closeButtonLight]}
               onPress={() => handleButtonPress('close')}
               activeOpacity={0.7}
             >
-              <Ionicons name="close" size={24} color="#ffffff" />
+              <Ionicons name="close" size={24} color={darkMode ? "#ffffff" : "#000000"} />
             </TouchableOpacity>
           </View>
 
@@ -61,12 +68,12 @@ const PauseModal = ({ visible, onResume, onHome, onClose }) => {
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={styles.secondaryButton}
+              style={[styles.secondaryButton, darkMode ? styles.secondaryButtonDark : styles.secondaryButtonLight]}
               onPress={() => handleButtonPress('home')}
               activeOpacity={0.7}
             >
-              <Ionicons name="home" size={24} color="#ffffff" />
-              <Text style={styles.secondaryButtonText}>Back to Menu</Text>
+              <Ionicons name="home" size={24} color={darkMode ? "#ffffff" : "#000000"} />
+              <Text style={[styles.secondaryButtonText, darkMode ? styles.textLight : styles.textDark]}>Back to Menu</Text>
             </TouchableOpacity>
           </View>
 
@@ -108,7 +115,6 @@ const styles = StyleSheet.create({
   },
   
   modalContainer: {
-    backgroundColor: '#2c2c2c',
     borderRadius: 20,
     padding: 24,
     width: '85%',
@@ -122,6 +128,12 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
   },
+  modalContainerDark: {
+    backgroundColor: '#2c2c2c',
+  },
+  modalContainerLight: {
+    backgroundColor: '#ffffff',
+  },
   
   header: {
     flexDirection: 'row',
@@ -131,16 +143,26 @@ const styles = StyleSheet.create({
   },
   
   title: {
-    color: '#ffffff',
     fontSize: 24,
     fontWeight: 'bold',
     letterSpacing: 0.5,
+  },
+  textLight: {
+    color: '#ffffff',
+  },
+  textDark: {
+    color: '#000000',
   },
   
   closeButton: {
     padding: 8,
     borderRadius: 20,
+  },
+  closeButtonDark: {
     backgroundColor: '#444',
+  },
+  closeButtonLight: {
+    backgroundColor: '#f0f0f0',
   },
   
   content: {
@@ -177,14 +199,18 @@ const styles = StyleSheet.create({
   secondaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#666',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
   },
+  secondaryButtonDark: {
+    backgroundColor: '#666',
+  },
+  secondaryButtonLight: {
+    backgroundColor: '#f0f0f0',
+  },
   
   secondaryButtonText: {
-    color: '#ffffff',
     fontSize: 16,
     fontWeight: '500',
     marginLeft: 8,

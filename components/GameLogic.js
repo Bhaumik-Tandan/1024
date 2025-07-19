@@ -125,9 +125,10 @@ export const findConnectedTiles = (board, targetRow, targetCol) => {
  * @param {number} targetCol - Starting column position
  * @param {number} [preferredRow] - Preferred row for merge result (e.g., dropped tile)
  * @param {number} [preferredCol] - Preferred col for merge result (e.g., dropped tile)
+ * @param {number} [originColumn] - The column where the original drop occurred (for prioritizing position)
  * @returns {Object|null} - Merge result or null if no merge possible
  */
-export const mergeConnectedTiles = (board, targetRow, targetCol, preferredRow, preferredCol) => {
+export const mergeConnectedTiles = (board, targetRow, targetCol, preferredRow, preferredCol, originColumn) => {
   const connectedTiles = findConnectedTiles(board, targetRow, targetCol);
   
   // If we found less than 2 connected tiles, no merge is possible
@@ -144,17 +145,61 @@ export const mergeConnectedTiles = (board, targetRow, targetCol, preferredRow, p
   let bestRow = -1;
   let bestCol = -1;
 
-  // For 2-tile merges, always prefer the dropped tile position if provided
+  // PRIORITY 1: For 2-tile merges, always prefer the dropped tile position if provided
   if (numberOfTiles === 2 && preferredRow !== undefined && preferredCol !== undefined) {
     bestRow = preferredRow;
     bestCol = preferredCol;
-  } else if (
+  } 
+  // PRIORITY 2: If preferred position is provided and exists in connected tiles, use it
+  else if (
     preferredRow !== undefined && preferredCol !== undefined &&
     connectedTiles.some(tile => tile.row === preferredRow && tile.col === preferredCol)
   ) {
     bestRow = preferredRow;
     bestCol = preferredCol;
-  } else if (numberOfTiles === 3) {
+  } 
+  // PRIORITY 3: If originColumn is provided, prioritize positions within that column
+  else if (originColumn !== undefined) {
+    // Filter connected tiles to those in the origin column
+    const originColumnTiles = connectedTiles.filter(tile => tile.col === originColumn);
+    
+    if (originColumnTiles.length > 0) {
+      if (numberOfTiles === 3 && originColumnTiles.length >= 2) {
+        // For 3-tile merges with tiles in origin column, prefer middle position within origin column
+        if (originColumnTiles.length === 3) {
+          // All tiles in origin column - use middle
+          const sortedTiles = [...originColumnTiles].sort((a, b) => a.row - b.row);
+          const middleTile = sortedTiles[1];
+          bestRow = middleTile.row;
+          bestCol = middleTile.col;
+        } else {
+          // Some tiles in origin column - use the one closest to middle
+          const sortedTiles = [...originColumnTiles].sort((a, b) => a.row - b.row);
+          const middleIndex = Math.floor(sortedTiles.length / 2);
+          bestRow = sortedTiles[middleIndex].row;
+          bestCol = sortedTiles[middleIndex].col;
+        }
+      } else if (numberOfTiles === 4) {
+        // For 4-tile merges, prefer the lowest row within origin column
+        for (const tile of originColumnTiles) {
+          if (bestRow === -1 || tile.row > bestRow) {
+            bestRow = tile.row;
+            bestCol = tile.col;
+          }
+        }
+      } else {
+        // For other merges, use first tile in origin column
+        bestRow = originColumnTiles[0].row;
+        bestCol = originColumnTiles[0].col;
+      }
+    } else {
+      // No tiles in origin column, fall back to default logic
+      bestRow = connectedTiles[0].row;
+      bestCol = connectedTiles[0].col;
+    }
+  }
+  // FALLBACK: Original logic for backward compatibility
+  else if (numberOfTiles === 3) {
     // Special handling for 3-tile merges: result should appear in the middle tile
     // First check if tiles are in the same row (horizontal merge)
     const sameRow = connectedTiles.every(tile => tile.row === connectedTiles[0].row);
@@ -256,9 +301,10 @@ export const mergeConnectedTiles = (board, targetRow, targetCol, preferredRow, p
  * Process chain reactions after a merge
  * 
  * @param {Array[]} board - The game board (2D array)
+ * @param {number} [originColumn] - The column where the original drop occurred (for prioritizing position)
  * @returns {Object} - Chain reaction results
  */
-export const processChainReactions = (board) => {
+export const processChainReactions = (board, originColumn) => {
   let totalScore = 0;
   let chainReactionCount = 0;
   let iterations = 0;
@@ -275,21 +321,38 @@ export const processChainReactions = (board) => {
       applyUpwardGravity(board, c);
     }
     
-    // Check entire board for possible merges
-    for (let r = 0; r < ROWS; r++) {
+    // Check entire board for possible merges, prioritizing origin column
+    const columnsToCheck = [];
+    
+    // If origin column is specified, check it first
+    if (originColumn !== undefined) {
+      columnsToCheck.push(originColumn);
+      // Then check other columns
       for (let c = 0; c < COLS; c++) {
+        if (c !== originColumn) {
+          columnsToCheck.push(c);
+        }
+      }
+    } else {
+      // No origin column specified, check all columns in order
+      for (let c = 0; c < COLS; c++) {
+        columnsToCheck.push(c);
+      }
+    }
+    
+    outerLoop: for (let r = 0; r < ROWS; r++) {
+      for (const c of columnsToCheck) {
         if (board[r][c] !== 0) {
-          const mergeResult = mergeConnectedTiles(board, r, c);
+          const mergeResult = mergeConnectedTiles(board, r, c, undefined, undefined, originColumn);
           
           if (mergeResult && mergeResult.merged) {
             totalScore += mergeResult.score;
             chainReactionActive = true;
             chainReactionCount++;
-            break; // Break to restart chain from this position
+            break outerLoop; // Break to restart chain from this position
           }
         }
       }
-      if (chainReactionActive) break; // Break out of outer loop too
     }
   }
   
@@ -364,18 +427,16 @@ export const processTileDrop = (board, value, column) => {
   
   // STEP 4: Initial merge check for the landed tile
   if (finalRow !== -1) {
-    // For 3-tile merges, don't use preferred position to allow middle placement
-    // For 2-tile merges, prefer the dropped tile position
-    // For other merges (4+ tiles), prefer the dropped tile position
+    // For all merges, pass the origin column to ensure results stay in the drop column
     const connectedTiles = findConnectedTiles(newBoard, finalRow, column);
     let initialMergeResult;
     
-    if (connectedTiles.length === 3) {
-      // 3-tile merge: let the middle position logic handle placement
-      initialMergeResult = mergeConnectedTiles(newBoard, finalRow, column);
+    if (connectedTiles.length === 2) {
+      // 2-tile merge: prefer the dropped tile position and stay in origin column
+      initialMergeResult = mergeConnectedTiles(newBoard, finalRow, column, finalRow, column, column);
     } else {
-      // 2-tile and other merges: prefer the dropped tile position
-      initialMergeResult = mergeConnectedTiles(newBoard, finalRow, column, finalRow, column);
+      // 3+ tile merges: use origin column logic to stay in drop column
+      initialMergeResult = mergeConnectedTiles(newBoard, finalRow, column, undefined, undefined, column);
     }
     
     if (initialMergeResult && initialMergeResult.merged) {
@@ -384,7 +445,7 @@ export const processTileDrop = (board, value, column) => {
   }
   
   // STEP 5: Process chain reactions
-  const chainResult = processChainReactions(newBoard);
+  const chainResult = processChainReactions(newBoard, column);
   totalScore += chainResult.totalScore;
   
   return {
@@ -410,7 +471,7 @@ export const processTileDrop = (board, value, column) => {
  * @param {number} resultCol - Where to place the merged result (defaults to latest position)
  * @returns {Object} - { score: number, merged: boolean, newRow: number, newCol: number, newValue: number }
  */
-export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, showMergeResultAnimation, isChainReaction = false, resultRow = null, resultCol = null) => {
+export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, showMergeResultAnimation, isChainReaction = false, resultRow = null, resultCol = null, originColumn = null) => {
   // Validate inputs
   if (!GameValidator.isValidBoard(board)) {
     return { score: 0, merged: false };
@@ -441,11 +502,53 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   let bestRow = -1;
   let bestCol = -1;
   
-  // For 2-tile merges, always prefer the dropped tile position if provided
+  // PRIORITY 1: For 2-tile merges, always prefer the dropped tile position if provided
   if (numberOfTiles === 2 && resultRow !== null && resultCol !== null) {
     bestRow = resultRow;
     bestCol = resultCol;
-  } else if (numberOfTiles === 3) {
+  } 
+  // PRIORITY 2: If originColumn is provided, prioritize positions within that column
+  else if (originColumn !== null) {
+    // Filter connected tiles to those in the origin column
+    const originColumnTiles = connectedTiles.filter(tile => tile.col === originColumn);
+    
+    if (originColumnTiles.length > 0) {
+      if (numberOfTiles === 3 && originColumnTiles.length >= 2) {
+        // For 3-tile merges with tiles in origin column, prefer middle position within origin column
+        if (originColumnTiles.length === 3) {
+          // All tiles in origin column - use middle
+          const sortedTiles = [...originColumnTiles].sort((a, b) => a.row - b.row);
+          const middleTile = sortedTiles[1];
+          bestRow = middleTile.row;
+          bestCol = middleTile.col;
+        } else {
+          // Some tiles in origin column - use the one closest to middle
+          const sortedTiles = [...originColumnTiles].sort((a, b) => a.row - b.row);
+          const middleIndex = Math.floor(sortedTiles.length / 2);
+          bestRow = sortedTiles[middleIndex].row;
+          bestCol = sortedTiles[middleIndex].col;
+        }
+      } else if (numberOfTiles === 4) {
+        // For 4-tile merges, prefer the lowest row within origin column
+        for (const tile of originColumnTiles) {
+          if (bestRow === -1 || tile.row > bestRow) {
+            bestRow = tile.row;
+            bestCol = tile.col;
+          }
+        }
+      } else {
+        // For other merges, use first tile in origin column
+        bestRow = originColumnTiles[0].row;
+        bestCol = originColumnTiles[0].col;
+      }
+    } else {
+      // No tiles in origin column, fall back to default logic
+      bestRow = connectedTiles[0].row;
+      bestCol = connectedTiles[0].col;
+    }
+  }
+  // FALLBACK: Original logic for backward compatibility
+  else if (numberOfTiles === 3) {
     // Special handling for 3-tile merges: result should appear in the middle tile
     // Sort tiles by row (top to bottom) to find the middle one
     const sortedTiles = [...connectedTiles].sort((a, b) => a.row - b.row);
@@ -574,7 +677,8 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
       showMergeResultAnimation,
       false, // Not a chain reaction - full animation
       resultRow, // For 2-tile merges, use dropped tile position
-      resultCol  // For 2-tile merges, use dropped tile position
+      resultCol, // For 2-tile merges, use dropped tile position
+      col       // Origin column (where the drop occurred)
     );
     totalScore += initialMergeResult.score;
     
@@ -635,7 +739,8 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
               showMergeResultAnimation,
               true, // This is a chain reaction - faster animation
               null, // Use default position for chain reactions
-              null  // Use default position for chain reactions
+              null, // Use default position for chain reactions
+              col   // Origin column (where the original drop occurred)
             );
             
             if (chainMergeResult.merged) {
@@ -675,7 +780,8 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
               showMergeResultAnimation,
               true, // This is a chain reaction - faster animation
               null, // Use default position for chain reactions
-              null  // Use default position for chain reactions
+              null, // Use default position for chain reactions
+              col   // Origin column (where the original drop occurred)
             );
             
             if (mergeResult.merged) {

@@ -321,7 +321,9 @@ const DropNumberBoard = ({ navigation }) => {
         // Update score and record
         if (totalScore > 0) {
           // Vibrate and play sound when tiles merge (non-blocking)
-          vibrateOnMerge().catch(err => console.log('Vibration/sound error:', err));
+          vibrateOnMerge().catch(err => {
+            // Vibration/sound error
+          });
           setScore(currentScore => {
             const newScore = currentScore + totalScore;
             if (newScore > record) {
@@ -345,10 +347,10 @@ const DropNumberBoard = ({ navigation }) => {
           setGameOver(true);
         }
       }).catch(error => {
-        console.error('Error processing tile landing:', error);
+        // Error processing tile landing
       });
     } catch (error) {
-      console.error('Error in handleTileLanded:', error);
+      // Error in handleTileLanded
     }
   };
 

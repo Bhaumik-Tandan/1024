@@ -25,9 +25,8 @@ class SoundManager {
       await this.loadMergeSound();
       
       this.isInitialized = true;
-      console.log('Sound manager initialized successfully');
     } catch (error) {
-      console.error('Failed to initialize sound manager:', error);
+      // Failed to initialize sound manager
     }
   }
 
@@ -43,9 +42,8 @@ class SoundManager {
       );
       
       this.mergeSound = sound;
-      console.log('Merge sound loaded successfully');
     } catch (error) {
-      console.error('Failed to load merge sound:', error);
+      // Failed to load merge sound
     }
   }
 
@@ -62,9 +60,8 @@ class SoundManager {
       
       // Play the sound
       await this.mergeSound.replayAsync();
-      console.log('Playing merge sound');
     } catch (error) {
-      console.error('Failed to play merge sound:', error);
+      // Failed to play merge sound
     }
   }
 
@@ -74,7 +71,7 @@ class SoundManager {
         await this.mergeSound.setVolumeAsync(volume);
       }
     } catch (error) {
-      console.error('Failed to update sound volume:', error);
+      // Failed to update sound volume
     }
   }
 
@@ -85,9 +82,8 @@ class SoundManager {
         this.mergeSound = null;
       }
       this.isInitialized = false;
-      console.log('Sound manager cleaned up successfully');
     } catch (error) {
-      console.error('Failed to cleanup sound manager:', error);
+      // Failed to cleanup sound manager
     }
   }
 }

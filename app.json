@@ -4,19 +4,19 @@
     "slug": "1024-game",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon.svg",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/splash.svg",
       "resizeMode": "contain",
       "backgroundColor": "#FF6B6B"
     },
     "ios": {
       "supportsTablet": true,
-      "icon": "./assets/icon.png",
+      "icon": "./assets/icon.svg",
       "splash": {
-        "image": "./assets/splash.png",
+        "image": "./assets/splash.svg",
         "resizeMode": "contain",
         "backgroundColor": "#FF6B6B"
       },
@@ -24,12 +24,12 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/adaptive-icon.svg",
         "backgroundColor": "#FF6B6B"
       },
-      "icon": "./assets/icon.png",
+      "icon": "./assets/icon.svg",
       "splash": {
-        "image": "./assets/splash-android.png",
+        "image": "./assets/splash-android.svg",
         "resizeMode": "contain",
         "backgroundColor": "#FF6B6B"
       },
@@ -37,7 +37,7 @@
       "package": "game1024.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/icon.svg"
     },
     "extra": {
       "eas": {

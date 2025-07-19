@@ -28,7 +28,6 @@ export const getRandomBlockValue = () => {
 export const applyUpwardGravity = (board, col) => {
   // Validate input
   if (!GameValidator.isValidBoard(board) || col < 0 || col >= COLS) {
-    console.warn('Invalid board or column for upward gravity application');
     return;
   }
 
@@ -59,7 +58,6 @@ export const applyUpwardGravity = (board, col) => {
 export const applyGravity = (board, col) => {
   // Validate input
   if (!GameValidator.isValidBoard(board) || col < 0 || col >= COLS) {
-    console.warn('Invalid board or column for gravity application');
     return;
   }
 
@@ -529,13 +527,11 @@ export const checkAndMergeAdjacentTowards = checkAndMergeConnectedGroup;
 export const handleBlockLanding = async (board, row, col, value, showMergeResultAnimation) => {
   // Input validation
   if (!GameValidator.isValidBoard(board)) {
-    console.error('Invalid board state provided to handleBlockLanding');
     return { newBoard: board, totalScore: 0 };
   }
 
   // Check bounds
   if (row < 0 || row >= ROWS || col < 0 || col >= COLS) {
-    console.warn('Invalid landing position for tile');
     return { newBoard: board, totalScore: 0 };
   }
 
@@ -715,7 +711,6 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
   
   // STEP 7: Validate final board state
   if (!GameValidator.isValidBoard(newBoard)) {
-    console.error('Invalid board state after processing');
     return { newBoard: board, totalScore: 0 };
   }
   

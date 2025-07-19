@@ -138,13 +138,6 @@ const SettingsScreen = ({ navigation }) => {
             color="#4caf50"
           />
 
-          <VolumeSlider
-            title="Sound Volume"
-            value={soundVolume}
-            onValueChange={setSoundVolume}
-            enabled={soundEnabled}
-            icon="volume-high"
-          />
         </View>
 
         {/* Game Settings */}

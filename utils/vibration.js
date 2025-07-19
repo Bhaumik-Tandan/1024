@@ -15,6 +15,11 @@ export const vibrateOnMerge = async () => {
   await soundManager.playMergeSound();
 };
 
+export const vibrateOnTouch = async () => {
+  // Play drop/touch sound (no vibration for drop)
+  await soundManager.playDropSound();
+};
+
 export const vibrateOnButtonPress = () => {
   const { vibrationEnabled } = useGameStore.getState();
   

@@ -43,7 +43,7 @@ import {
   getTextColor
 } from '../components/constants';
 import useGameStore from '../store/gameStore';
-import { vibrateOnMerge } from '../utils/vibration';
+import { vibrateOnMerge, vibrateOnTouch } from '../utils/vibration';
 
 /**
  * Main game component with enhanced architecture
@@ -324,11 +324,43 @@ const DropNumberBoard = ({ navigation, route }) => {
   };
 
   /**
+   * Check if a tile at the given position has adjacent tiles
+   * @param {Array[]} board - The game board
+   * @param {number} row - Row position
+   * @param {number} col - Column position
+   * @returns {boolean} - True if there are adjacent tiles
+   */
+  const hasAdjacentTiles = (board, row, col) => {
+    const adjacentPositions = [
+      { row: row - 1, col }, // up
+      { row: row + 1, col }, // down
+      { row, col: col - 1 }, // left
+      { row, col: col + 1 }  // right
+    ];
+    
+    return adjacentPositions.some(pos => {
+      return pos.row >= 0 && pos.row < ROWS && 
+             pos.col >= 0 && pos.col < COLS && 
+             board[pos.row][pos.col] !== 0;
+    });
+  };
+
+  /**
    * Handle tile landing and process all game logic
    * Uses the enhanced game engine with chain reactions and scoring
    */
   const handleTileLanded = (row, col, value) => {
     try {
+      // Check if the newly landed tile is touching other tiles
+      const isTouchingTiles = hasAdjacentTiles(board, row, col);
+      
+      // Play touch sound if the new block touches existing tiles
+      if (isTouchingTiles) {
+        vibrateOnTouch().catch(err => {
+          // Touch sound/vibration error
+        });
+      }
+      
       // Process the tile landing through the game engine
       handleBlockLanding(
         board, 

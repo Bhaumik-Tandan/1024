@@ -49,7 +49,7 @@ import { vibrateOnMerge } from '../utils/vibration';
  * Main game component with enhanced architecture
  * Uses centralized game rules and improved state management
  */
-const DropNumberBoard = ({ navigation }) => {
+const DropNumberBoard = ({ navigation, route }) => {
   // Core game state
   const [board, setBoard] = useState(() => Array.from({ length: ROWS }, () => Array(COLS).fill(0)));
   const [score, setScore] = useState(0);
@@ -80,7 +80,7 @@ const DropNumberBoard = ({ navigation }) => {
   const [boardLeft, setBoardLeft] = useState(0);
   
   // Zustand store
-  const { updateScore, updateHighestBlock, darkMode } = useGameStore();
+  const { updateScore, updateHighestBlock, darkMode, saveGame, loadSavedGame, clearSavedGame } = useGameStore();
   
   // Use the animation manager
   const {
@@ -129,6 +129,44 @@ const DropNumberBoard = ({ navigation }) => {
     }
   }, [gameStats.highestTile, lastHighestBlock, updateHighestBlock]);
 
+  // Load saved game if resuming
+  useEffect(() => {
+    if (route.params?.resume) {
+      const savedGame = loadSavedGame();
+      if (savedGame) {
+        setBoard(savedGame.board);
+        setScore(savedGame.score);
+        setRecord(savedGame.record);
+        setNextBlock(savedGame.nextBlock);
+        setPreviewBlock(savedGame.previewBlock);
+        setGameStats(savedGame.gameStats);
+        setGameOver(false);
+        setHasWon(false);
+        clearFalling();
+        clearMergeAnimations();
+      }
+    }
+  }, [route.params?.resume, loadSavedGame, clearFalling, clearMergeAnimations]);
+
+  // Auto-save game state periodically
+  useEffect(() => {
+    if (!gameOver && !hasWon && !isPaused) {
+      const autoSaveInterval = setInterval(() => {
+        const gameState = {
+          board,
+          score,
+          record,
+          nextBlock,
+          previewBlock,
+          gameStats,
+        };
+        saveGame(gameState);
+      }, 10000); // Save every 10 seconds
+
+      return () => clearInterval(autoSaveInterval);
+    }
+  }, [board, score, record, nextBlock, previewBlock, gameStats, gameOver, hasWon, isPaused, saveGame]);
+
   // Pause modal handlers
   const handlePause = () => {
     setIsPaused(true);
@@ -140,6 +178,7 @@ const DropNumberBoard = ({ navigation }) => {
   
   const handleRestart=()=>{
     setBoard(() => Array.from({ length: ROWS }, () => Array(COLS).fill(0)));
+    clearSavedGame();
   }
 
   const handleHome = () => {
@@ -383,6 +422,9 @@ const DropNumberBoard = ({ navigation }) => {
       highestTile: 0,
       startTime: Date.now(),
     });
+    
+    // Clear saved game when starting fresh
+    clearSavedGame();
   };
 
   /**
@@ -542,8 +584,9 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#666',
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: 'transparent',
   },
   nextBlockValue: {
     fontSize: Math.max(14, CELL_SIZE / 3),

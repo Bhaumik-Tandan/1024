@@ -9,9 +9,10 @@ import {
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
-const BOARD_SIZE = 5;
-const CELL_SIZE = (width - 40) / BOARD_SIZE;
-const GRID_SIZE = 4;
+const BOARD_SIZE = 9; // Changed from 5 to 9 rows
+const CELL_SIZE = (width - 40) / 5; // Keep 5 columns
+const GRID_SIZE = 5; // Changed from 4 to 5 columns
+const VISIBLE_ROWS = 8; // Only 8 rows are visible/playable, bottom row is transparent
 
 const GameBoard = () => {
   const [board, setBoard] = useState([]);
@@ -89,13 +90,13 @@ const GameBoard = () => {
   };
 
   const findTargetRow = (boardState, col) => {
-    // Find the highest empty row in the column
-    for (let row = 0; row < BOARD_SIZE; row++) {
+    // Find the highest empty row in the column (only check visible rows)
+    for (let row = 0; row < VISIBLE_ROWS; row++) {
       if (boardState[row][col] === 0) {
         return row;
       }
     }
-    return BOARD_SIZE - 1; // If no empty space, stay at bottom
+    return VISIBLE_ROWS - 1; // If no empty space in visible area, stay at bottom of visible area
   };
 
   const startSlideAnimation = (slidingTile) => {
@@ -136,8 +137,8 @@ const GameBoard = () => {
   const checkAndCombine = (boardState, row, col) => {
     const value = boardState[row][col];
     
-    // Check if we can combine with the tile above
-    if (row > 0 && boardState[row - 1][col] === value) {
+    // Check if we can combine with the tile above (only within visible area)
+    if (row > 0 && row < VISIBLE_ROWS && boardState[row - 1][col] === value) {
       boardState[row - 1][col] *= 2;
       boardState[row][col] = 0;
       setScore(prev => prev + boardState[row - 1][col]);
@@ -172,7 +173,7 @@ const GameBoard = () => {
     let moved = false;
     let newScore = score;
 
-    for (let row = 0; row < BOARD_SIZE; row++) {
+    for (let row = 0; row < VISIBLE_ROWS; row++) { // Only move visible rows
       let newRow = boardState[row].slice(0, GRID_SIZE); // Always use GRID_SIZE columns
       // Chain merge (handles all compaction and merging)
       chainMergeRow(newRow, val => { newScore += val; });
@@ -192,7 +193,7 @@ const GameBoard = () => {
     let moved = false;
     let newScore = score;
 
-    for (let row = 0; row < BOARD_SIZE; row++) {
+    for (let row = 0; row < VISIBLE_ROWS; row++) { // Only move visible rows
       let newRow = boardState[row].slice(0, GRID_SIZE).reverse();
       // Chain merge (handles all compaction and merging)
       chainMergeRow(newRow, val => { newScore += val; });
@@ -218,8 +219,8 @@ const GameBoard = () => {
       const newCol = [];
       let lastValue = 0;
       
-      // Move all non-zero values up
-      for (let row = 0; row < BOARD_SIZE; row++) {
+      // Move all non-zero values up (only from visible rows)
+      for (let row = 0; row < VISIBLE_ROWS; row++) {
         if (boardState[row][col] !== 0) {
           if (lastValue === boardState[row][col]) {
             newCol[newCol.length - 1] *= 2;
@@ -238,13 +239,13 @@ const GameBoard = () => {
         newCol.push(lastValue);
       }
       
-      // Fill remaining spaces with zeros
-      while (newCol.length < BOARD_SIZE) {
+      // Fill remaining spaces with zeros (only for visible rows)
+      while (newCol.length < VISIBLE_ROWS) {
         newCol.push(0);
       }
       
       // Check if the column changed
-      for (let row = 0; row < BOARD_SIZE; row++) {
+      for (let row = 0; row < VISIBLE_ROWS; row++) {
         if (boardState[row][col] !== newCol[row]) {
           moved = true;
         }
@@ -264,8 +265,8 @@ const GameBoard = () => {
       const newCol = [];
       let lastValue = 0;
       
-      // Move all non-zero values down
-      for (let row = BOARD_SIZE - 1; row >= 0; row--) {
+      // Move all non-zero values down (only from visible rows)
+      for (let row = VISIBLE_ROWS - 1; row >= 0; row--) {
         if (boardState[row][col] !== 0) {
           if (lastValue === boardState[row][col]) {
             newCol[0] *= 2;
@@ -284,13 +285,13 @@ const GameBoard = () => {
         newCol.unshift(lastValue);
       }
       
-      // Fill remaining spaces with zeros
-      while (newCol.length < BOARD_SIZE) {
+      // Fill remaining spaces with zeros (only for visible rows)
+      while (newCol.length < VISIBLE_ROWS) {
         newCol.unshift(0);
       }
       
       // Check if the column changed
-      for (let row = 0; row < BOARD_SIZE; row++) {
+      for (let row = 0; row < VISIBLE_ROWS; row++) {
         if (boardState[row][col] !== newCol[row]) {
           moved = true;
         }
@@ -303,8 +304,8 @@ const GameBoard = () => {
   };
 
   const checkGameOver = (boardState) => {
-    // Check if there are any empty cells
-    for (let row = 0; row < BOARD_SIZE; row++) {
+    // Check if there are any empty cells in visible area
+    for (let row = 0; row < VISIBLE_ROWS; row++) {
       for (let col = 0; col < GRID_SIZE; col++) {
         if (boardState[row][col] === 0) {
           return false;
@@ -312,8 +313,8 @@ const GameBoard = () => {
       }
     }
     
-    // Check if any moves are possible
-    for (let row = 0; row < BOARD_SIZE; row++) {
+    // Check if any moves are possible in visible area
+    for (let row = 0; row < VISIBLE_ROWS; row++) {
       for (let col = 0; col < GRID_SIZE; col++) {
         const currentValue = boardState[row][col];
         
@@ -323,7 +324,7 @@ const GameBoard = () => {
         }
         
         // Check bottom neighbor
-        if (row < BOARD_SIZE - 1 && boardState[row + 1][col] === currentValue) {
+        if (row < VISIBLE_ROWS - 1 && boardState[row + 1][col] === currentValue) {
           return false;
         }
       }
@@ -333,7 +334,7 @@ const GameBoard = () => {
   };
 
   const checkWin = (boardState) => {
-    for (let row = 0; row < BOARD_SIZE; row++) {
+    for (let row = 0; row < VISIBLE_ROWS; row++) {
       for (let col = 0; col < GRID_SIZE; col++) {
         if (boardState[row][col] >= 1024) {
           return true;
@@ -384,7 +385,12 @@ const GameBoard = () => {
 
 
 
-  const getTileColor = (value) => {
+  const getTileColor = (value, row) => {
+    // Make bottom row transparent
+    if (row === BOARD_SIZE - 1) {
+      return 'transparent';
+    }
+    
     const colors = {
       0: '#cdc1b4',
       2: '#eee4da',
@@ -425,13 +431,26 @@ const GameBoard = () => {
                   key={`${rowIndex}-${colIndex}`}
                   style={[
                     styles.cell,
-                    { backgroundColor: getTileColor(cell) }
+                    { 
+                      backgroundColor: getTileColor(cell, rowIndex),
+                      borderWidth: rowIndex === BOARD_SIZE - 1 ? 1 : 0,
+                      borderColor: rowIndex === BOARD_SIZE - 1 ? '#bbada0' : 'transparent',
+                      borderStyle: rowIndex === BOARD_SIZE - 1 ? 'dashed' : 'solid'
+                    }
                   ]}
                 >
-                  {cell !== 0 && (
+                  {cell !== 0 && rowIndex !== BOARD_SIZE - 1 && (
                     <Text style={[
                       styles.cellText,
                       { color: getTileTextColor(cell) }
+                    ]}>
+                      {cell}
+                    </Text>
+                  )}
+                  {cell !== 0 && rowIndex === BOARD_SIZE - 1 && (
+                    <Text style={[
+                      styles.cellText,
+                      { color: '#776e65', opacity: 0.7 }
                     ]}>
                       {cell}
                     </Text>
@@ -464,7 +483,7 @@ const GameBoard = () => {
                     position: 'absolute',
                     top: slidingTile.row * (CELL_SIZE + 8) + 8,
                     left: slidingTile.col * (CELL_SIZE + 8) + 8,
-                    backgroundColor: getTileColor(slidingTile.value),
+                    backgroundColor: getTileColor(slidingTile.value, slidingTile.targetRow),
                   },
                   animatedStyle
                 ]}

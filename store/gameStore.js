@@ -16,6 +16,10 @@ const useGameStore = create(
       currentScore: 0,
       highestBlock: null,
       
+      // Saved game state
+      savedGame: null,
+      hasSavedGame: false,
+      
       // Actions
       toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
       toggleVibration: () => set((state) => ({ vibrationEnabled: !state.vibrationEnabled })),
@@ -38,6 +42,37 @@ const useGameStore = create(
         }
       },
       
+      // Save game state
+      saveGame: (gameState) => {
+        const savedGameData = {
+          board: gameState.board,
+          score: gameState.score,
+          record: gameState.record,
+          nextBlock: gameState.nextBlock,
+          previewBlock: gameState.previewBlock,
+          gameStats: gameState.gameStats,
+          timestamp: Date.now(),
+        };
+        set({ 
+          savedGame: savedGameData,
+          hasSavedGame: true 
+        });
+      },
+      
+      // Load saved game
+      loadSavedGame: () => {
+        const { savedGame } = get();
+        return savedGame;
+      },
+      
+      // Clear saved game
+      clearSavedGame: () => {
+        set({ 
+          savedGame: null,
+          hasSavedGame: false 
+        });
+      },
+      
       resetGame: () => set({ currentScore: 0 }),
       
       resetAllSettings: () => set({
@@ -48,6 +83,8 @@ const useGameStore = create(
         highScore: null,
         currentScore: 0,
         highestBlock: null,
+        savedGame: null,
+        hasSavedGame: false,
       }),
     }),
     {

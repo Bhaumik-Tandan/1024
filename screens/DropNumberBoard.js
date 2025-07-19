@@ -17,19 +17,20 @@ import {
   PanResponder,
 } from 'react-native';
 
-import GameHeader from './GameHeader';
-import GameGrid from './GameGrid';
-import { useAnimationManager } from './AnimationManager';
+import GameHeader from '../components/GameHeader';
+import GameGrid from '../components/GameGrid';
+import PauseModal from '../components/PauseModal';
+import { useAnimationManager } from '../components/AnimationManager';
 import { 
   getRandomBlockValue, 
   handleBlockLanding,
   applyGravity 
-} from './GameLogic';
+} from '../components/GameLogic';
 import { 
   GameValidator, 
   GAME_CONFIG, 
   GAME_RULES 
-} from './GameRules';
+} from '../components/GameRules';
 import { 
   ROWS, 
   COLS, 
@@ -40,12 +41,13 @@ import {
   getCellTop,
   ANIMATION_CONFIG,
   getTextColor
-} from './constants';
+} from '../components/constants';
+import useGameStore from '../store/gameStore';
 
-/**
+/**r
  * Main game component using modern React patterns and centralized rules
  */
-const DropNumberBoard = () => {
+const DropNumberBoard = ({ navigation }) => {
   // Core game state
   const [board, setBoard] = useState(() => Array.from({ length: ROWS }, () => Array(COLS).fill(0)));
   const [score, setScore] = useState(0);
@@ -57,6 +59,7 @@ const DropNumberBoard = () => {
   const [gameOver, setGameOver] = useState(false);
   const [hasWon, setHasWon] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
   
   // Touch sensitivity control
   const [isTouchEnabled, setIsTouchEnabled] = useState(true);
@@ -73,6 +76,9 @@ const DropNumberBoard = () => {
 
   const boardRef = useRef(null);
   const [boardLeft, setBoardLeft] = useState(0);
+  
+  // Zustand store
+  const { updateScore, updateHighestBlock } = useGameStore();
   
   // Use the animation manager
   const {
@@ -101,14 +107,50 @@ const DropNumberBoard = () => {
     })
   ).current;
 
+  // Track score and highest block for Zustand updates
+  const [lastScore, setLastScore] = useState(0);
+  const [lastHighestBlock, setLastHighestBlock] = useState(0);
 
+  // Update Zustand store when score changes
+  useEffect(() => {
+    if (score !== lastScore) {
+      updateScore(score);
+      setLastScore(score);
+    }
+  }, [score, lastScore, updateScore]);
+
+  // Update Zustand store when highest block changes
+  useEffect(() => {
+    if (gameStats.highestTile !== lastHighestBlock) {
+      updateHighestBlock(gameStats.highestTile);
+      setLastHighestBlock(gameStats.highestTile);
+    }
+  }, [gameStats.highestTile, lastHighestBlock, updateHighestBlock]);
+
+  // Pause modal handlers
+  const handlePause = () => {
+    setIsPaused(true);
+  };
+
+  const handleResume = () => {
+    setIsPaused(false);
+  };
+
+  const handleHome = () => {
+    setIsPaused(false);
+    navigation.navigate('Home');
+  };
+
+  const handleClosePause = () => {
+    setIsPaused(false);
+  };
 
   /**
    * Game loop: Spawn new tiles automatically
    * Uses timing configuration from GameRules
    */
   useEffect(() => {
-    if (!falling && !gameOver && !hasWon) {
+    if (!falling && !gameOver && !hasWon && !isPaused) {
       const spawnCol = Math.floor(COLS / 2); // Center column as per rules
       
       // Check for game over condition - check if top row is full
@@ -159,7 +201,7 @@ const DropNumberBoard = () => {
     }
     
     // Validate tap conditions
-    if (!falling || falling.fastDrop || gameOver || hasWon) {
+    if (!falling || falling.fastDrop || gameOver || hasWon || isPaused) {
       return;
     }
     
@@ -240,62 +282,65 @@ const DropNumberBoard = () => {
    * Handle tile landing and process all game logic
    * Uses the enhanced game engine with chain reactions and scoring
    */
-  const handleTileLanded = async (row, col, value) => {
+  const handleTileLanded = (row, col, value) => {
     try {
       // Process the tile landing through the game engine
-      const result = await handleBlockLanding(
+      handleBlockLanding(
         board, 
         row, 
         col, 
         value, 
         showMergeResultAnimation
-      );
-      
-      const { 
-        newBoard, 
-        totalScore, 
-        chainReactionCount = 0, 
-        iterations = 0 
-      } = result;
-      
-      // Update game statistics
-      setGameStats(prevStats => ({
-        ...prevStats,
-        tilesPlaced: prevStats.tilesPlaced + 1,
-        mergesPerformed: prevStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
-        chainReactions: prevStats.chainReactions + chainReactionCount,
-        highestTile: Math.max(prevStats.highestTile, ...newBoard.flat()),
-      }));
-      
-      // Update score and record
-      if (totalScore > 0) {
-        setScore(currentScore => {
-          const newScore = currentScore + totalScore;
-          if (newScore > record) {
-            setRecord(newScore);
-          }
-          return newScore;
+      ).then(result => {
+        const { 
+          newBoard, 
+          totalScore, 
+          chainReactionCount = 0, 
+          iterations = 0 
+        } = result;
+        
+        // Update game statistics
+        setGameStats(prevStats => {
+          const newHighestTile = Math.max(prevStats.highestTile, ...newBoard.flat());
+          
+          return {
+            ...prevStats,
+            tilesPlaced: prevStats.tilesPlaced + 1,
+            mergesPerformed: prevStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
+            chainReactions: prevStats.chainReactions + chainReactionCount,
+            highestTile: newHighestTile,
+          };
         });
-      }
+        
+        // Update score and record
+        if (totalScore > 0) {
+          setScore(currentScore => {
+            const newScore = currentScore + totalScore;
+            if (newScore > record) {
+              setRecord(newScore);
+            }
+            return newScore;
+          });
+        }
 
-      // Update board state
-      setBoard(newBoard);
-      
-      // Check for winning condition
-      if (!hasWon && GameValidator.hasWon(newBoard, score + totalScore)) {
-        setHasWon(true);
-        // Could show win animation or modal here
-      }
-      
-      // Check for game over condition
-      if (GameValidator.isGameOver(newBoard)) {
-        setGameOver(true);
-      }
-      
+        // Update board state
+        setBoard(newBoard);
+        
+        // Check for winning condition
+        if (!hasWon && GameValidator.hasWon(newBoard, score + totalScore)) {
+          setHasWon(true);
+          // Could show win animation or modal here
+        }
+        
+        // Check for game over condition
+        if (GameValidator.isGameOver(newBoard)) {
+          setGameOver(true);
+        }
+      }).catch(error => {
+        console.error('Error processing tile landing:', error);
+      });
     } catch (error) {
-      console.error('Error handling tile landing:', error);
-      // Fallback: ensure game doesn't break
-      setNextBlock(getRandomBlockValue());
+      console.error('Error in handleTileLanded:', error);
     }
   };
 
@@ -350,6 +395,7 @@ const DropNumberBoard = () => {
       <GameHeader 
         score={score}
         record={record}
+        onPause={handlePause}
       />
       
       <View
@@ -428,6 +474,14 @@ const DropNumberBoard = () => {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Pause Modal */}
+      <PauseModal
+        visible={isPaused}
+        onResume={handleResume}
+        onHome={handleHome}
+        onClose={handleClosePause}
+      />
     </View>
   );
 };

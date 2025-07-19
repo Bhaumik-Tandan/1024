@@ -2,13 +2,15 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
 import PAGES from '../constants/pages';
-import DropNumberBoard from '../components/DropNumberBoard';
+import DropNumberBoard from '../screens/DropNumberBoard';
+import HomeScreen from '../screens/HomeScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import { NavigationContainer } from '@react-navigation/native';
 
 const Stack = createNativeStackNavigator();
 const RootNavigator = (
     <NavigationContainer>
-    <Stack.Navigator>
+    <Stack.Navigator initialRouteName={PAGES.DROP_NUMBER_BOARD}>
         <Stack.Group>
             <Stack.Screen
                 name={PAGES.DROP_NUMBER_BOARD}
@@ -16,6 +18,20 @@ const RootNavigator = (
                     headerShown: false,
                 }}
                 component={DropNumberBoard}
+            />
+            <Stack.Screen
+                name={PAGES.HOME}
+                options={{
+                    headerShown: false,
+                }}
+                component={HomeScreen}
+            />
+            <Stack.Screen
+                name={PAGES.SETTINGS}
+                options={{
+                    headerShown: false,
+                }}
+                component={SettingsScreen}
             />
         </Stack.Group>
     </Stack.Navigator>

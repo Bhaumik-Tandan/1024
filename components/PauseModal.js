@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { vibrateOnButtonPress } from '../utils/vibration';
 import useGameStore from '../store/gameStore';
 
-const PauseModal = ({ visible, onResume, onHome, onClose }) => {
+const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
   const { darkMode } = useGameStore();
 
   const handleButtonPress = (action) => {
@@ -29,7 +29,7 @@ const PauseModal = ({ visible, onResume, onHome, onClose }) => {
         onClose();
         break;
       case 'restart':
-        // This would restart the game
+        onRestart();
         onClose();
         break;
       default:

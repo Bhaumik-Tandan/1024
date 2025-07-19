@@ -137,6 +137,10 @@ const DropNumberBoard = ({ navigation }) => {
   const handleResume = () => {
     setIsPaused(false);
   };
+  
+  const handleRestart=()=>{
+    setBoard(() => Array.from({ length: ROWS }, () => Array(COLS).fill(0)));
+  }
 
   const handleHome = () => {
     setIsPaused(false);
@@ -486,6 +490,7 @@ const DropNumberBoard = ({ navigation }) => {
         onResume={handleResume}
         onHome={handleHome}
         onClose={handleClosePause}
+        onRestart={handleRestart}
       />
     </View>
   );

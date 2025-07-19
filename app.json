@@ -8,17 +8,30 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FF6B6B"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "icon": "./assets/icon.png",
+      "splash": {
+        "image": "./assets/splash.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#FF6B6B"
+      },
+      "bundleIdentifier": "game1024.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#FF6B6B"
+      },
+      "icon": "./assets/icon.png",
+      "splash": {
+        "image": "./assets/splash-android.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#FF6B6B"
       },
       "edgeToEdgeEnabled": true,
       "package": "game1024.app"

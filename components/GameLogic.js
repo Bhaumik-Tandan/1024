@@ -459,6 +459,136 @@ export const processTileDrop = (board, value, column) => {
 };
 
 /**
+ * Process a tile drop into a full column when merging is possible
+ * This handles the special case where a column is full but the dropped tile can merge
+ * 
+ * @param {Array[]} board - Current board state (2D array)
+ * @param {number} value - Value of the tile to drop
+ * @param {number} column - Column where the tile should be dropped
+ * @returns {Object} - Result containing updated board and score
+ */
+export const processFullColumnDrop = (board, value, column) => {
+  // Validate inputs
+  if (!board || !Array.isArray(board) || board.length === 0) {
+    throw new Error('Invalid board: must be a non-empty 2D array');
+  }
+  
+  if (column < 0 || column >= COLS) {
+    throw new Error(`Invalid column: must be between 0 and ${COLS - 1}`);
+  }
+  
+  if (value <= 0) {
+    throw new Error('Invalid value: must be greater than 0');
+  }
+  
+  // Create a deep copy of the board to avoid mutations
+  let newBoard = board.map(row => [...row]);
+  let totalScore = 0;
+  
+  // Verify the column is actually full
+  let columnFull = true;
+  for (let row = 0; row < ROWS; row++) {
+    if (newBoard[row][column] === 0) {
+      columnFull = false;
+      break;
+    }
+  }
+  
+  if (!columnFull) {
+    // Column is not full, use regular drop logic
+    return processTileDrop(board, value, column);
+  }
+  
+  // Check if merging is possible at the bottom of the column
+  const bottomRow = ROWS - 1;
+  const bottomValue = newBoard[bottomRow][column];
+  
+  // Case 1: Direct merge with bottom tile
+  if (bottomValue === value) {
+    // Create a temporary tile above the bottom for merging
+    // We'll simulate placing the tile "on top" of the bottom tile
+    // and let the merge logic handle it
+    
+    // Temporarily create space by moving the bottom tile up one position
+    // This is just for the merge calculation
+    let tempBoard = newBoard.map(row => [...row]);
+    
+    // Check if we can create a temporary space by merging
+    // For now, we'll handle this by directly creating the merge result
+    const newValue = value * 2; // Simple 2-tile merge
+    tempBoard[bottomRow][column] = newValue;
+    
+    totalScore += newValue;
+    
+    // Apply upward gravity to settle everything
+    for (let c = 0; c < COLS; c++) {
+      applyUpwardGravity(tempBoard, c);
+    }
+    
+    // Process any chain reactions
+    const chainResult = processChainReactions(tempBoard, column);
+    totalScore += chainResult.totalScore;
+    
+    return {
+      board: tempBoard,
+      score: Math.floor(totalScore),
+      success: true,
+      chainReactions: chainResult.chainReactionCount,
+      iterations: chainResult.iterations
+    };
+  }
+  
+  // Case 2: Check for adjacent merges
+  const adjacentPositions = [
+    { row: bottomRow - 1, col: column }, // up from bottom
+    { row: bottomRow, col: column - 1 }, // left of bottom
+    { row: bottomRow, col: column + 1 }  // right of bottom
+  ];
+  
+  for (const pos of adjacentPositions) {
+    if (pos.row >= 0 && pos.row < ROWS && 
+        pos.col >= 0 && pos.col < COLS && 
+        newBoard[pos.row][pos.col] === value) {
+      
+      // Found an adjacent tile that can merge
+      // Create the merge by replacing the bottom tile with the new merged value
+      const newValue = value * 2;
+      newBoard[bottomRow][column] = newValue;
+      
+      // Clear the adjacent tile that merged
+      newBoard[pos.row][pos.col] = 0;
+      
+      totalScore += newValue;
+      
+      // Apply upward gravity to settle everything
+      for (let c = 0; c < COLS; c++) {
+        applyUpwardGravity(newBoard, c);
+      }
+      
+      // Process any chain reactions
+      const chainResult = processChainReactions(newBoard, column);
+      totalScore += chainResult.totalScore;
+      
+      return {
+        board: newBoard,
+        score: Math.floor(totalScore),
+        success: true,
+        chainReactions: chainResult.chainReactionCount,
+        iterations: chainResult.iterations
+      };
+    }
+  }
+  
+  // No merge possible
+  return {
+    board: newBoard,
+    score: 0,
+    success: false,
+    error: 'Column is full and no merge possible'
+  };
+};
+
+/**
  * CONNECTED GROUP MERGING: Find all connected tiles with same value and merge them
  * Uses flood fill algorithm to find connected components
  * Implements exponential merging rule: newValue = originalValue * 2^(numberOfTiles - 1)

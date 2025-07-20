@@ -24,7 +24,8 @@ import { useAnimationManager } from '../components/AnimationManager';
 import { 
   getRandomBlockValue, 
   handleBlockLanding,
-  applyGravity 
+  applyGravity,
+  processFullColumnDrop 
 } from '../components/GameLogic';
 import { 
   GameValidator, 
@@ -263,9 +264,15 @@ const DropNumberBoard = ({ navigation, route }) => {
       }
     }
     
-    // If no empty cell found in the column, return (column is full)
+    // If no empty cell found, check if we can merge in the full column
+    let canMergeInFull = null;
     if (landingRow === -1) {
-      return; // Column is full, can't place tile
+      canMergeInFull = canMergeInFullColumn(board, landingCol, falling.value);
+      if (!canMergeInFull) {
+        return; // Column is full and no merge possible
+      }
+      // Set landing row to the bottom for the merge case
+      landingRow = canMergeInFull.mergeRow;
     }
     
     // Disable touch temporarily to prevent rapid successive taps
@@ -286,7 +293,7 @@ const DropNumberBoard = ({ navigation, route }) => {
     
     // Update next block immediately when user taps
     setNextBlock(previewBlock);
-    setPreviewBlock(getRandomBlockValue());
+    setPreviewBlock(getRandomBlockValue(currentMinSpawn));
     
     // Update falling tile with target position and start animation
     const updatedFalling = {
@@ -314,7 +321,13 @@ const DropNumberBoard = ({ navigation, route }) => {
     
     // Handle landing after animation completes
     const fastDropTimer = setTimeout(() => {
-      handleTileLanded(landingRow, landingCol, falling.value);
+      if (canMergeInFull) {
+        // Special handling for full column merge
+        handleFullColumnTileLanded(landingRow, landingCol, falling.value);
+      } else {
+        // Normal tile landing
+        handleTileLanded(landingRow, landingCol, falling.value);
+      }
       clearFalling();
     }, GAME_CONFIG.TIMING.FAST_DROP_DURATION);
     
@@ -341,6 +354,38 @@ const DropNumberBoard = ({ navigation, route }) => {
              pos.col >= 0 && pos.col < COLS && 
              board[pos.row][pos.col] !== 0;
     });
+  };
+
+  /**
+   * Check if a tile can merge when dropped into a full column
+   * @param {Array[]} board - The game board
+   * @param {number} col - Column to check
+   * @param {number} value - Value of the tile to drop
+   * @returns {Object|null} - { canMerge: boolean, mergeRow: number } or null
+   */
+  const canMergeInFullColumn = (board, col, value) => {
+    // Check if the bottom tile in the column matches the dropping tile
+    const bottomRow = ROWS - 1;
+    if (board[bottomRow][col] === value) {
+      return { canMerge: true, mergeRow: bottomRow };
+    }
+    
+    // Check if any adjacent tiles to the bottom can merge
+    const adjacentPositions = [
+      { row: bottomRow - 1, col }, // up from bottom
+      { row: bottomRow, col: col - 1 }, // left of bottom
+      { row: bottomRow, col: col + 1 }  // right of bottom
+    ];
+    
+    for (const pos of adjacentPositions) {
+      if (pos.row >= 0 && pos.row < ROWS && 
+          pos.col >= 0 && pos.col < COLS && 
+          board[pos.row][pos.col] === value) {
+        return { canMerge: true, mergeRow: bottomRow };
+      }
+    }
+    
+    return null;
   };
 
   /**
@@ -412,6 +457,97 @@ const DropNumberBoard = ({ navigation, route }) => {
       });
     } catch (error) {
       // Error in handleTileLanded
+    }
+  };
+
+  /**
+   * Handle tile landing in a full column when merging is possible
+   * Uses the special full column drop logic
+   */
+  const handleFullColumnTileLanded = (row, col, value) => {
+    try {
+      // Process the full column drop through the special game engine
+      const result = processFullColumnDrop(board, value, col);
+      
+      if (result.success) {
+        const { 
+          board: newBoard, 
+          score: totalScore, 
+          chainReactions: chainReactionCount = 0, 
+          iterations = 0 
+        } = result;
+        
+        // Update game statistics
+        setGameStats(prevStats => {
+          const newHighestTile = Math.max(prevStats.highestTile, ...newBoard.flat());
+          
+          return {
+            ...prevStats,
+            tilesPlaced: prevStats.tilesPlaced + 1,
+            mergesPerformed: prevStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
+            chainReactions: prevStats.chainReactions + chainReactionCount,
+            highestTile: newHighestTile,
+          };
+        });
+        
+        // Process dynamic floor changes
+        const floorResult = processFloorChange(
+          newBoard, 
+          currentMinSpawn,
+          (floorChangeInfo) => {
+            // Floor change callback - handle UI feedback
+            console.log(`Floor raised! ${floorChangeInfo.oldMinSpawn} → ${floorChangeInfo.newMinSpawn}`);
+            console.log(`${floorChangeInfo.tilesUpgraded} tiles upgraded to new floor`);
+            setFloorLevel(floorChangeInfo.floorLevel);
+          },
+          (upgradeInfo) => {
+            // Tile upgrade callback - handle animations
+            console.log(`Tile at (${upgradeInfo.row},${upgradeInfo.col}) upgraded: ${upgradeInfo.oldValue} → ${upgradeInfo.newValue}`);
+          }
+        );
+        
+        // Update floor state if it changed
+        if (floorResult.floorChanged) {
+          setCurrentMinSpawn(floorResult.newMinSpawn);
+          setBoard([...floorResult.newBoard || newBoard]); // Update board with upgraded tiles
+        } else {
+          // Update board state
+          setBoard(newBoard);
+        }
+        
+        // Update max tile achieved
+        const currentMaxTile = Math.max(...newBoard.flat());
+        if (currentMaxTile > maxTileAchieved) {
+          setMaxTileAchieved(currentMaxTile);
+        }
+        
+        // Update score and record
+        if (totalScore > 0) {
+          setScore(currentScore => {
+            const newScore = currentScore + totalScore;
+            if (newScore > record) {
+              setRecord(newScore);
+            }
+            return newScore;
+          });
+        }
+        
+        // Check for game over condition
+        if (GameValidator.isGameOver(newBoard)) {
+          setGameOver(true);
+        }
+        
+        // Play merge sound/vibration for successful merge
+        vibrateOnTouch().catch(err => {
+          // Touch sound/vibration error
+        });
+      } else {
+        // Full column drop failed, should not happen if canMergeInFullColumn worked correctly
+        console.error('Full column drop failed:', result.error);
+      }
+    } catch (error) {
+      // Error in handleFullColumnTileLanded
+      console.error('Error in handleFullColumnTileLanded:', error);
     }
   };
 

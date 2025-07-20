@@ -4,11 +4,11 @@
     "slug": "1024-game",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.svg",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.svg",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#FF6B6B"
     },
@@ -20,16 +20,20 @@
         "resizeMode": "contain",
         "backgroundColor": "#FF6B6B"
       },
-      "bundleIdentifier": "game1024.app"
+      "bundleIdentifier": "game1024.app",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "This app uses audio for game sound effects.",
+        "UIBackgroundModes": ["audio"]
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.svg",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FF6B6B"
       },
-      "icon": "./assets/icon.svg",
+      "icon": "./assets/icon.png",
       "splash": {
-        "image": "./assets/splash-android.svg",
+        "image": "./assets/splash-android.png",
         "resizeMode": "contain",
         "backgroundColor": "#FF6B6B"
       },

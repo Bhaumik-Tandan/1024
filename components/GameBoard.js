@@ -20,41 +20,125 @@ const GameBoard = () => {
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
   const [slidingTiles, setSlidingTiles] = useState([]);
+  const [gameStarted, setGameStarted] = useState(false);
   const slideAnimations = useRef({});
+  const autoSlideIntervalRef = useRef(null);
 
   // Initialize the board
   useEffect(() => {
     initializeBoard();
   }, []);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSlideIntervalRef.current) {
+        clearInterval(autoSlideIntervalRef.current);
+        autoSlideIntervalRef.current = null;
+      }
+    };
+  }, []);
+
   // Auto-slide effect - periodically add new tiles
   useEffect(() => {
-    if (gameOver || won) return;
+    // TEMPORARILY DISABLED to isolate infinite loop issue
+    // TODO: Re-enable with proper implementation
+    /*
+    if (gameOver || won || !gameStarted) {
+      if (autoSlideIntervalRef.current) {
+        clearInterval(autoSlideIntervalRef.current);
+        autoSlideIntervalRef.current = null;
+      }
+      return;
+    }
     
-    const autoSlideInterval = setInterval(() => {
-      setBoard(currentBoard => {
-        const newBoard = currentBoard.map(row => [...row]);
-        addRandomTile(newBoard);
-        return newBoard;
-      });
-    }, 3000); // Add new tile every 3 seconds
+    // Add a delay before starting auto-slide to prevent immediate execution
+    const startDelay = setTimeout(() => {
+      autoSlideIntervalRef.current = setInterval(() => {
+        // Check conditions and add tile if possible
+        // Use functional state update to avoid stale closures
+        setBoard(currentBoard => {
+          // Skip if there are sliding tiles
+          if (slidingTiles.length > 0) {
+            return currentBoard;
+          }
+          
+          // Check if we can add a tile
+          const bottomRow = BOARD_SIZE - 1;
+          const emptyBottomCells = [];
+          
+          for (let col = 0; col < GRID_SIZE; col++) {
+            if (currentBoard[bottomRow][col] === 0) {
+              emptyBottomCells.push(col);
+            }
+          }
+          
+          if (emptyBottomCells.length === 0) {
+            return currentBoard; // No empty cells
+          }
+          
+          // Create new board with tile added
+          const newBoard = currentBoard.map(row => [...row]);
+          const randomCol = emptyBottomCells[Math.floor(Math.random() * emptyBottomCells.length)];
+          const newValue = Math.random() < 0.9 ? 2 : 4;
+          newBoard[bottomRow][randomCol] = newValue;
+          
+          return newBoard;
+        });
+      }, 3000); // Add new tile every 3 seconds
+    }, 1000); // 1 second delay before starting auto-slide
     
-    return () => clearInterval(autoSlideInterval);
-  }, [gameOver, won]);
+    return () => {
+      clearTimeout(startDelay);
+      if (autoSlideIntervalRef.current) {
+        clearInterval(autoSlideIntervalRef.current);
+        autoSlideIntervalRef.current = null;
+      }
+    };
+    */
+  }, [gameOver, won, gameStarted]); // Keep dependencies minimal
 
   // Update all logic to use BOARD_SIZE for rows and GRID_SIZE for columns
   // Board initialization
   const initializeBoard = () => {
     const newBoard = Array(BOARD_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(0));
-    addRandomTile(newBoard);
-    addRandomTile(newBoard);
+    // Add initial tiles without animation during setup
+    addInitialTile(newBoard);
+    addInitialTile(newBoard);
     setBoard(newBoard);
     setScore(0);
     setGameOver(false);
     setWon(false);
+    setGameStarted(true); // Mark game as started after initialization
+  };
+
+  // Function for adding tiles during initialization (no animation)
+  const addInitialTile = (boardState) => {
+    // Find empty cells in the entire visible area for initialization
+    const emptyCells = [];
+    
+    for (let row = 0; row < VISIBLE_ROWS; row++) {
+      for (let col = 0; col < GRID_SIZE; col++) {
+        if (boardState[row][col] === 0) {
+          emptyCells.push({ row, col });
+        }
+      }
+    }
+    
+    if (emptyCells.length > 0) {
+      const randomIndex = Math.floor(Math.random() * emptyCells.length);
+      const { row, col } = emptyCells[randomIndex];
+      const newValue = Math.random() < 0.9 ? 2 : 4;
+      boardState[row][col] = newValue;
+    }
   };
 
   const addRandomTile = (boardState) => {
+    // Prevent adding tiles if there are already sliding tiles in progress
+    if (slidingTiles.length > 0) {
+      return;
+    }
+    
     // Find empty cells in the bottom row (BOARD_SIZE - 1)
     const bottomRow = BOARD_SIZE - 1;
     const emptyBottomCells = [];
@@ -336,7 +420,7 @@ const GameBoard = () => {
 
 
   const handleMove = (direction) => {
-    if (gameOver) return;
+    if (gameOver || slidingTiles.length > 0) return; // Prevent moves during animations
     
     const newBoard = board.map(row => [...row]);
     let moved = false;
@@ -359,12 +443,8 @@ const GameBoard = () => {
     if (moved) {
       setBoard(newBoard);
       
-      // Add new tile after a short delay to allow for visual feedback
-      setTimeout(() => {
-        addRandomTile(newBoard);
-      }, 300);
-      
-  
+      // Don't add new tile manually - let the auto-slide handle it
+      // Remove the setTimeout that was adding tiles after moves
       
       if (checkGameOver(newBoard)) {
         setGameOver(true);

@@ -1,4 +1,5 @@
 import { Audio } from 'expo-av';
+import { Platform } from 'react-native';
 import useGameStore from '../store/gameStore';
 
 class SoundManager {
@@ -12,9 +13,14 @@ class SoundManager {
   async initialize() {
     try {
       // Request audio permissions
-      await Audio.requestPermissionsAsync();
+      const { status } = await Audio.requestPermissionsAsync();
       
-      // Set audio mode for better performance
+      if (status !== 'granted') {
+        console.warn('Audio permissions not granted');
+        return;
+      }
+      
+      // Simplified iOS audio mode configuration with only valid options
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
         staysActiveInBackground: false,
@@ -29,8 +35,9 @@ class SoundManager {
       await this.loadDropSound();
       
       this.isInitialized = true;
+      console.log('Sound manager initialized successfully');
     } catch (error) {
-      // Failed to initialize sound manager
+      console.error('Failed to initialize sound manager:', error);
     }
   }
 
@@ -47,7 +54,7 @@ class SoundManager {
       
       this.mergeSound = sound;
     } catch (error) {
-      // Failed to load merge sound
+      console.error('Failed to load merge sound:', error);
     }
   }
 
@@ -64,7 +71,7 @@ class SoundManager {
       
       this.intermediateMergeSound = sound;
     } catch (error) {
-      // Failed to load intermediate merge sound
+      console.error('Failed to load intermediate merge sound:', error);
     }
   }
 
@@ -81,7 +88,7 @@ class SoundManager {
       
       this.dropSound = sound;
     } catch (error) {
-      // Failed to load drop sound
+      console.error('Failed to load drop sound:', error);
     }
   }
 
@@ -89,17 +96,22 @@ class SoundManager {
     try {
       const { soundEnabled, soundVolume } = useGameStore.getState();
       
-      if (!soundEnabled || !this.mergeSound) {
+      if (!soundEnabled || !this.mergeSound || !this.isInitialized) {
         return;
       }
       
-      // Update volume if needed
-      await this.mergeSound.setVolumeAsync(soundVolume);
+      // Ensure sound is in playable state
+      const status = await this.mergeSound.getStatusAsync();
+      if (!status.isLoaded) {
+        console.warn('Merge sound not loaded');
+        return;
+      }
       
-      // Play the sound
+      // Update volume and play
+      await this.mergeSound.setVolumeAsync(soundVolume);
       await this.mergeSound.replayAsync();
     } catch (error) {
-      // Failed to play merge sound
+      console.error('Failed to play merge sound:', error);
     }
   }
 
@@ -107,17 +119,20 @@ class SoundManager {
     try {
       const { soundEnabled, soundVolume } = useGameStore.getState();
       
-      if (!soundEnabled || !this.intermediateMergeSound) {
+      if (!soundEnabled || !this.intermediateMergeSound || !this.isInitialized) {
         return;
       }
       
-      // Update volume if needed (slightly lower volume for intermediate merge)
-      await this.intermediateMergeSound.setVolumeAsync(soundVolume * 0.85);
+      const status = await this.intermediateMergeSound.getStatusAsync();
+      if (!status.isLoaded) {
+        console.warn('Intermediate merge sound not loaded');
+        return;
+      }
       
-      // Play the sound
+      await this.intermediateMergeSound.setVolumeAsync(soundVolume * 0.85);
       await this.intermediateMergeSound.replayAsync();
     } catch (error) {
-      // Failed to play intermediate merge sound
+      console.error('Failed to play intermediate merge sound:', error);
     }
   }
 
@@ -125,17 +140,20 @@ class SoundManager {
     try {
       const { soundEnabled, soundVolume } = useGameStore.getState();
       
-      if (!soundEnabled || !this.dropSound) {
+      if (!soundEnabled || !this.dropSound || !this.isInitialized) {
         return;
       }
       
-      // Update volume if needed (slightly lower volume for drop sound)
-      await this.dropSound.setVolumeAsync(soundVolume * 0.7);
+      const status = await this.dropSound.getStatusAsync();
+      if (!status.isLoaded) {
+        console.warn('Drop sound not loaded');
+        return;
+      }
       
-      // Play the sound
+      await this.dropSound.setVolumeAsync(soundVolume * 0.7);
       await this.dropSound.replayAsync();
     } catch (error) {
-      // Failed to play drop sound
+      console.error('Failed to play drop sound:', error);
     }
   }
 
@@ -151,7 +169,7 @@ class SoundManager {
         await this.dropSound.setVolumeAsync(volume * 0.7);
       }
     } catch (error) {
-      // Failed to update sound volume
+      console.error('Failed to update sound volume:', error);
     }
   }
 
@@ -171,7 +189,7 @@ class SoundManager {
       }
       this.isInitialized = false;
     } catch (error) {
-      // Failed to cleanup sound manager
+      console.error('Failed to cleanup sound manager:', error);
     }
   }
 }

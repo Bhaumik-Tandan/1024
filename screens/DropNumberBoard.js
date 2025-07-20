@@ -76,6 +76,11 @@ const DropNumberBoard = ({ navigation, route }) => {
     startTime: Date.now(),
   });
 
+  // Floor system states
+  const [currentMinSpawn, setCurrentMinSpawn] = useState(2);
+  const [floorLevel, setFloorLevel] = useState(1);
+  const [maxTileAchieved, setMaxTileAchieved] = useState(0);
+
   const boardRef = useRef(null);
   const [boardLeft, setBoardLeft] = useState(0);
   
@@ -293,7 +298,7 @@ const DropNumberBoard = ({ navigation, route }) => {
     
     // Update next block immediately when user taps
     setNextBlock(previewBlock);
-    setPreviewBlock(getRandomBlockValue(currentMinSpawn));
+    setPreviewBlock(getRandomBlockValue());
     
     // Update falling tile with target position and start animation
     const updatedFalling = {
@@ -490,30 +495,8 @@ const DropNumberBoard = ({ navigation, route }) => {
           };
         });
         
-        // Process dynamic floor changes
-        const floorResult = processFloorChange(
-          newBoard, 
-          currentMinSpawn,
-          (floorChangeInfo) => {
-            // Floor change callback - handle UI feedback
-            console.log(`Floor raised! ${floorChangeInfo.oldMinSpawn} → ${floorChangeInfo.newMinSpawn}`);
-            console.log(`${floorChangeInfo.tilesUpgraded} tiles upgraded to new floor`);
-            setFloorLevel(floorChangeInfo.floorLevel);
-          },
-          (upgradeInfo) => {
-            // Tile upgrade callback - handle animations
-            console.log(`Tile at (${upgradeInfo.row},${upgradeInfo.col}) upgraded: ${upgradeInfo.oldValue} → ${upgradeInfo.newValue}`);
-          }
-        );
-        
-        // Update floor state if it changed
-        if (floorResult.floorChanged) {
-          setCurrentMinSpawn(floorResult.newMinSpawn);
-          setBoard([...floorResult.newBoard || newBoard]); // Update board with upgraded tiles
-        } else {
-          // Update board state
-          setBoard(newBoard);
-        }
+        // Update board state
+        setBoard(newBoard);
         
         // Update max tile achieved
         const currentMaxTile = Math.max(...newBoard.flat());

@@ -58,7 +58,6 @@ const DropNumberBoard = ({ navigation, route }) => {
   // Core game state
   const [board, setBoard] = useState(() => Array.from({ length: ROWS }, () => Array(COLS).fill(0)));
   const [score, setScore] = useState(0);
-  const [record, setRecord] = useState(0);
   const [nextBlock, setNextBlock] = useState(() => getRandomBlockValue());
   const [previewBlock, setPreviewBlock] = useState(() => getRandomBlockValue());
   
@@ -89,7 +88,7 @@ const DropNumberBoard = ({ navigation, route }) => {
   const [boardLeft, setBoardLeft] = useState(0);
   
   // Zustand store
-  const { updateScore, updateHighestBlock, darkMode, saveGame, loadSavedGame, clearSavedGame } = useGameStore();
+  const { updateScore, updateHighestBlock, darkMode, saveGame, loadSavedGame, clearSavedGame, highScore } = useGameStore();
   
   // Use the animation manager
   const {
@@ -152,7 +151,6 @@ const DropNumberBoard = ({ navigation, route }) => {
         // Set all values immediately
         setBoard(savedGame.board);
         setScore(savedGame.score);
-        setRecord(savedGame.record);
         setGameOver(false);
         setGameStats(savedGame.gameStats);
         setNextBlock(savedGame.nextBlock);
@@ -171,7 +169,6 @@ const DropNumberBoard = ({ navigation, route }) => {
         const gameState = {
           board,
           score,
-          record,
           nextBlock,
           previewBlock,
           gameStats,
@@ -181,7 +178,7 @@ const DropNumberBoard = ({ navigation, route }) => {
 
       return () => clearInterval(autoSaveInterval);
     }
-  }, [board, score, record, nextBlock, previewBlock, gameStats, gameOver, isPaused]); // Removed saveGame from dependencies
+  }, [board, score, nextBlock, previewBlock, gameStats, gameOver, isPaused]); // Removed saveGame from dependencies
 
   // Save game state when screen loses focus
   useFocusEffect(
@@ -192,7 +189,6 @@ const DropNumberBoard = ({ navigation, route }) => {
           const currentGameState = {
             board,
             score,
-            record,
             nextBlock,
             previewBlock,
             gameStats,
@@ -200,7 +196,7 @@ const DropNumberBoard = ({ navigation, route }) => {
           saveGame(currentGameState);
         }
       };
-    }, [board, score, record, nextBlock, previewBlock, gameStats, gameOver])
+    }, [board, score, nextBlock, previewBlock, gameStats, gameOver])
   );
 
   // Pause modal handlers
@@ -222,7 +218,6 @@ const DropNumberBoard = ({ navigation, route }) => {
     const currentGameState = {
       board,
       score,
-      record,
       nextBlock,
       previewBlock,
       gameStats,
@@ -484,13 +479,11 @@ const DropNumberBoard = ({ navigation, route }) => {
           };
         });
         
-        // Update score and record
+        // Update score using store's updateScore method
         if (totalScore > 0) {
           setScore(currentScore => {
             const newScore = currentScore + totalScore;
-            if (newScore > record) {
-              setRecord(newScore);
-            }
+            updateScore(newScore); // This handles high score automatically
             return newScore;
           });
         }
@@ -556,13 +549,11 @@ const DropNumberBoard = ({ navigation, route }) => {
           setMaxTileAchieved(currentMaxTile);
         }
         
-        // Update score and record
+        // Update score using store's updateScore method
         if (totalScore > 0) {
           setScore(currentScore => {
             const newScore = currentScore + totalScore;
-            if (newScore > record) {
-              setRecord(newScore);
-            }
+            updateScore(newScore); // This handles high score automatically
             return newScore;
           });
         }
@@ -632,7 +623,7 @@ const DropNumberBoard = ({ navigation, route }) => {
     <View style={[styles.container, darkMode ? styles.containerDark : styles.containerLight]}>
       <GameHeader 
         score={score}
-        record={record}
+        record={highScore || 0}
         onPause={handlePause}
       />
       
@@ -734,7 +725,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a1a',
   },
   containerLight: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8f9fa',
   },
   separator: {
     height: 2,

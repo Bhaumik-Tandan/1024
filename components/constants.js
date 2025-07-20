@@ -26,70 +26,70 @@ export const getCellLeft = (col) => col * (CELL_SIZE + CELL_MARGIN);
 export const getCellTop = (row) => row * (CELL_SIZE + CELL_MARGIN);
 
 /**
- * Tile color scheme - Vibrant, modern colors inspired by popular mobile games
+ * Tile color scheme - Modern, accessible colors with better contrast
  */
 export const COLORS = {
   // Empty cell
   0: '#2c2c2c',
   
-  // Small values (common) - warm, inviting colors
-  2: '#FFE0B2',      // Light peach
-  4: '#FFCC80',      // Peach
-  8: '#FFB74D',      // Orange
-  16: '#FF9800',     // Vibrant orange
-  32: '#FF7043',     // Red-orange
+  // Small values (common) - soft, friendly colors
+  2: '#F8E1A6',      // Soft gold
+  4: '#FFD54F',      // Amber
+  8: '#FFA726',      // Orange
+  16: '#FF7043',     // Deep orange
+  32: '#E57373',     // Coral
   
-  // Medium values - vibrant colors
-  64: '#FFEB3B',     // Bright yellow
-  128: '#CDDC39',    // Lime green
-  256: '#8BC34A',    // Green
-  512: '#4CAF50',    // Material green
+  // Medium values - vibrant but balanced
+  64: '#BA68C8',     // Light purple
+  128: '#9575CD',    // Medium purple  
+  256: '#7986CB',    // Indigo
+  512: '#64B5F6',    // Blue
   
-  // High values - rich, exciting colors
-  1024: '#009688',   // Teal (special milestone)
-  2048: '#00BCD4',   // Cyan
-  4096: '#03A9F4',   // Blue
-  8192: '#2196F3',   // Material blue
+  // High values - premium gradient feel
+  1024: '#4FC3F7',   // Cyan (milestone without crown)
+  2048: '#4DD0E1',   // Light cyan
+  4096: '#26C6DA',   // Darker cyan
+  8192: '#00ACC1',   // Teal
   
-  // Ultra high values - premium colors
-  16384: '#3F51B5',  // Indigo
-  32768: '#673AB7',  // Deep purple
-  65536: '#9C27B0',  // Purple
-  131072: '#E91E63', // Pink
-  262144: '#F44336', // Red
-  524288: '#FF5722', // Deep orange
-  1048576: '#795548', // Brown (1M milestone)
-  2097152: '#607D8B' // Blue grey
+  // Ultra high values - rich, luxurious colors
+  16384: '#00897B',  // Dark teal
+  32768: '#43A047',  // Green
+  65536: '#7CB342',  // Light green
+  131072: '#C0CA33', // Lime
+  262144: '#FDD835', // Yellow
+  524288: '#FFB300', // Amber
+  1048576: '#FF8F00', // Orange (1M milestone)
+  2097152: '#FF6F00' // Deep orange
 };
 
 /**
  * Enhanced gradient colors for tiles - creates depth and visual appeal
  */
 export const TILE_GRADIENTS = {
-  2: ['#FFE0B2', '#FFCC80'],
-  4: ['#FFCC80', '#FFB74D'],
-  8: ['#FFB74D', '#FF9800'],
-  16: ['#FF9800', '#FF7043'],
-  32: ['#FF7043', '#F44336'],
+  2: ['#F8E1A6', '#F5D982'],
+  4: ['#FFD54F', '#FFC107'],
+  8: ['#FFA726', '#FF8F00'],
+  16: ['#FF7043', '#E64A19'],
+  32: ['#E57373', '#D32F2F'],
   
-  64: ['#FFEB3B', '#FFC107'],
-  128: ['#CDDC39', '#8BC34A'],
-  256: ['#8BC34A', '#4CAF50'],
-  512: ['#4CAF50', '#2E7D32'],
+  64: ['#BA68C8', '#9C27B0'],
+  128: ['#9575CD', '#673AB7'],
+  256: ['#7986CB', '#3F51B5'],
+  512: ['#64B5F6', '#2196F3'],
   
-  1024: ['#26C6DA', '#00ACC1'], // Special teal gradient for 1024
-  2048: ['#29B6F6', '#0288D1'],
-  4096: ['#42A5F5', '#1976D2'],
-  8192: ['#5C6BC0', '#3949AB'],
+  1024: ['#4FC3F7', '#29B6F6'], // Beautiful cyan gradient for 1024 (no crown)
+  2048: ['#4DD0E1', '#26C6DA'],
+  4096: ['#26C6DA', '#00ACC1'],
+  8192: ['#00ACC1', '#00838F'],
   
-  16384: ['#7E57C2', '#5E35B1'],
-  32768: ['#AB47BC', '#8E24AA'],
-  65536: ['#EC407A', '#D81B60'],
-  131072: ['#EF5350', '#E53935'],
-  262144: ['#FF7043', '#F4511E'],
-  524288: ['#A1887F', '#6D4C41'],
-  1048576: ['#FFD700', '#FFC107'], // Gold gradient for 1M milestone
-  2097152: ['#90A4AE', '#546E7A']
+  16384: ['#00897B', '#00695C'],
+  32768: ['#43A047', '#2E7D32'],
+  65536: ['#7CB342', '#558B2F'],
+  131072: ['#C0CA33', '#9E9D24'],
+  262144: ['#FDD835', '#F57F17'],
+  524288: ['#FFB300', '#FF8F00'],
+  1048576: ['#FF8F00', '#FF6F00'], // Rich orange gradient for 1M milestone
+  2097152: ['#FF6F00', '#E65100']
 };
 
 /**
@@ -160,14 +160,14 @@ export const isMilestoneTile = (value) => {
  * Get special tile decoration (crown, stars, etc.)
  */
 export const getTileDecoration = (value) => {
-  if (value === 1048576) { // 1M
+  if (value === 1048576) { // 1M - Only 1M gets crown now
     return { type: 'crown', stars: true };
-  }
-  if (value === 1024) { // 1K
-    return { type: 'crown', stars: false };
   }
   if (value >= 524288) { // High value tiles get stars
     return { type: 'stars', stars: true };
+  }
+  if (value >= 1024) { // 1K and above get subtle glow effect
+    return { type: 'glow', stars: false };
   }
   return null;
 };
@@ -217,28 +217,40 @@ export const UI_CONFIG = {
  * Theme colors for the game
  */
 export const THEME = {
-  // Background colors
-  BACKGROUND_PRIMARY: '#2d2d2d',
-  BACKGROUND_SECONDARY: '#1a1a1a',
-  BACKGROUND_BOARD: '#2c2c2c',
+  // Dark theme
+  DARK: {
+    BACKGROUND_PRIMARY: '#1a1a1a',
+    BACKGROUND_SECONDARY: '#2c2c2c',
+    BACKGROUND_BOARD: '#2a2a2a',
+    TEXT_PRIMARY: '#ffffff',
+    TEXT_SECONDARY: '#aaaaaa',
+    BORDER_COLOR: '#444444',
+    SHADOW_COLOR: '#000000',
+  },
   
-  // Text colors
-  TEXT_PRIMARY: '#ffffff',
-  TEXT_SECONDARY: '#aaaaaa',
-  TEXT_ACCENT: '#ffd700',
+  // Light theme
+  LIGHT: {
+    BACKGROUND_PRIMARY: '#ffffff',
+    BACKGROUND_SECONDARY: '#f8f9fa',
+    BACKGROUND_BOARD: '#e9ecef',
+    TEXT_PRIMARY: '#212529',
+    TEXT_SECONDARY: '#6c757d',
+    BORDER_COLOR: '#dee2e6',
+    SHADOW_COLOR: 'rgba(0,0,0,0.1)',
+  },
   
-  // UI element colors
-  BORDER_COLOR: '#444444',
-  SHADOW_COLOR: '#000000',
-  SUCCESS_COLOR: '#4CAF50',
-  WARNING_COLOR: '#FF9800',
-  ERROR_COLOR: '#F44336',
+  // Common colors
+  TEXT_ACCENT: '#007bff',
+  SUCCESS_COLOR: '#28a745',
+  WARNING_COLOR: '#ffc107',
+  ERROR_COLOR: '#dc3545',
   
   // Header box colors
-  SCORE_BOX: '#2a2a2a',
-  RECORD_BOX: '#4a90e2',
-  RANK_BOX: '#444444',
-  COINS_BOX: '#2a2a2a',
+  SCORE_BOX_DARK: '#2a2a2a',
+  SCORE_BOX_LIGHT: '#f8f9fa',
+  RECORD_BOX: '#007bff',
+  RANK_BOX_DARK: '#444444',
+  RANK_BOX_LIGHT: '#e9ecef',
 };
 
 /**

@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2c2c2c',
   },
   containerLight: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8f9fa',
   },
   
   header: {
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   textDark: {
-    color: '#000000',
+    color: '#212529',
   },
   
   placeholder: {
@@ -286,7 +286,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#333',
   },
   settingRowLight: {
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    shadowColor: 'rgba(0,0,0,0.05)',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 1,
   },
   
   settingLeft: {
@@ -370,7 +377,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#333',
   },
   statRowLight: {
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    shadowColor: 'rgba(0,0,0,0.05)',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 1,
   },
   
   statLeft: {

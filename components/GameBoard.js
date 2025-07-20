@@ -615,7 +615,7 @@ const GameBoard = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#faf8ef',
+    backgroundColor: '#f8f9fa',
     padding: 20,
   },
   header: {
@@ -627,22 +627,29 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: '#776e65',
+    color: '#212529',
   },
   scoreContainer: {
-    backgroundColor: '#bbada0',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
     padding: 10,
     borderRadius: 6,
     alignItems: 'center',
     minWidth: 80,
+    shadowColor: 'rgba(0,0,0,0.1)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   scoreLabel: {
-    color: '#eee4da',
+    color: '#6c757d',
     fontSize: 12,
     fontWeight: 'bold',
   },
   scoreValue: {
-    color: '#f9f6f2',
+    color: '#212529',
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -650,9 +657,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   board: {
-    backgroundColor: '#bbada0',
+    backgroundColor: '#e9ecef',
     borderRadius: 8,
     padding: 8,
+    borderWidth: 2,
+    borderColor: '#dee2e6',
+    shadowColor: 'rgba(0,0,0,0.1)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
   },
   row: {
     flexDirection: 'row',

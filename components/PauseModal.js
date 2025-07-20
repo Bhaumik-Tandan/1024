@@ -11,7 +11,7 @@ import { vibrateOnButtonPress } from '../utils/vibration';
 import useGameStore from '../store/gameStore';
 
 const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
-  const { darkMode } = useGameStore();
+  const { darkMode, vibrationEnabled, soundEnabled, toggleVibration, toggleSound } = useGameStore();
 
   const handleButtonPress = (action) => {
     // Vibrate on button press
@@ -79,17 +79,25 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
 
           <View style={styles.bottomRow}>
             <TouchableOpacity 
-              style={[styles.iconButton, styles.adButton]}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="play-circle" size={24} color="#ffffff" />
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.iconButton, styles.layoutButton]}
+              style={[styles.iconButton, styles.vibrationButton, !vibrationEnabled && styles.disabledButton]}
+              onPress={() => {
+                vibrateOnButtonPress();
+                toggleVibration();
+              }}
               activeOpacity={0.7}
             >
               <Ionicons name="phone-portrait" size={24} color="#ffffff" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.iconButton, styles.soundButton, !soundEnabled && styles.disabledButton]}
+              onPress={() => {
+                vibrateOnButtonPress();
+                toggleSound();
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="musical-notes" size={24} color="#ffffff" />
             </TouchableOpacity>
 
             <TouchableOpacity 
@@ -132,7 +140,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#2c2c2c',
   },
   modalContainerLight: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
   },
   
   header: {
@@ -151,7 +161,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   textDark: {
-    color: '#000000',
+    color: '#212529',
   },
   
   closeButton: {
@@ -162,7 +172,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#444',
   },
   closeButtonLight: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
   },
   
   content: {
@@ -207,7 +219,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#666',
   },
   secondaryButtonLight: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
   },
   
   secondaryButtonText: {
@@ -231,12 +245,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#444',
   },
   
-  adButton: {
+  vibrationButton: {
     backgroundColor: '#ff9800',
   },
   
-  layoutButton: {
-    backgroundColor: '#2196f3',
+  soundButton: {
+    backgroundColor: '#4caf50',
+  },
+
+  disabledButton: {
+    backgroundColor: '#666',
+    opacity: 0.5,
   },
   
   refreshButton: {

@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a1a',
   },
   containerLight: {
-    backgroundColor: '#faf8ef',
+    backgroundColor: '#f8f9fa',
   },
   
   // Background
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   backgroundGradientLight: {
-    backgroundColor: '#faf8ef',
+    backgroundColor: '#f8f9fa',
   },
   backgroundGradientDark: {
     backgroundColor: '#1a1a1a',
@@ -206,13 +206,13 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   textDark: {
-    color: '#776e65',
+    color: '#212529',
   },
   subtitleLight: {
     color: '#cccccc',
   },
   subtitleDark: {
-    color: '#8f7a66',
+    color: '#6c757d',
   },
   
   // Score Section
@@ -233,7 +233,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#3c3a32',
   },
   cardLight: {
-    backgroundColor: '#bbada0',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    shadowColor: 'rgba(0,0,0,0.1)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   
   scoreLabel: {

@@ -39,8 +39,13 @@ const styles = StyleSheet.create({
     borderBottomColor: '#333',
   },
   topBarLight: {
-    backgroundColor: '#ffffff',
-    borderBottomColor: '#e0e0e0',
+    backgroundColor: '#f8f9fa',
+    borderBottomColor: '#dee2e6',
+    shadowColor: 'rgba(0,0,0,0.1)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   scoreBox: {
     borderRadius: 12,
@@ -58,7 +63,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#2a2a2a',
   },
   scoreBoxLight: {
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+    shadowColor: 'rgba(0,0,0,0.1)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   scoreValue: {
     fontSize: 20,
@@ -68,7 +80,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   textDark: {
-    color: '#000',
+    color: '#212529',
   },
   scoreLabel: {
     fontSize: 12,
@@ -79,7 +91,7 @@ const styles = StyleSheet.create({
     color: '#aaa',
   },
   labelDark: {
-    color: '#666',
+    color: '#6c757d',
   },
   pauseButton: {
     width: 48,

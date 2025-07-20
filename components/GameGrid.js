@@ -98,15 +98,21 @@ const GameGrid = ({
               
               {cell !== 0 && !isAnimating && (
                 <View style={styles.tileContent}>
-                  {/* Crown icon for milestone tiles */}
+                  {/* Crown icon for 1M milestone tiles only */}
                   {decoration?.type === 'crown' && (
                     <Text style={styles.crownIcon}>👑</Text>
+                  )}
+                  
+                  {/* Glow effect for 1K+ tiles */}
+                  {decoration?.type === 'glow' && (
+                    <View style={[styles.glowRing, { borderColor: tileStyle.borderColor || '#4FC3F7' }]} />
                   )}
                   
                   <Text style={[
                     styles.cellText,
                     isMilestone && styles.milestoneText,
-                    decoration?.type === 'crown' && styles.crownedText
+                    decoration?.type === 'crown' && styles.crownedText,
+                    decoration?.type === 'glow' && styles.glowText
                   ]}>
                     {cell >= 1000 ? `${(cell / 1000).toFixed(cell % 1000 === 0 ? 0 : 1)}K` : cell}
                   </Text>
@@ -147,10 +153,15 @@ const GameGrid = ({
               <Text style={styles.crownIcon}>👑</Text>
             )}
             
+            {getTileDecoration(falling.value)?.type === 'glow' && (
+              <View style={[styles.glowRing, { borderColor: getTileStyle(falling.value).borderColor || '#4FC3F7' }]} />
+            )}
+            
             <Text style={[
               styles.cellText,
               isMilestoneTile(falling.value) && styles.milestoneText,
-              getTileDecoration(falling.value)?.type === 'crown' && styles.crownedText
+              getTileDecoration(falling.value)?.type === 'crown' && styles.crownedText,
+              getTileDecoration(falling.value)?.type === 'glow' && styles.glowText
             ]}>
               {falling.value >= 1000 ? `${(falling.value / 1000).toFixed(falling.value % 1000 === 0 ? 0 : 1)}K` : falling.value}
             </Text>
@@ -502,10 +513,19 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   boardDark: {
-    backgroundColor: '#2c2c2c',
+    backgroundColor: '#2a2a2a',
+    borderWidth: 2,
+    borderColor: '#444444',
   },
   boardLight: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#e9ecef',
+    borderWidth: 2,
+    borderColor: '#dee2e6',
+    shadowColor: 'rgba(0,0,0,0.1)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   cell: {
     width: CELL_SIZE,
@@ -525,6 +545,9 @@ const styles = StyleSheet.create({
     fontSize: Math.max(14, CELL_SIZE / 3),
     fontWeight: 'bold',
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   fallingBlock: {
     borderRadius: 4,
@@ -593,6 +616,29 @@ const styles = StyleSheet.create({
   },
   crownedText: {
     color: '#ffd700', // Gold color for crowned text
+  },
+  glowRing: {
+    position: 'absolute',
+    top: -3,
+    left: -3,
+    right: -3,
+    bottom: -3,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#4FC3F7',
+    backgroundColor: 'transparent',
+    shadowColor: '#4FC3F7',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  glowText: {
+    color: '#ffffff',
+    fontWeight: '900',
+    textShadowColor: 'rgba(79, 195, 247, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
   },
   tileContent: {
     position: 'absolute',

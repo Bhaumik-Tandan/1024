@@ -12,15 +12,7 @@ class SoundManager {
 
   async initialize() {
     try {
-      // Request audio permissions
-      const { status } = await Audio.requestPermissionsAsync();
-      
-      if (status !== 'granted') {
-        // Audio permissions not granted
-        return;
-      }
-      
-      // Simplified iOS audio mode configuration with only valid options
+      // Configure audio mode for playback only (no permissions needed)
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
         staysActiveInBackground: false,

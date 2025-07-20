@@ -22,7 +22,6 @@
       },
       "bundleIdentifier": "game1024.app",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "This app uses audio for game sound effects.",
         "UIBackgroundModes": ["audio"]
       }
     },

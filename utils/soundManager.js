@@ -146,14 +146,14 @@ class SoundManager {
       
       const status = await this.dropSound.getStatusAsync();
       if (!status.isLoaded) {
-        console.warn('Drop sound not loaded');
+        // Drop sound not loaded
         return;
       }
       
       await this.dropSound.setVolumeAsync(soundVolume * 0.7);
       await this.dropSound.replayAsync();
     } catch (error) {
-      console.error('Failed to play drop sound:', error);
+      // Failed to play drop sound
     }
   }
 
@@ -169,7 +169,7 @@ class SoundManager {
         await this.dropSound.setVolumeAsync(volume * 0.7);
       }
     } catch (error) {
-      console.error('Failed to update sound volume:', error);
+      // Failed to update sound volume
     }
   }
 
@@ -189,7 +189,7 @@ class SoundManager {
       }
       this.isInitialized = false;
     } catch (error) {
-      console.error('Failed to cleanup sound manager:', error);
+      // Failed to cleanup sound manager
     }
   }
 }

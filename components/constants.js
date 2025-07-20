@@ -26,58 +26,150 @@ export const getCellLeft = (col) => col * (CELL_SIZE + CELL_MARGIN);
 export const getCellTop = (row) => row * (CELL_SIZE + CELL_MARGIN);
 
 /**
- * Tile color scheme - follows 2048 style with modern colors
+ * Tile color scheme - Vibrant, modern colors inspired by popular mobile games
  */
 export const COLORS = {
   // Empty cell
-  0: '#3a3a3a',
+  0: '#2c2c2c',
   
-  // Small values (common)
-  2: '#eee4da',      // Light beige
-  4: '#ede0c8',      // Slightly darker beige
-  8: '#8dd3f4',      // Light blue
-  16: '#6ec6ff',     // Blue
-  32: '#ff8a65',     // Orange
+  // Small values (common) - warm, inviting colors
+  2: '#FFE0B2',      // Light peach
+  4: '#FFCC80',      // Peach
+  8: '#FFB74D',      // Orange
+  16: '#FF9800',     // Vibrant orange
+  32: '#FF7043',     // Red-orange
   
-  // Medium values
-  64: '#fbc02d',     // Yellow
-  128: '#ffd54f',    // Bright yellow
-  256: '#ffb300',    // Gold
-  512: '#ff7043',    // Red-orange
+  // Medium values - vibrant colors
+  64: '#FFEB3B',     // Bright yellow
+  128: '#CDDC39',    // Lime green
+  256: '#8BC34A',    // Green
+  512: '#4CAF50',    // Material green
   
-  // High values (rare)
-  1024: '#d84315',   // Dark red
-  2048: '#ad1457',   // Purple-red
-  4096: '#6a1b9a',   // Purple
+  // High values - rich, exciting colors
+  1024: '#009688',   // Teal (special milestone)
+  2048: '#00BCD4',   // Cyan
+  4096: '#03A9F4',   // Blue
+  8192: '#2196F3',   // Material blue
   
-  // Ultra high values (infinite game!)
-  8192: '#1a237e',   // Deep blue
-  16384: '#0d47a1',  // Navy
-  32768: '#1565c0',  // Blue
-  65536: '#4527a0',  // Indigo
-  131072: '#2e7d32', // Green
-  262144: '#00695c', // Teal
-  524288: '#bf360c', // Deep orange
-  1048576: '#3e2723', // Brown
-  2097152: '#263238' // Blue grey
+  // Ultra high values - premium colors
+  16384: '#3F51B5',  // Indigo
+  32768: '#673AB7',  // Deep purple
+  65536: '#9C27B0',  // Purple
+  131072: '#E91E63', // Pink
+  262144: '#F44336', // Red
+  524288: '#FF5722', // Deep orange
+  1048576: '#795548', // Brown (1M milestone)
+  2097152: '#607D8B' // Blue grey
 };
 
 /**
- * Get color for any tile value, including ultra-high values
+ * Enhanced gradient colors for tiles - creates depth and visual appeal
+ */
+export const TILE_GRADIENTS = {
+  2: ['#FFE0B2', '#FFCC80'],
+  4: ['#FFCC80', '#FFB74D'],
+  8: ['#FFB74D', '#FF9800'],
+  16: ['#FF9800', '#FF7043'],
+  32: ['#FF7043', '#F44336'],
+  
+  64: ['#FFEB3B', '#FFC107'],
+  128: ['#CDDC39', '#8BC34A'],
+  256: ['#8BC34A', '#4CAF50'],
+  512: ['#4CAF50', '#2E7D32'],
+  
+  1024: ['#26C6DA', '#00ACC1'], // Special teal gradient for 1024
+  2048: ['#29B6F6', '#0288D1'],
+  4096: ['#42A5F5', '#1976D2'],
+  8192: ['#5C6BC0', '#3949AB'],
+  
+  16384: ['#7E57C2', '#5E35B1'],
+  32768: ['#AB47BC', '#8E24AA'],
+  65536: ['#EC407A', '#D81B60'],
+  131072: ['#EF5350', '#E53935'],
+  262144: ['#FF7043', '#F4511E'],
+  524288: ['#A1887F', '#6D4C41'],
+  1048576: ['#FFD700', '#FFC107'], // Gold gradient for 1M milestone
+  2097152: ['#90A4AE', '#546E7A']
+};
+
+/**
+ * Special milestone tiles that get crown icons and star effects
+ */
+export const MILESTONE_TILES = [1024, 1048576]; // 1K and 1M
+
+/**
+ * Get tile styling with gradients and special effects
+ */
+export const getTileStyle = (value) => {
+  const baseStyle = {
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  };
+
+  if (TILE_GRADIENTS[value]) {
+    const [startColor, endColor] = TILE_GRADIENTS[value];
+    return {
+      ...baseStyle,
+      backgroundColor: startColor,
+      // For gradient effect, we'll use a combination approach
+      borderColor: endColor,
+      borderWidth: 2,
+    };
+  }
+
+  return {
+    ...baseStyle,
+    backgroundColor: COLORS[value] || '#3c3a32',
+  };
+};
+
+/**
+ * Get tile color (fallback for basic usage)
  */
 export const getTileColor = (value) => {
+  // For milestone tiles, use gradient start color
+  if (TILE_GRADIENTS[value]) {
+    return TILE_GRADIENTS[value][0];
+  }
+  
   // Return predefined color if it exists
   if (COLORS[value]) {
     return COLORS[value];
   }
   
-  // For ultra-high values beyond our definitions, generate a color
-  // Use a simple algorithm to create consistent colors for any value
-  const hue = (Math.log2(value) * 30) % 360; // Cycle through hues
-  const saturation = Math.min(80, 50 + (Math.log2(value) * 2)); // Increase saturation
-  const lightness = Math.max(20, 60 - (Math.log2(value) * 2)); // Decrease lightness
+  // For ultra-high values beyond our definitions, generate a vibrant color
+  const hue = (Math.log2(value) * 45) % 360; // More color variation
+  const saturation = Math.min(90, 70 + (Math.log2(value) * 2)); // Higher saturation
+  const lightness = Math.max(40, 65 - (Math.log2(value) * 1.5)); // Better contrast
   
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+};
+
+/**
+ * Check if a tile is a milestone tile that should have special effects
+ */
+export const isMilestoneTile = (value) => {
+  return MILESTONE_TILES.includes(value);
+};
+
+/**
+ * Get special tile decoration (crown, stars, etc.)
+ */
+export const getTileDecoration = (value) => {
+  if (value === 1048576) { // 1M
+    return { type: 'crown', stars: true };
+  }
+  if (value === 1024) { // 1K
+    return { type: 'crown', stars: false };
+  }
+  if (value >= 524288) { // High value tiles get stars
+    return { type: 'stars', stars: true };
+  }
+  return null;
 };
 
 /**

@@ -8,7 +8,11 @@ import {
   COLORS, 
   getCellLeft, 
   getCellTop,
-  ANIMATION_CONFIG 
+  ANIMATION_CONFIG,
+  getTileStyle,
+  isMilestoneTile,
+  getTileDecoration,
+  TILE_GRADIENTS
 } from './constants';
 
 const GameGrid = ({ 
@@ -63,6 +67,10 @@ const GameGrid = ({
             anim.row === rowIdx && anim.col === colIdx
           );
           
+          const tileStyle = getTileStyle(cell);
+          const decoration = getTileDecoration(cell);
+          const isMilestone = isMilestoneTile(cell);
+          
           return (
             <View
               key={`${rowIdx}-${colIdx}`}
@@ -72,14 +80,37 @@ const GameGrid = ({
                   position: 'absolute',
                   left: getCellLeft(colIdx),
                   top: getCellTop(rowIdx),
-                  backgroundColor: COLORS[cell] || COLORS[0],
                   opacity: isAnimating ? 0 : 1, // Hide tiles during animation
                 },
+                tileStyle,
                 cell !== 0 && styles.cellFilled,
+                isMilestone && styles.milestoneTile,
               ]}
             >
+              {/* Stars background for special tiles */}
+              {decoration?.stars && (
+                <View style={styles.starsContainer}>
+                  <Text style={styles.starIcon}>⭐</Text>
+                  <Text style={[styles.starIcon, styles.starTop]}>⭐</Text>
+                  <Text style={[styles.starIcon, styles.starBottom]}>⭐</Text>
+                </View>
+              )}
+              
               {cell !== 0 && !isAnimating && (
-                <Text style={styles.cellText}>{cell}</Text>
+                <View style={styles.tileContent}>
+                  {/* Crown icon for milestone tiles */}
+                  {decoration?.type === 'crown' && (
+                    <Text style={styles.crownIcon}>👑</Text>
+                  )}
+                  
+                  <Text style={[
+                    styles.cellText,
+                    isMilestone && styles.milestoneText,
+                    decoration?.type === 'crown' && styles.crownedText
+                  ]}>
+                    {cell >= 1000 ? `${(cell / 1000).toFixed(cell % 1000 === 0 ? 0 : 1)}K` : cell}
+                  </Text>
+                </View>
               )}
             </View>
           );
@@ -95,14 +126,35 @@ const GameGrid = ({
               position: 'absolute',
               left: getCellLeft(falling.col), // Use the actual column of the falling tile
               top: falling.static ? getCellTop(ROWS - 1) : getCellTop(0), // Use proper cell positioning
-              backgroundColor: COLORS[falling.value] || COLORS[0],
               width: CELL_SIZE,
               height: CELL_SIZE,
               transform: falling.static ? [] : [{ translateY: falling.anim }],
             },
+            getTileStyle(falling.value),
           ]}
         >
-          <Text style={styles.cellText}>{falling.value}</Text>
+          {/* Special effects for falling milestone tiles */}
+          {getTileDecoration(falling.value)?.stars && (
+            <View style={styles.starsContainer}>
+              <Text style={styles.starIcon}>⭐</Text>
+              <Text style={[styles.starIcon, styles.starTop]}>⭐</Text>
+              <Text style={[styles.starIcon, styles.starBottom]}>⭐</Text>
+            </View>
+          )}
+          
+          <View style={styles.tileContent}>
+            {getTileDecoration(falling.value)?.type === 'crown' && (
+              <Text style={styles.crownIcon}>👑</Text>
+            )}
+            
+            <Text style={[
+              styles.cellText,
+              isMilestoneTile(falling.value) && styles.milestoneText,
+              getTileDecoration(falling.value)?.type === 'crown' && styles.crownedText
+            ]}>
+              {falling.value >= 1000 ? `${(falling.value / 1000).toFixed(falling.value % 1000 === 0 ? 0 : 1)}K` : falling.value}
+            </Text>
+          </View>
         </Animated.View>
       )}
 
@@ -116,15 +168,35 @@ const GameGrid = ({
               position: 'absolute',
               left: getCellLeft(tile.col),
               top: getCellTop(tile.row),
-              backgroundColor: COLORS[tile.value] || COLORS[0],
               width: CELL_SIZE,
               height: CELL_SIZE,
               opacity: tile.anim,
               transform: [{ scale: tile.scale }],
             },
+            getTileStyle(tile.value),
           ]}
         >
-          <Text style={styles.cellText}>{tile.value}</Text>
+          {getTileDecoration(tile.value)?.stars && (
+            <View style={styles.starsContainer}>
+              <Text style={styles.starIcon}>⭐</Text>
+              <Text style={[styles.starIcon, styles.starTop]}>⭐</Text>
+              <Text style={[styles.starIcon, styles.starBottom]}>⭐</Text>
+            </View>
+          )}
+          
+          <View style={styles.tileContent}>
+            {getTileDecoration(tile.value)?.type === 'crown' && (
+              <Text style={styles.crownIcon}>👑</Text>
+            )}
+            
+            <Text style={[
+              styles.cellText,
+              isMilestoneTile(tile.value) && styles.milestoneText,
+              getTileDecoration(tile.value)?.type === 'crown' && styles.crownedText
+            ]}>
+              {tile.value >= 1000 ? `${(tile.value / 1000).toFixed(tile.value % 1000 === 0 ? 0 : 1)}K` : tile.value}
+            </Text>
+          </View>
         </Animated.View>
       ))}
 
@@ -137,15 +209,35 @@ const GameGrid = ({
               position: 'absolute',
               left: getCellLeft(mergeResult.col),
               top: getCellTop(mergeResult.row),
-              backgroundColor: COLORS[mergeResult.value] || COLORS[0],
               width: CELL_SIZE,
               height: CELL_SIZE,
               opacity: mergeResult.anim,
               transform: [{ scale: mergeResult.scale }],
             },
+            getTileStyle(mergeResult.value),
           ]}
         >
-          <Text style={styles.cellText}>{mergeResult.value}</Text>
+          {getTileDecoration(mergeResult.value)?.stars && (
+            <View style={styles.starsContainer}>
+              <Text style={styles.starIcon}>⭐</Text>
+              <Text style={[styles.starIcon, styles.starTop]}>⭐</Text>
+              <Text style={[styles.starIcon, styles.starBottom]}>⭐</Text>
+            </View>
+          )}
+          
+          <View style={styles.tileContent}>
+            {getTileDecoration(mergeResult.value)?.type === 'crown' && (
+              <Text style={styles.crownIcon}>👑</Text>
+            )}
+            
+            <Text style={[
+              styles.cellText,
+              isMilestoneTile(mergeResult.value) && styles.milestoneText,
+              getTileDecoration(mergeResult.value)?.type === 'crown' && styles.crownedText
+            ]}>
+              {mergeResult.value >= 1000 ? `${(mergeResult.value / 1000).toFixed(mergeResult.value % 1000 === 0 ? 0 : 1)}K` : mergeResult.value}
+            </Text>
+          </View>
         </Animated.View>
       )}
 
@@ -166,13 +258,13 @@ const GameGrid = ({
             },
           ]}
         >
-          {/* Glow effect */}
+          {/* Enhanced glow effect with gradient colors */}
           <Animated.View
             style={[
               styles.glowEffect,
               {
                 opacity: anim.glow,
-                backgroundColor: COLORS[anim.value] || COLORS[0],
+                backgroundColor: TILE_GRADIENTS[anim.value] ? TILE_GRADIENTS[anim.value][1] : (COLORS[anim.value] || COLORS[0]),
               },
             ]}
           />
@@ -181,12 +273,30 @@ const GameGrid = ({
           <View
             style={[
               styles.mainTile,
-              {
-                backgroundColor: COLORS[anim.value] || COLORS[0],
-              },
+              getTileStyle(anim.value),
             ]}
           >
-            <Text style={styles.cellText}>{anim.value}</Text>
+            {getTileDecoration(anim.value)?.stars && (
+              <View style={styles.starsContainer}>
+                <Text style={styles.starIcon}>⭐</Text>
+                <Text style={[styles.starIcon, styles.starTop]}>⭐</Text>
+                <Text style={[styles.starIcon, styles.starBottom]}>⭐</Text>
+              </View>
+            )}
+            
+            <View style={styles.tileContent}>
+              {getTileDecoration(anim.value)?.type === 'crown' && (
+                <Text style={styles.crownIcon}>👑</Text>
+              )}
+              
+              <Text style={[
+                styles.cellText,
+                isMilestoneTile(anim.value) && styles.milestoneText,
+                getTileDecoration(anim.value)?.type === 'crown' && styles.crownedText
+              ]}>
+                {anim.value >= 1000 ? `${(anim.value / 1000).toFixed(anim.value % 1000 === 0 ? 0 : 1)}K` : anim.value}
+              </Text>
+            </View>
           </View>
         </Animated.View>
       ))}
@@ -440,8 +550,51 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderColor: 'transparent',
   },
-
-  guideOverlay: {
+  milestoneTile: {
+    borderColor: 'transparent',
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderRadius: 8,
+    backgroundColor: 'transparent',
+  },
+  starsContainer: {
+    position: 'absolute',
+    top: -CELL_SIZE * 0.2,
+    left: -CELL_SIZE * 0.2,
+    right: -CELL_SIZE * 0.2,
+    bottom: -CELL_SIZE * 0.2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: -1,
+  },
+  starIcon: {
+    fontSize: CELL_SIZE * 0.4,
+    color: '#ffd700', // Gold color for stars
+  },
+  starTop: {
+    position: 'absolute',
+    top: -CELL_SIZE * 0.1,
+  },
+  starBottom: {
+    position: 'absolute',
+    bottom: -CELL_SIZE * 0.1,
+  },
+  crownIcon: {
+    fontSize: CELL_SIZE * 0.6,
+    position: 'absolute',
+    top: -CELL_SIZE * 0.1,
+    left: CELL_SIZE * 0.4,
+    zIndex: 1,
+  },
+  milestoneText: {
+    color: '#ffd700', // Gold color for milestone text
+  },
+  crownedText: {
+    color: '#ffd700', // Gold color for crowned text
+  },
+  tileContent: {
     position: 'absolute',
     top: 0,
     left: 0,
@@ -449,32 +602,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: 8,
-  },
-  guideText: {
-    color: '#fff',
-    fontSize: Math.max(16, CELL_SIZE / 2.5),
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  mergeAnimationTile: {
-    borderRadius: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  glowEffect: {
-    position: 'absolute',
-    top: -4,
-    left: -4,
-    right: -4,
-    bottom: -4,
-    borderRadius: 8,
-    shadowColor: '#fff',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
-    elevation: 10,
+    zIndex: 1,
   },
   mainTile: {
     width: '100%',
@@ -536,6 +664,45 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 12,
     elevation: 12,
+  },
+  
+  // Guide overlay styles
+  guideOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 8,
+  },
+  guideText: {
+    color: '#fff',
+    fontSize: Math.max(16, CELL_SIZE / 2.5),
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  
+  // Animation styles
+  mergeAnimationTile: {
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  glowEffect: {
+    position: 'absolute',
+    top: -6,
+    left: -6,
+    right: -6,
+    bottom: -6,
+    borderRadius: 12,
+    shadowColor: '#fff',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 15,
+    elevation: 15,
   },
 });
 

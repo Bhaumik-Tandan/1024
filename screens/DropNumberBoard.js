@@ -42,7 +42,10 @@ import {
   getCellLeft, 
   getCellTop,
   ANIMATION_CONFIG,
-  getTextColor
+  getTextColor,
+  getTileStyle,
+  isMilestoneTile,
+  getTileDecoration
 } from '../components/constants';
 import useGameStore from '../store/gameStore';
 import { vibrateOnTouch } from '../utils/vibration';
@@ -445,15 +448,13 @@ const DropNumberBoard = ({ navigation, route }) => {
    */
   const handleTileLanded = (row, col, value) => {
     try {
-      // Check if the newly landed tile is touching other tiles
-      const isTouchingTiles = hasAdjacentTiles(board, row, col);
+      // Always play drop sound when a tile lands
+      vibrateOnTouch().catch(err => {
+        // Drop sound error
+      });
       
-      // Play touch sound if the new block touches existing tiles
-      if (isTouchingTiles) {
-        vibrateOnTouch().catch(err => {
-          // Touch sound/vibration error
-        });
-      }
+      // Check if the newly landed tile is touching other tiles for additional vibration
+      const isTouchingTiles = hasAdjacentTiles(board, row, col);
       
       // Process the tile landing through the game engine
       handleBlockLanding(
@@ -517,6 +518,11 @@ const DropNumberBoard = ({ navigation, route }) => {
    */
   const handleFullColumnTileLanded = (row, col, value) => {
     try {
+      // Always play drop sound when a tile lands
+      vibrateOnTouch().catch(err => {
+        // Drop sound error
+      });
+      
       // Process the full column drop through the special game engine
       const result = processFullColumnDrop(board, value, col);
       
@@ -565,11 +571,6 @@ const DropNumberBoard = ({ navigation, route }) => {
         if (GameValidator.isGameOver(newBoard)) {
           setGameOver(true);
         }
-        
-        // Play merge sound/vibration for successful merge
-        vibrateOnTouch().catch(err => {
-          // Touch sound/vibration error
-        });
       } else {
         // Full column drop failed, should not happen if canMergeInFullColumn worked correctly
         // Error handled silently
@@ -659,16 +660,33 @@ const DropNumberBoard = ({ navigation, route }) => {
       <View style={styles.nextBlockContainer}>
         <View style={[
           styles.nextBlockTile,
-          {
-            backgroundColor: COLORS[nextBlock] || COLORS[0],
-          }
+          getTileStyle(nextBlock),
         ]}>
-          <Text style={[
-            styles.nextBlockValue,
-            {
-              color: getTextColor(nextBlock),
-            }
-          ]}>{nextBlock}</Text>
+          {/* Special effects for next block if it's a milestone */}
+          {getTileDecoration(nextBlock)?.stars && (
+            <View style={styles.starsContainer}>
+              <Text style={styles.starIcon}>⭐</Text>
+              <Text style={[styles.starIcon, styles.starTop]}>⭐</Text>
+              <Text style={[styles.starIcon, styles.starBottom]}>⭐</Text>
+            </View>
+          )}
+          
+          <View style={styles.tileContent}>
+            {getTileDecoration(nextBlock)?.type === 'crown' && (
+              <Text style={styles.crownIcon}>👑</Text>
+            )}
+            
+            <Text style={[
+              styles.nextBlockValue,
+              {
+                color: getTextColor(nextBlock),
+              },
+              isMilestoneTile(nextBlock) && styles.milestoneText,
+              getTileDecoration(nextBlock)?.type === 'crown' && styles.crownedText
+            ]}>
+              {nextBlock >= 1000 ? `${(nextBlock / 1000).toFixed(nextBlock % 1000 === 0 ? 0 : 1)}K` : nextBlock}
+            </Text>
+          </View>
         </View>
       </View>
     
@@ -760,6 +778,55 @@ const styles = StyleSheet.create({
     fontSize: Math.max(14, CELL_SIZE / 3),
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  
+  // Enhanced tile styles
+  starsContainer: {
+    position: 'absolute',
+    top: -CELL_SIZE * 0.2,
+    left: -CELL_SIZE * 0.2,
+    right: -CELL_SIZE * 0.2,
+    bottom: -CELL_SIZE * 0.2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: -1,
+  },
+  starIcon: {
+    fontSize: CELL_SIZE * 0.4,
+    color: '#ffd700', // Gold color for stars
+  },
+  starTop: {
+    position: 'absolute',
+    top: -CELL_SIZE * 0.1,
+  },
+  starBottom: {
+    position: 'absolute',
+    bottom: -CELL_SIZE * 0.1,
+  },
+  crownIcon: {
+    fontSize: CELL_SIZE * 0.6,
+    position: 'absolute',
+    top: -CELL_SIZE * 0.1,
+    left: CELL_SIZE * 0.4,
+    zIndex: 1,
+  },
+  milestoneText: {
+    color: '#ffd700', // Gold color for milestone text
+    fontWeight: 'bold',
+  },
+  crownedText: {
+    color: '#ffd700', // Gold color for crowned text
+    fontWeight: 'bold',
+  },
+  tileContent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
   },
   debugText: {
     color: '#ff6b6b',

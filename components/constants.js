@@ -47,7 +47,7 @@ export const COLORS = {
   
   // High values (rare)
   1024: '#d84315',   // Dark red
-  2048: '#ad1457',   // Purple-red (no longer a win condition!)
+  2048: '#ad1457',   // Purple-red
   4096: '#6a1b9a',   // Purple
   
   // Ultra high values (infinite game!)

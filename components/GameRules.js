@@ -131,17 +131,7 @@ export const GAME_RULES = {
     allowPartialFill: false,
   },
   
-  /**
-   * RULE 7: WINNING CONDITIONS
-   * - Reach target score (optional)
-   * - Create target tile value (optional)
-   * - Survive for target time (optional)
-   */
-  winning: {
-    scoreTarget: null,     // No score target by default
-    tileTarget: null,      // No tile target - infinite game!
-    timeTarget: null,      // No time target by default
-  },
+
 };
 
 /**
@@ -181,28 +171,7 @@ export const GameValidator = {
     return board[GAME_RULES.gameOver.checkRow].every(cell => cell !== 0);
   },
   
-  /**
-   * Check if player has won
-   */
-  hasWon(board, score) {
-    // Check for target tile
-    if (GAME_RULES.winning.tileTarget) {
-      for (let row of board) {
-        for (let cell of row) {
-          if (cell >= GAME_RULES.winning.tileTarget) {
-            return true;
-          }
-        }
-      }
-    }
-    
-    // Check for target score
-    if (GAME_RULES.winning.scoreTarget && score >= GAME_RULES.winning.scoreTarget) {
-      return true;
-    }
-    
-    return false;
-  },
+
   
   /**
    * Validate board state

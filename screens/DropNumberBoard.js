@@ -140,7 +140,6 @@ const DropNumberBoard = ({ navigation, route }) => {
         setPreviewBlock(savedGame.previewBlock);
         setGameStats(savedGame.gameStats);
         setGameOver(false);
-        setHasWon(false);
         clearFalling();
         clearMergeAnimations();
       }
@@ -149,7 +148,7 @@ const DropNumberBoard = ({ navigation, route }) => {
 
   // Auto-save game state periodically
   useEffect(() => {
-    if (!gameOver && !hasWon && !isPaused) {
+    if (!gameOver && !isPaused) {
       const autoSaveInterval = setInterval(() => {
         const gameState = {
           board,
@@ -164,7 +163,7 @@ const DropNumberBoard = ({ navigation, route }) => {
 
       return () => clearInterval(autoSaveInterval);
     }
-  }, [board, score, record, nextBlock, previewBlock, gameStats, gameOver, hasWon, isPaused, saveGame]);
+  }, [board, score, record, nextBlock, previewBlock, gameStats, gameOver, isPaused, saveGame]);
 
   // Pause modal handlers
   const handlePause = () => {
@@ -245,7 +244,7 @@ const DropNumberBoard = ({ navigation, route }) => {
     }
     
     // Validate tap conditions
-    if (!falling || falling.fastDrop || gameOver || hasWon || isPaused) {
+    if (!falling || falling.fastDrop || gameOver || isPaused) {
       return;
     }
     
@@ -402,7 +401,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         // Update board state
         setBoard(newBoard);
         
-        // No win condition - infinite game continues!
+    
         
         // Check for game over condition
         if (GameValidator.isGameOver(newBoard)) {
@@ -617,20 +616,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   
-  // Win screen styles
-  winText: {
-    color: '#ffd700',
-    fontSize: 36,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  winSubtext: {
-    color: '#fff',
-    fontSize: 18,
-    marginBottom: 15,
-    textAlign: 'center',
-  },
+
   
   // Game over screen styles
   gameOverText: {

@@ -333,16 +333,7 @@ const GameBoard = () => {
     return true;
   };
 
-  const checkWin = (boardState) => {
-    for (let row = 0; row < VISIBLE_ROWS; row++) {
-      for (let col = 0; col < GRID_SIZE; col++) {
-        if (boardState[row][col] >= 1024) {
-          return true;
-        }
-      }
-    }
-    return false;
-  };
+
 
   const handleMove = (direction) => {
     if (gameOver) return;
@@ -373,7 +364,7 @@ const GameBoard = () => {
         addRandomTile(newBoard);
       }, 300);
       
-      // Win condition disabled - infinite game continues!
+  
       
       if (checkGameOver(newBoard)) {
         setGameOver(true);

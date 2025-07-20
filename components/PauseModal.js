@@ -7,6 +7,7 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { vibrateOnButtonPress } from '../utils/vibration';
 import useGameStore from '../store/gameStore';
 
@@ -86,7 +87,11 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
               }}
               activeOpacity={0.7}
             >
-              <Ionicons name="phone-portrait" size={24} color="#ffffff" />
+              <MaterialCommunityIcons 
+                name={vibrationEnabled ? "vibrate" : "vibrate-off"} 
+                size={24} 
+                color="#ffffff" 
+              />
             </TouchableOpacity>
 
             <TouchableOpacity 
@@ -97,7 +102,11 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
               }}
               activeOpacity={0.7}
             >
-              <Ionicons name="musical-notes" size={24} color="#ffffff" />
+              <Ionicons 
+                name={soundEnabled ? "volume-high" : "volume-mute"} 
+                size={24} 
+                color="#ffffff" 
+              />
             </TouchableOpacity>
 
             <TouchableOpacity 

@@ -27,7 +27,8 @@ const useGameStore = create(
       setSoundVolume: (volume) => set({ soundVolume: Math.max(0, Math.min(1, volume)) }),
       
       updateScore: (score) => {
-        const currentHighScore = get().highScore || 0;
+        const state = get();
+        const currentHighScore = state.highScore || 0;
         if (score > currentHighScore) {
           set({ highScore: score, currentScore: score });
         } else {
@@ -36,7 +37,8 @@ const useGameStore = create(
       },
       
       updateHighestBlock: (blockValue) => {
-        const currentHighest = get().highestBlock || 0;
+        const state = get();
+        const currentHighest = state.highestBlock || 0;
         if (blockValue > currentHighest) {
           set({ highestBlock: blockValue });
         }

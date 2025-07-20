@@ -303,9 +303,10 @@ export const mergeConnectedTiles = (board, targetRow, targetCol, preferredRow, p
  * 
  * @param {Array[]} board - The game board (2D array)
  * @param {number} [originColumn] - The column where the original drop occurred (for prioritizing position)
+ * @param {Function} [showMergeResultAnimation] - Animation callback function
  * @returns {Object} - Chain reaction results
  */
-export const processChainReactions = (board, originColumn) => {
+export const processChainReactions = async (board, originColumn, showMergeResultAnimation = null) => {
   let totalScore = 0;
   let chainReactionCount = 0;
   let iterations = 0;
@@ -344,7 +345,23 @@ export const processChainReactions = (board, originColumn) => {
     outerLoop: for (let r = 0; r < ROWS; r++) {
       for (const c of columnsToCheck) {
         if (board[r][c] !== 0) {
-          const mergeResult = mergeConnectedTiles(board, r, c, undefined, undefined, originColumn);
+          // Use the animated merge function if animation callback is provided
+          let mergeResult;
+          if (showMergeResultAnimation) {
+            mergeResult = await checkAndMergeConnectedGroup(
+              board, 
+              r, 
+              c, 
+              showMergeResultAnimation,
+              true, // This is a chain reaction - faster animation
+              null, // Use default position for chain reactions
+              null, // Use default position for chain reactions
+              originColumn // Origin column (where the original drop occurred)
+            );
+          } else {
+            // Fallback to non-animated merge for backward compatibility
+            mergeResult = mergeConnectedTiles(board, r, c, undefined, undefined, originColumn);
+          }
           
           if (mergeResult && mergeResult.merged) {
             totalScore += mergeResult.score;
@@ -370,9 +387,10 @@ export const processChainReactions = (board, originColumn) => {
  * @param {Array[]} board - Current board state (2D array)
  * @param {number} value - Value of the tile to drop
  * @param {number} column - Column where the tile should be dropped
+ * @param {Function} [showMergeResultAnimation] - Animation callback function
  * @returns {Object} - Result containing updated board and score
  */
-export const processTileDrop = (board, value, column) => {
+export const processTileDrop = async (board, value, column, showMergeResultAnimation = null) => {
   // Validate inputs
   if (!board || !Array.isArray(board) || board.length === 0) {
     throw new Error('Invalid board: must be a non-empty 2D array');
@@ -432,12 +450,42 @@ export const processTileDrop = (board, value, column) => {
     const connectedTiles = findConnectedTiles(newBoard, finalRow, column);
     let initialMergeResult;
     
-    if (connectedTiles.length === 2) {
-      // 2-tile merge: prefer the dropped tile position and stay in origin column
-      initialMergeResult = mergeConnectedTiles(newBoard, finalRow, column, finalRow, column, column);
+    if (showMergeResultAnimation) {
+      // Use the animated merge function
+      if (connectedTiles.length === 2) {
+        // 2-tile merge: prefer the dropped tile position and stay in origin column
+        initialMergeResult = await checkAndMergeConnectedGroup(
+          newBoard, 
+          finalRow, 
+          column, 
+          showMergeResultAnimation,
+          false, // Not a chain reaction - full animation
+          finalRow, // For 2-tile merges, use dropped tile position
+          column, // For 2-tile merges, use dropped tile position
+          column // Origin column (where the drop occurred)
+        );
+      } else {
+        // 3+ tile merges: use origin column logic to stay in drop column
+        initialMergeResult = await checkAndMergeConnectedGroup(
+          newBoard, 
+          finalRow, 
+          column, 
+          showMergeResultAnimation,
+          false, // Not a chain reaction - full animation
+          null, // Use default position for 3+ tile merges
+          null, // Use default position for 3+ tile merges
+          column // Origin column (where the drop occurred)
+        );
+      }
     } else {
-      // 3+ tile merges: use origin column logic to stay in drop column
-      initialMergeResult = mergeConnectedTiles(newBoard, finalRow, column, undefined, undefined, column);
+      // Fallback to non-animated merge for backward compatibility
+      if (connectedTiles.length === 2) {
+        // 2-tile merge: prefer the dropped tile position and stay in origin column
+        initialMergeResult = mergeConnectedTiles(newBoard, finalRow, column, finalRow, column, column);
+      } else {
+        // 3+ tile merges: use origin column logic to stay in drop column
+        initialMergeResult = mergeConnectedTiles(newBoard, finalRow, column, undefined, undefined, column);
+      }
     }
     
     if (initialMergeResult && initialMergeResult.merged) {
@@ -445,8 +493,8 @@ export const processTileDrop = (board, value, column) => {
     }
   }
   
-  // STEP 5: Process chain reactions
-  const chainResult = processChainReactions(newBoard, column);
+  // STEP 5: Process chain reactions with animation support
+  const chainResult = await processChainReactions(newBoard, column, showMergeResultAnimation);
   totalScore += chainResult.totalScore;
   
   return {
@@ -465,9 +513,10 @@ export const processTileDrop = (board, value, column) => {
  * @param {Array[]} board - Current board state (2D array)
  * @param {number} value - Value of the tile to drop
  * @param {number} column - Column where the tile should be dropped
+ * @param {Function} showMergeResultAnimation - Animation callback function
  * @returns {Object} - Result containing updated board and score
  */
-export const processFullColumnDrop = (board, value, column) => {
+export const processFullColumnDrop = async (board, value, column, showMergeResultAnimation = null) => {
   // Validate inputs
   if (!board || !Array.isArray(board) || board.length === 0) {
     throw new Error('Invalid board: must be a non-empty 2D array');
@@ -496,7 +545,7 @@ export const processFullColumnDrop = (board, value, column) => {
   
   if (!columnFull) {
     // Column is not full, use regular drop logic
-    return processTileDrop(board, value, column);
+    return await processTileDrop(board, value, column, showMergeResultAnimation);
   }
   
   // Check if merging is possible at the bottom of the column
@@ -505,32 +554,40 @@ export const processFullColumnDrop = (board, value, column) => {
   
   // Case 1: Direct merge with bottom tile
   if (bottomValue === value) {
-    // Create a temporary tile above the bottom for merging
-    // We'll simulate placing the tile "on top" of the bottom tile
-    // and let the merge logic handle it
+    // Use the proper merge animation system
+    if (showMergeResultAnimation) {
+      // Prepare merge positions for animation
+      const mergingTilePositions = [
+        { row: bottomRow, col: column, value: bottomValue },
+        { row: bottomRow, col: column, value: value } // Simulated dropped tile position
+      ];
+      
+      const newValue = value * 2; // Simple 2-tile merge
+      
+      // Show merge animation
+      showMergeResultAnimation(bottomRow, column, newValue, mergingTilePositions, false);
+      
+      // Wait for animation to start
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     
-    // Temporarily create space by moving the bottom tile up one position
-    // This is just for the merge calculation
-    let tempBoard = newBoard.map(row => [...row]);
-    
-    // Check if we can create a temporary space by merging
-    // For now, we'll handle this by directly creating the merge result
+    // Create the merge result
     const newValue = value * 2; // Simple 2-tile merge
-    tempBoard[bottomRow][column] = newValue;
+    newBoard[bottomRow][column] = newValue;
     
     totalScore += newValue;
     
     // Apply upward gravity to settle everything
     for (let c = 0; c < COLS; c++) {
-      applyUpwardGravity(tempBoard, c);
+      applyUpwardGravity(newBoard, c);
     }
     
-    // Process any chain reactions
-    const chainResult = processChainReactions(tempBoard, column);
+    // Process any chain reactions with animation support
+    const chainResult = await processChainReactions(newBoard, column, showMergeResultAnimation);
     totalScore += chainResult.totalScore;
     
     return {
-      board: tempBoard,
+      board: newBoard,
       score: Math.floor(totalScore),
       success: true,
       chainReactions: chainResult.chainReactionCount,
@@ -551,8 +608,24 @@ export const processFullColumnDrop = (board, value, column) => {
         newBoard[pos.row][pos.col] === value) {
       
       // Found an adjacent tile that can merge
-      // Create the merge by replacing the bottom tile with the new merged value
       const newValue = value * 2;
+      
+      // Use the proper merge animation system for adjacent merges
+      if (showMergeResultAnimation) {
+        // Prepare merge positions for animation
+        const mergingTilePositions = [
+          { row: pos.row, col: pos.col, value: value },
+          { row: bottomRow, col: column, value: value } // Simulated dropped tile position
+        ];
+        
+        // Show merge animation
+        showMergeResultAnimation(bottomRow, column, newValue, mergingTilePositions, false);
+        
+        // Wait for animation to start
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      // Create the merge by replacing the bottom tile with the new merged value
       newBoard[bottomRow][column] = newValue;
       
       // Clear the adjacent tile that merged
@@ -565,8 +638,8 @@ export const processFullColumnDrop = (board, value, column) => {
         applyUpwardGravity(newBoard, c);
       }
       
-      // Process any chain reactions
-      const chainResult = processChainReactions(newBoard, column);
+      // Process any chain reactions with animation support
+      const chainResult = await processChainReactions(newBoard, column, showMergeResultAnimation);
       totalScore += chainResult.totalScore;
       
       return {

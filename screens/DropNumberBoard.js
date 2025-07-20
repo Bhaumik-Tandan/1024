@@ -121,22 +121,6 @@ const DropNumberBoard = ({ navigation, route }) => {
   const [lastScore, setLastScore] = useState(0);
   const [lastHighestBlock, setLastHighestBlock] = useState(0);
 
-  // Update Zustand store when score changes
-  useEffect(() => {
-    if (score !== lastScore) {
-      updateScore(score);
-      setLastScore(score);
-    }
-  }, [score, lastScore]); // Removed updateScore from dependencies
-
-  // Update Zustand store when highest block changes
-  useEffect(() => {
-    if (gameStats.highestTile !== lastHighestBlock) {
-      updateHighestBlock(gameStats.highestTile);
-      setLastHighestBlock(gameStats.highestTile);
-    }
-  }, [gameStats.highestTile, lastHighestBlock]); // Removed updateHighestBlock from dependencies
-
   // Load saved game if resuming
   useEffect(() => {
     if (route.params?.resume) {
@@ -156,11 +140,23 @@ const DropNumberBoard = ({ navigation, route }) => {
         setNextBlock(savedGame.nextBlock);
         setPreviewBlock(savedGame.previewBlock);
         
+        // Update tracking variables for store sync
+        setLastScore(savedGame.score);
+        setLastHighestBlock(savedGame.gameStats?.highestTile || 0);
+        
+        // Update store after loading - defer to avoid render cycle issues
+        setTimeout(() => {
+          updateScore(savedGame.score);
+          if (savedGame.gameStats?.highestTile) {
+            updateHighestBlock(savedGame.gameStats.highestTile);
+          }
+        }, 0);
+        
         // Force the falling tile to be null so game loop recreates it
         setFalling(null);
       }
     }
-  }, [route.params?.resume]); // Removed store functions from dependencies
+  }, [route.params?.resume, loadSavedGame]);
 
   // Auto-save game state periodically
   useEffect(() => {
@@ -178,7 +174,7 @@ const DropNumberBoard = ({ navigation, route }) => {
 
       return () => clearInterval(autoSaveInterval);
     }
-  }, [board, score, nextBlock, previewBlock, gameStats, gameOver, isPaused]); // Removed saveGame from dependencies
+  }, [board, score, nextBlock, previewBlock, gameStats, gameOver, isPaused, saveGame]);
 
   // Save game state when screen loses focus
   useFocusEffect(
@@ -196,7 +192,7 @@ const DropNumberBoard = ({ navigation, route }) => {
           saveGame(currentGameState);
         }
       };
-    }, [board, score, nextBlock, previewBlock, gameStats, gameOver])
+    }, [board, score, nextBlock, previewBlock, gameStats, gameOver, saveGame])
   );
 
   // Pause modal handlers
@@ -208,9 +204,8 @@ const DropNumberBoard = ({ navigation, route }) => {
     setIsPaused(false);
   };
   
-  const handleRestart=()=>{
-    setBoard(() => Array.from({ length: ROWS }, () => Array(COLS).fill(0)));
-    clearSavedGame();
+  const handleRestart = () => {
+    resetGame(); // Use the full reset function instead of partial reset
   }
 
   const handleHome = () => {
@@ -369,10 +364,10 @@ const DropNumberBoard = ({ navigation, route }) => {
     }).start();
     
     // Handle landing after animation completes
-    const fastDropTimer = setTimeout(() => {
+    const fastDropTimer = setTimeout(async () => {
       if (canMergeInFull) {
         // Special handling for full column merge
-        handleFullColumnTileLanded(landingRow, landingCol, tileValueToDrop);
+        await handleFullColumnTileLanded(landingRow, landingCol, tileValueToDrop);
       } else {
         // Normal tile landing
         handleTileLanded(landingRow, landingCol, tileValueToDrop);
@@ -466,27 +461,36 @@ const DropNumberBoard = ({ navigation, route }) => {
           iterations = 0 
         } = result;
         
-        // Update game statistics
-        setGameStats(prevStats => {
-          const newHighestTile = Math.max(prevStats.highestTile, ...newBoard.flat());
-          
-          return {
-            ...prevStats,
-            tilesPlaced: prevStats.tilesPlaced + 1,
-            mergesPerformed: prevStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
-            chainReactions: prevStats.chainReactions + chainReactionCount,
-            highestTile: newHighestTile,
-          };
-        });
+        // Calculate new values first
+        const newHighestTile = Math.max(gameStats.highestTile, ...newBoard.flat());
+        const newScore = totalScore > 0 ? score + totalScore : score;
         
-        // Update score using store's updateScore method
+        // Update game statistics
+        setGameStats(prevStats => ({
+          ...prevStats,
+          tilesPlaced: prevStats.tilesPlaced + 1,
+          mergesPerformed: prevStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
+          chainReactions: prevStats.chainReactions + chainReactionCount,
+          highestTile: newHighestTile,
+        }));
+        
+        // Update score
         if (totalScore > 0) {
-          setScore(currentScore => {
-            const newScore = currentScore + totalScore;
-            updateScore(newScore); // This handles high score automatically
-            return newScore;
-          });
+          setScore(newScore);
         }
+        
+        // Update store after all state updates - defer to avoid render cycle issues
+        setTimeout(() => {
+          if (newHighestTile > lastHighestBlock) {
+            updateHighestBlock(newHighestTile);
+            setLastHighestBlock(newHighestTile);
+          }
+          
+          if (totalScore > 0) {
+            updateScore(newScore);
+            setLastScore(newScore);
+          }
+        }, 0);
 
         // Update board state
         setBoard(newBoard);
@@ -509,15 +513,15 @@ const DropNumberBoard = ({ navigation, route }) => {
    * Handle tile landing in a full column when merging is possible
    * Uses the special full column drop logic
    */
-  const handleFullColumnTileLanded = (row, col, value) => {
+  const handleFullColumnTileLanded = async (row, col, value) => {
     try {
       // Always play drop sound when a tile lands
       vibrateOnTouch().catch(err => {
         // Drop sound error
       });
       
-      // Process the full column drop through the special game engine
-      const result = processFullColumnDrop(board, value, col);
+      // Process the full column drop through the special game engine with animation support
+      const result = await processFullColumnDrop(board, value, col, showMergeResultAnimation);
       
       if (result.success) {
         const { 
@@ -527,18 +531,18 @@ const DropNumberBoard = ({ navigation, route }) => {
           iterations = 0 
         } = result;
         
+        // Calculate new values first
+        const newHighestTile = Math.max(gameStats.highestTile, ...newBoard.flat());
+        const newScore = totalScore > 0 ? score + totalScore : score;
+        
         // Update game statistics
-        setGameStats(prevStats => {
-          const newHighestTile = Math.max(prevStats.highestTile, ...newBoard.flat());
-          
-          return {
-            ...prevStats,
-            tilesPlaced: prevStats.tilesPlaced + 1,
-            mergesPerformed: prevStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
-            chainReactions: prevStats.chainReactions + chainReactionCount,
-            highestTile: newHighestTile,
-          };
-        });
+        setGameStats(prevStats => ({
+          ...prevStats,
+          tilesPlaced: prevStats.tilesPlaced + 1,
+          mergesPerformed: prevStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
+          chainReactions: prevStats.chainReactions + chainReactionCount,
+          highestTile: newHighestTile,
+        }));
         
         // Update board state
         setBoard(newBoard);
@@ -549,14 +553,23 @@ const DropNumberBoard = ({ navigation, route }) => {
           setMaxTileAchieved(currentMaxTile);
         }
         
-        // Update score using store's updateScore method
+        // Update score
         if (totalScore > 0) {
-          setScore(currentScore => {
-            const newScore = currentScore + totalScore;
-            updateScore(newScore); // This handles high score automatically
-            return newScore;
-          });
+          setScore(newScore);
         }
+        
+        // Update store after all state updates - defer to avoid render cycle issues
+        setTimeout(() => {
+          if (newHighestTile > lastHighestBlock) {
+            updateHighestBlock(newHighestTile);
+            setLastHighestBlock(newHighestTile);
+          }
+          
+          if (totalScore > 0) {
+            updateScore(newScore);
+            setLastScore(newScore);
+          }
+        }, 0);
         
         // Check for game over condition
         if (GameValidator.isGameOver(newBoard)) {
@@ -599,6 +612,10 @@ const DropNumberBoard = ({ navigation, route }) => {
       highestTile: 0,
       startTime: Date.now(),
     });
+    
+    // Reset tracking variables for store sync
+    setLastScore(0);
+    setLastHighestBlock(0);
     
     // Clear saved game when starting fresh
     clearSavedGame();

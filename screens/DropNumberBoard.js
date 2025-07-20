@@ -124,7 +124,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       updateScore(score);
       setLastScore(score);
     }
-  }, [score, lastScore, updateScore]);
+  }, [score, lastScore]); // Removed updateScore from dependencies
 
   // Update Zustand store when highest block changes
   useEffect(() => {
@@ -132,7 +132,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       updateHighestBlock(gameStats.highestTile);
       setLastHighestBlock(gameStats.highestTile);
     }
-  }, [gameStats.highestTile, lastHighestBlock, updateHighestBlock]);
+  }, [gameStats.highestTile, lastHighestBlock]); // Removed updateHighestBlock from dependencies
 
   // Load saved game if resuming
   useEffect(() => {
@@ -150,7 +150,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         clearMergeAnimations();
       }
     }
-  }, [route.params?.resume, loadSavedGame, clearFalling, clearMergeAnimations]);
+  }, [route.params?.resume]); // Removed store functions from dependencies
 
   // Auto-save game state periodically
   useEffect(() => {
@@ -169,7 +169,7 @@ const DropNumberBoard = ({ navigation, route }) => {
 
       return () => clearInterval(autoSaveInterval);
     }
-  }, [board, score, record, nextBlock, previewBlock, gameStats, gameOver, isPaused, saveGame]);
+  }, [board, score, record, nextBlock, previewBlock, gameStats, gameOver, isPaused]); // Removed saveGame from dependencies
 
   // Pause modal handlers
   const handlePause = () => {

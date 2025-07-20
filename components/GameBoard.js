@@ -41,9 +41,6 @@ const GameBoard = () => {
 
   // Auto-slide effect - periodically add new tiles
   useEffect(() => {
-    // TEMPORARILY DISABLED to isolate infinite loop issue
-    // TODO: Re-enable with proper implementation
-    /*
     if (gameOver || won || !gameStarted) {
       if (autoSlideIntervalRef.current) {
         clearInterval(autoSlideIntervalRef.current);
@@ -55,15 +52,9 @@ const GameBoard = () => {
     // Add a delay before starting auto-slide to prevent immediate execution
     const startDelay = setTimeout(() => {
       autoSlideIntervalRef.current = setInterval(() => {
-        // Check conditions and add tile if possible
-        // Use functional state update to avoid stale closures
+        // Use callback style to get current state without dependencies
         setBoard(currentBoard => {
-          // Skip if there are sliding tiles
-          if (slidingTiles.length > 0) {
-            return currentBoard;
-          }
-          
-          // Check if we can add a tile
+          // Check if there are empty cells in bottom row
           const bottomRow = BOARD_SIZE - 1;
           const emptyBottomCells = [];
           
@@ -83,6 +74,22 @@ const GameBoard = () => {
           const newValue = Math.random() < 0.9 ? 2 : 4;
           newBoard[bottomRow][randomCol] = newValue;
           
+          // Add sliding animation asynchronously to avoid state update conflicts
+          setTimeout(() => {
+            const targetRow = findTargetRow(newBoard, randomCol);
+            const tileId = `sliding-${Date.now()}-${randomCol}`;
+            const newSlidingTile = {
+              id: tileId,
+              row: bottomRow,
+              col: randomCol,
+              value: newValue,
+              targetRow: targetRow,
+            };
+            
+            setSlidingTiles(prev => [...prev, newSlidingTile]);
+            startSlideAnimation(newSlidingTile);
+          }, 50); // Small delay to prevent conflicts
+          
           return newBoard;
         });
       }, 3000); // Add new tile every 3 seconds
@@ -95,8 +102,7 @@ const GameBoard = () => {
         autoSlideIntervalRef.current = null;
       }
     };
-    */
-  }, [gameOver, won, gameStarted]); // Keep dependencies minimal
+  }, [gameOver, won, gameStarted]); // Minimal dependencies
 
   // Update all logic to use BOARD_SIZE for rows and GRID_SIZE for columns
   // Board initialization

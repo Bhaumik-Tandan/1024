@@ -16,6 +16,7 @@ import {
   Animated,
   PanResponder,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 import GameHeader from '../components/GameHeader';
 import GameGrid from '../components/GameGrid';
@@ -139,15 +140,23 @@ const DropNumberBoard = ({ navigation, route }) => {
     if (route.params?.resume) {
       const savedGame = loadSavedGame();
       if (savedGame) {
+        // Loading saved game state
+        
+        // Clear falling state first
+        clearFalling();
+        clearMergeAnimations();
+        
+        // Set all values immediately
         setBoard(savedGame.board);
         setScore(savedGame.score);
         setRecord(savedGame.record);
+        setGameOver(false);
+        setGameStats(savedGame.gameStats);
         setNextBlock(savedGame.nextBlock);
         setPreviewBlock(savedGame.previewBlock);
-        setGameStats(savedGame.gameStats);
-        setGameOver(false);
-        clearFalling();
-        clearMergeAnimations();
+        
+        // Force the falling tile to be null so game loop recreates it
+        setFalling(null);
       }
     }
   }, [route.params?.resume]); // Removed store functions from dependencies
@@ -171,6 +180,26 @@ const DropNumberBoard = ({ navigation, route }) => {
     }
   }, [board, score, record, nextBlock, previewBlock, gameStats, gameOver, isPaused]); // Removed saveGame from dependencies
 
+  // Save game state when screen loses focus
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        // Save game state when leaving the screen
+        if (!gameOver) {
+          const currentGameState = {
+            board,
+            score,
+            record,
+            nextBlock,
+            previewBlock,
+            gameStats,
+          };
+          saveGame(currentGameState);
+        }
+      };
+    }, [board, score, record, nextBlock, previewBlock, gameStats, gameOver])
+  );
+
   // Pause modal handlers
   const handlePause = () => {
     setIsPaused(true);
@@ -186,6 +215,17 @@ const DropNumberBoard = ({ navigation, route }) => {
   }
 
   const handleHome = () => {
+    // Save current game state before going to main menu
+    const currentGameState = {
+      board,
+      score,
+      record,
+      nextBlock,
+      previewBlock,
+      gameStats,
+    };
+    saveGame(currentGameState);
+    
     setIsPaused(false);
     navigation.navigate('Home');
   };
@@ -220,12 +260,14 @@ const DropNumberBoard = ({ navigation, route }) => {
         inPreview: true // Flag to indicate it's in preview mode
       };
       
+      // Falling tile created with nextBlock value
+      
       setFalling(fallingTile);
       // Don't automatically show guide for every new tile
       // setShowGuide(true); // Removed this line
     }
     // eslint-disable-next-line
-  }, [falling, gameOver, board]);
+  }, [falling, gameOver, board, nextBlock]); // Added nextBlock to dependencies
 
   /**
    * Cleanup touch timeout on component unmount
@@ -296,6 +338,9 @@ const DropNumberBoard = ({ navigation, route }) => {
     // Hide guide overlay permanently
     setShowGuide(false);
     
+    // Capture the current nextBlock value before updating it
+    const tileValueToDrop = nextBlock;
+    
     // Update next block immediately when user taps
     setNextBlock(previewBlock);
     setPreviewBlock(getRandomBlockValue());
@@ -305,6 +350,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       ...falling,
       col: landingCol, // Update the column
       toRow: landingRow,
+      value: tileValueToDrop, // Use the captured value to ensure visual consistency
       fastDrop: true,
       static: false,
       inPreview: false // Remove preview mode when user taps
@@ -328,10 +374,10 @@ const DropNumberBoard = ({ navigation, route }) => {
     const fastDropTimer = setTimeout(() => {
       if (canMergeInFull) {
         // Special handling for full column merge
-        handleFullColumnTileLanded(landingRow, landingCol, falling.value);
+        handleFullColumnTileLanded(landingRow, landingCol, tileValueToDrop);
       } else {
         // Normal tile landing
-        handleTileLanded(landingRow, landingCol, falling.value);
+        handleTileLanded(landingRow, landingCol, tileValueToDrop);
       }
       clearFalling();
     }, GAME_CONFIG.TIMING.FAST_DROP_DURATION);
@@ -526,11 +572,10 @@ const DropNumberBoard = ({ navigation, route }) => {
         });
       } else {
         // Full column drop failed, should not happen if canMergeInFullColumn worked correctly
-        console.error('Full column drop failed:', result.error);
+        // Error handled silently
       }
     } catch (error) {
-      // Error in handleFullColumnTileLanded
-      console.error('Error in handleFullColumnTileLanded:', error);
+      // Error in handleFullColumnTileLanded - handled silently
     }
   };
 

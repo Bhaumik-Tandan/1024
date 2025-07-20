@@ -24,7 +24,7 @@ export default function App() {
         // Initialize sound manager
         await soundManager.initialize();
       } catch (error) {
-        console.error('Failed to initialize audio:', error);
+        // Audio initialization failed silently
       }
     };
 

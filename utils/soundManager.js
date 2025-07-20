@@ -16,7 +16,7 @@ class SoundManager {
       const { status } = await Audio.requestPermissionsAsync();
       
       if (status !== 'granted') {
-        console.warn('Audio permissions not granted');
+        // Audio permissions not granted
         return;
       }
       
@@ -35,9 +35,9 @@ class SoundManager {
       await this.loadDropSound();
       
       this.isInitialized = true;
-      console.log('Sound manager initialized successfully');
+      // Sound manager initialized successfully
     } catch (error) {
-      console.error('Failed to initialize sound manager:', error);
+      // Failed to initialize sound manager
     }
   }
 
@@ -54,7 +54,7 @@ class SoundManager {
       
       this.mergeSound = sound;
     } catch (error) {
-      console.error('Failed to load merge sound:', error);
+      // Failed to load merge sound
     }
   }
 
@@ -71,7 +71,7 @@ class SoundManager {
       
       this.intermediateMergeSound = sound;
     } catch (error) {
-      console.error('Failed to load intermediate merge sound:', error);
+      // Failed to load intermediate merge sound
     }
   }
 
@@ -88,7 +88,7 @@ class SoundManager {
       
       this.dropSound = sound;
     } catch (error) {
-      console.error('Failed to load drop sound:', error);
+      // Failed to load drop sound
     }
   }
 
@@ -103,7 +103,7 @@ class SoundManager {
       // Ensure sound is in playable state
       const status = await this.mergeSound.getStatusAsync();
       if (!status.isLoaded) {
-        console.warn('Merge sound not loaded');
+        // Merge sound not loaded
         return;
       }
       
@@ -111,7 +111,7 @@ class SoundManager {
       await this.mergeSound.setVolumeAsync(soundVolume);
       await this.mergeSound.replayAsync();
     } catch (error) {
-      console.error('Failed to play merge sound:', error);
+      // Failed to play merge sound
     }
   }
 
@@ -125,14 +125,14 @@ class SoundManager {
       
       const status = await this.intermediateMergeSound.getStatusAsync();
       if (!status.isLoaded) {
-        console.warn('Intermediate merge sound not loaded');
+        // Intermediate merge sound not loaded
         return;
       }
       
       await this.intermediateMergeSound.setVolumeAsync(soundVolume * 0.85);
       await this.intermediateMergeSound.replayAsync();
     } catch (error) {
-      console.error('Failed to play intermediate merge sound:', error);
+      // Failed to play intermediate merge sound
     }
   }
 

@@ -717,6 +717,15 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
     value: tile.value
   }));
   
+  // Play appropriate merge sound
+  if (isChainReaction) {
+    // For chain reaction merges, play intermediate merge sound
+    vibrateOnIntermediateMerge().catch(err => {
+      // Intermediate merge sound/vibration error
+    });
+  }
+  // Note: For initial merges (isChainReaction = false), sound will be handled by the main game engine
+  
   // Clear all connected tiles from board immediately (animation will show them)
   connectedTiles.forEach(tile => {
     board[tile.row][tile.col] = 0;

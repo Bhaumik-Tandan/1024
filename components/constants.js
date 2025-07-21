@@ -45,10 +45,36 @@ const getResponsiveSizing = () => {
       cellMargin: cellMargin
     };
   } else {
-    // For mobile, use responsive sizing based on screen width
-    const cellMargin = Math.max(2, Math.floor(width * 0.008));
-    const cellSize = Math.floor((width - 40 - (COLS - 1) * cellMargin) / COLS);
-    return { cellSize, cellMargin };
+    // Enhanced mobile/tablet sizing with iPad-specific optimizations
+    const isTablet = width >= 768; // iPad and larger tablets
+    const isLargeTablet = width >= 1024; // iPad Pro and larger
+    
+    let maxGameWidth;
+    let cellMargin;
+    
+    if (isLargeTablet) {
+      // Large tablets (iPad Pro) - limit game width for better UX
+      maxGameWidth = Math.min(600, width * 0.7);
+      cellMargin = 8;
+    } else if (isTablet) {
+      // Regular tablets (standard iPad) - moderate sizing
+      maxGameWidth = Math.min(500, width * 0.75);
+      cellMargin = 6;
+    } else {
+      // Phones - use most of screen width
+      maxGameWidth = width - 40;
+      cellMargin = Math.max(2, Math.floor(width * 0.008));
+    }
+    
+    const cellSize = Math.floor((maxGameWidth - (COLS - 1) * cellMargin) / COLS);
+    
+    // Cap cell size for very large screens
+    const maxCellSize = isLargeTablet ? 90 : isTablet ? 80 : 120;
+    
+    return { 
+      cellSize: Math.min(cellSize, maxCellSize), 
+      cellMargin: cellMargin 
+    };
   }
 };
 
@@ -217,16 +243,39 @@ export const getTextColor = (value) => {
 };
 
 /**
- * UI Layout Dimensions
+ * Responsive breakpoints - enhanced for tablets
+ */
+export const BREAKPOINTS = {
+  SMALL_PHONE: 320,
+  PHONE: 375,
+  LARGE_PHONE: 414,
+  SMALL_TABLET: 768,  // iPad mini, regular iPad
+  TABLET: 820,        // iPad Air
+  LARGE_TABLET: 1024, // iPad Pro
+  DESKTOP: 1200,
+};
+
+/**
+ * Get responsive value based on screen size - enhanced for tablets
+ */
+export const getResponsiveValue = (phone, tablet, desktop) => {
+  if (width <= BREAKPOINTS.LARGE_PHONE) return phone;
+  if (width <= BREAKPOINTS.LARGE_TABLET) return tablet;
+  return desktop;
+};
+
+/**
+ * UI Layout Dimensions - enhanced for tablets
  */
 export const UI_CONFIG = {
   // Spacing
   BOARD_PADDING: 8,
-  HEADER_HEIGHT: 80,
-  FOOTER_HEIGHT: 40,
+  HEADER_HEIGHT: getResponsiveValue(80, 100, 120),
+  FOOTER_HEIGHT: getResponsiveValue(40, 50, 60),
   
-  // Board dimensions
-  BOARD_WIDTH: width - 20,
+  // Board dimensions - responsive for tablets
+  BOARD_WIDTH: width >= BREAKPOINTS.SMALL_TABLET ? 
+    Math.min(600, width * 0.8) : width - 20,
   GRID_WIDTH: COLS * CELL_SIZE + (COLS - 1) * CELL_MARGIN,
   GRID_HEIGHT: ROWS * CELL_SIZE + (ROWS - 1) * CELL_MARGIN,
   
@@ -320,35 +369,15 @@ export const ANIMATION_CONFIG = {
 };
 
 /**
- * Responsive breakpoints
- */
-export const BREAKPOINTS = {
-  SMALL_PHONE: 320,
-  PHONE: 375,
-  LARGE_PHONE: 414,
-  TABLET: 768,
-  LARGE_TABLET: 1024,
-};
-
-/**
- * Get responsive value based on screen size
- */
-export const getResponsiveValue = (small, medium, large) => {
-  if (width <= BREAKPOINTS.PHONE) return small;
-  if (width <= BREAKPOINTS.LARGE_PHONE) return medium;
-  return large;
-};
-
-/**
- * Font sizes that scale with screen size
+ * Font sizes that scale with screen size - enhanced for tablets
  */
 export const FONT_SIZES = {
-  TINY: getResponsiveValue(10, 11, 12),
-  SMALL: getResponsiveValue(12, 13, 14),
-  MEDIUM: getResponsiveValue(14, 16, 18),
-  LARGE: getResponsiveValue(18, 20, 22),
-  XLARGE: getResponsiveValue(22, 24, 26),
-  XXLARGE: getResponsiveValue(28, 32, 36),
+  TINY: getResponsiveValue(10, 12, 14),
+  SMALL: getResponsiveValue(12, 14, 16),
+  MEDIUM: getResponsiveValue(14, 18, 20),
+  LARGE: getResponsiveValue(18, 22, 24),
+  XLARGE: getResponsiveValue(22, 28, 32),
+  XXLARGE: getResponsiveValue(28, 36, 42),
 };
 
 export default {

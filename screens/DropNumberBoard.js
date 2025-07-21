@@ -664,35 +664,38 @@ const DropNumberBoard = ({ navigation, route }) => {
       </View>
       
       {/* Next Block - centered and styled like tiles */}
-      <View style={styles.nextBlockContainer}>
-        <View style={[
-          styles.nextBlockTile,
-          getTileStyle(nextBlock),
-        ]}>
-          {/* Special effects for next block if it's a milestone */}
-          {getTileDecoration(nextBlock)?.stars && (
-            <View style={styles.starsContainer}>
-              <Text style={styles.starIcon}>⭐</Text>
-              <Text style={[styles.starIcon, styles.starTop]}>⭐</Text>
-              <Text style={[styles.starIcon, styles.starBottom]}>⭐</Text>
-            </View>
-          )}
-          
-          <View style={styles.tileContent}>
-            {getTileDecoration(nextBlock)?.type === 'crown' && (
-              <Text style={styles.crownIcon}>👑</Text>
+      <View style={styles.nextBlockArea}>
+        <Text style={styles.nextBlockLabel}>NEXT</Text>
+        <View style={styles.nextBlockContainer}>
+          <View style={[
+            styles.nextBlockTile,
+            getTileStyle(nextBlock),
+          ]}>
+            {/* Special effects for next block if it's a milestone */}
+            {getTileDecoration(nextBlock)?.stars && (
+              <View style={styles.starsContainer}>
+                <Text style={styles.starIcon}>⭐</Text>
+                <Text style={[styles.starIcon, styles.starTop]}>⭐</Text>
+                <Text style={[styles.starIcon, styles.starBottom]}>⭐</Text>
+              </View>
             )}
             
-            <Text style={[
-              styles.nextBlockValue,
-              {
-                color: getTextColor(nextBlock),
-              },
-              isMilestoneTile(nextBlock) && styles.milestoneText,
-              getTileDecoration(nextBlock)?.type === 'crown' && styles.crownedText
-            ]}>
-              {nextBlock >= 1000 ? `${(nextBlock / 1000).toFixed(nextBlock % 1000 === 0 ? 0 : 1)}K` : nextBlock}
-            </Text>
+            <View style={styles.tileContent}>
+              {getTileDecoration(nextBlock)?.type === 'crown' && (
+                <Text style={styles.crownIcon}>👑</Text>
+              )}
+              
+              <Text style={[
+                styles.nextBlockValue,
+                {
+                  color: getTextColor(nextBlock),
+                },
+                isMilestoneTile(nextBlock) && styles.milestoneText,
+                getTileDecoration(nextBlock)?.type === 'crown' && styles.crownedText
+              ]}>
+                {nextBlock >= 1000 ? `${(nextBlock / 1000).toFixed(nextBlock % 1000 === 0 ? 0 : 1)}K` : nextBlock}
+              </Text>
+            </View>
           </View>
         </View>
       </View>
@@ -752,24 +755,32 @@ const styles = StyleSheet.create({
   },
   nextBlockArea: {
     alignItems: 'center',
-    marginTop: 40,
-    paddingVertical: 25,
+    marginTop: 20,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
     backgroundColor: '#2a2a2a',
     borderRadius: 12,
     marginHorizontal: 20,
     marginBottom: 20,
     borderWidth: 2,
-    borderColor: '#555',
+    borderColor: '#444444',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.5,
     shadowRadius: 6,
     elevation: 8,
   },
+  nextBlockLabel: {
+    color: '#cccccc',
+    fontSize: 14,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   nextBlockContainer: {
     alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 20,
+    justifyContent: 'center',
   },
   nextBlockTile: {
     width: CELL_SIZE,
@@ -780,41 +791,49 @@ const styles = StyleSheet.create({
     borderLeftWidth: 1,
     borderRightWidth: 1,
     borderColor: 'transparent',
+    // Add explicit styling for better visibility on iPad
+    minWidth: 60,
+    minHeight: 60,
+    maxWidth: 100,
+    maxHeight: 100,
   },
   nextBlockValue: {
-    fontSize: Math.max(14, CELL_SIZE / 3),
+    fontSize: Math.max(14, Math.min(24, CELL_SIZE / 3)),
     fontWeight: 'bold',
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   
   // Enhanced tile styles
   starsContainer: {
     position: 'absolute',
-    top: -CELL_SIZE * 0.2,
-    left: -CELL_SIZE * 0.2,
-    right: -CELL_SIZE * 0.2,
-    bottom: -CELL_SIZE * 0.2,
+    top: -CELL_SIZE * 0.15,
+    left: -CELL_SIZE * 0.15,
+    right: -CELL_SIZE * 0.15,
+    bottom: -CELL_SIZE * 0.15,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: -1,
   },
   starIcon: {
-    fontSize: CELL_SIZE * 0.4,
+    fontSize: Math.max(12, Math.min(20, CELL_SIZE * 0.3)),
     color: '#ffd700', // Gold color for stars
   },
   starTop: {
     position: 'absolute',
-    top: -CELL_SIZE * 0.1,
+    top: -Math.max(6, CELL_SIZE * 0.08),
   },
   starBottom: {
     position: 'absolute',
-    bottom: -CELL_SIZE * 0.1,
+    bottom: -Math.max(6, CELL_SIZE * 0.08),
   },
   crownIcon: {
-    fontSize: CELL_SIZE * 0.6,
+    fontSize: Math.max(16, Math.min(24, CELL_SIZE * 0.5)),
     position: 'absolute',
-    top: -CELL_SIZE * 0.1,
-    left: CELL_SIZE * 0.4,
+    top: -Math.max(8, CELL_SIZE * 0.08),
+    left: Math.max(12, CELL_SIZE * 0.35),
     zIndex: 1,
   },
   milestoneText: {
@@ -915,6 +934,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+
 });
 
 export default DropNumberBoard; 

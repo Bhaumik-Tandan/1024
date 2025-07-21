@@ -510,6 +510,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginTop: 25,
     marginBottom: 10,
+    // Ensure proper centering on tablets
+    maxWidth: 600,
   },
   boardDark: {
     backgroundColor: '#2a2a2a',

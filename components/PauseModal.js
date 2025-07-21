@@ -12,7 +12,7 @@ import { vibrateOnButtonPress } from '../utils/vibration';
 import useGameStore from '../store/gameStore';
 
 const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
-  const { darkMode, vibrationEnabled, soundEnabled, toggleVibration, toggleSound } = useGameStore();
+  const { vibrationEnabled, soundEnabled, toggleVibration, toggleSound } = useGameStore();
 
   const handleButtonPress = (action) => {
     // Vibrate on button press
@@ -46,15 +46,15 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={[styles.modalContainer, darkMode ? styles.modalContainerDark : styles.modalContainerLight]}>
+        <View style={[styles.modalContainer, styles.modalContainerDark]}>
           <View style={styles.header}>
-            <Text style={[styles.title, darkMode ? styles.textLight : styles.textDark]}>Game Paused</Text>
+            <Text style={[styles.title, styles.textLight]}>Game Paused</Text>
             <TouchableOpacity 
-              style={[styles.closeButton, darkMode ? styles.closeButtonDark : styles.closeButtonLight]}
+              style={[styles.closeButton, styles.closeButtonDark]}
               onPress={() => handleButtonPress('close')}
               activeOpacity={0.7}
             >
-              <Ionicons name="close" size={24} color={darkMode ? "#ffffff" : "#000000"} />
+              <Ionicons name="close" size={24} color="#ffffff" />
             </TouchableOpacity>
           </View>
 
@@ -69,12 +69,12 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
             </TouchableOpacity>
 
             <TouchableOpacity 
-              style={[styles.secondaryButton, darkMode ? styles.secondaryButtonDark : styles.secondaryButtonLight]}
+              style={[styles.secondaryButton, styles.secondaryButtonDark]}
               onPress={() => handleButtonPress('home')}
               activeOpacity={0.7}
             >
-              <Ionicons name="home" size={24} color={darkMode ? "#ffffff" : "#000000"} />
-              <Text style={[styles.secondaryButtonText, darkMode ? styles.textLight : styles.textDark]}>Back to Menu</Text>
+              <Ionicons name="home" size={24} color="#ffffff" />
+              <Text style={[styles.secondaryButtonText, styles.textLight]}>Back to Menu</Text>
             </TouchableOpacity>
           </View>
 

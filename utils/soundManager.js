@@ -1,6 +1,11 @@
-import { Audio } from 'expo-av';
 import { Platform } from 'react-native';
 import useGameStore from '../store/gameStore';
+
+// Only import Audio on native platforms
+let Audio = null;
+if (Platform.OS !== 'web') {
+  Audio = require('expo-av').Audio;
+}
 
 class SoundManager {
   constructor() {
@@ -8,9 +13,16 @@ class SoundManager {
     this.intermediateMergeSound = null;
     this.dropSound = null;
     this.isInitialized = false;
+    this.isWebPlatform = Platform.OS === 'web';
   }
 
   async initialize() {
+    // Skip audio initialization on web
+    if (this.isWebPlatform) {
+      this.isInitialized = true;
+      return;
+    }
+
     try {
       // Configure audio mode for playback only (no permissions needed)
       await Audio.setAudioModeAsync({
@@ -34,6 +46,8 @@ class SoundManager {
   }
 
   async loadMergeSound() {
+    if (this.isWebPlatform || !Audio) return;
+    
     try {
       const { sound } = await Audio.Sound.createAsync(
         require('../assets/mergeSound.wav'),
@@ -51,6 +65,8 @@ class SoundManager {
   }
 
   async loadIntermediateMergeSound() {
+    if (this.isWebPlatform || !Audio) return;
+    
     try {
       const { sound } = await Audio.Sound.createAsync(
         require('../assets/intermediateMerge.wav'),
@@ -68,6 +84,8 @@ class SoundManager {
   }
 
   async loadDropSound() {
+    if (this.isWebPlatform || !Audio) return;
+    
     try {
       const { sound } = await Audio.Sound.createAsync(
         require('../assets/drop.wav'),
@@ -85,6 +103,8 @@ class SoundManager {
   }
 
   async playMergeSound() {
+    if (this.isWebPlatform) return;
+    
     try {
       const { soundEnabled, soundVolume } = useGameStore.getState();
       
@@ -108,6 +128,8 @@ class SoundManager {
   }
 
   async playIntermediateMergeSound() {
+    if (this.isWebPlatform) return;
+    
     try {
       const { soundEnabled, soundVolume } = useGameStore.getState();
       
@@ -129,6 +151,8 @@ class SoundManager {
   }
 
   async playDropSound() {
+    if (this.isWebPlatform) return;
+    
     try {
       const { soundEnabled, soundVolume } = useGameStore.getState();
       
@@ -150,6 +174,8 @@ class SoundManager {
   }
 
   async updateVolume(volume) {
+    if (this.isWebPlatform) return;
+    
     try {
       if (this.mergeSound) {
         await this.mergeSound.setVolumeAsync(volume);
@@ -166,6 +192,8 @@ class SoundManager {
   }
 
   async cleanup() {
+    if (this.isWebPlatform) return;
+    
     try {
       if (this.mergeSound) {
         await this.mergeSound.unloadAsync();

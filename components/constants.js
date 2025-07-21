@@ -7,15 +7,31 @@
  * Game logic constants are now in GameRules.js for better organization
  */
 
-import { Dimensions } from 'react-native';
+import { Dimensions, Platform } from 'react-native';
 import { GAME_CONFIG } from './GameRules';
 
 // Import game dimensions from rules
 export const COLS = GAME_CONFIG.BOARD.COLS;
 export const ROWS = GAME_CONFIG.BOARD.ROWS;
 
-// UI Layout Constants
-export const { width, height } = Dimensions.get('window');
+// UI Layout Constants - with web fallbacks
+const getDimensions = () => {
+  try {
+    const dimensions = Dimensions.get('window');
+    return {
+      width: dimensions?.width || (Platform.OS === 'web' ? 400 : 400),
+      height: dimensions?.height || (Platform.OS === 'web' ? 800 : 800)
+    };
+  } catch (error) {
+    // Fallback dimensions if Dimensions.get fails
+    return {
+      width: Platform.OS === 'web' ? 400 : 400,
+      height: Platform.OS === 'web' ? 800 : 800
+    };
+  }
+};
+
+export const { width, height } = getDimensions();
 export const CELL_MARGIN = Math.max(2, Math.floor(width * 0.008)); // Smaller margin for more space
 export const CELL_SIZE = Math.floor((width - 40 - (COLS - 1) * CELL_MARGIN) / COLS); // Use more screen width
 

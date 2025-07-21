@@ -88,7 +88,7 @@ const DropNumberBoard = ({ navigation, route }) => {
   const [boardLeft, setBoardLeft] = useState(0);
   
   // Zustand store
-  const { updateScore, updateHighestBlock, darkMode, saveGame, loadSavedGame, clearSavedGame, highScore } = useGameStore();
+  const { updateScore, updateHighestBlock, saveGame, loadSavedGame, clearSavedGame, highScore } = useGameStore();
   
   // Use the animation manager
   const {
@@ -637,7 +637,7 @@ const DropNumberBoard = ({ navigation, route }) => {
 
   // UI rendering
   return (
-    <View style={[styles.container, darkMode ? styles.containerDark : styles.containerLight]}>
+    <View style={[styles.container, styles.containerDark]}>
       <GameHeader 
         score={score}
         record={highScore || 0}
@@ -660,7 +660,6 @@ const DropNumberBoard = ({ navigation, route }) => {
           showGuide={showGuide}
           panHandlers={panResponder.panHandlers}
           isTouchEnabled={isTouchEnabled}
-          darkMode={darkMode}
         />
       </View>
       

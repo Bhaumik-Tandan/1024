@@ -15,13 +15,11 @@ import useGameStore from '../store/gameStore';
 
 const SettingsScreen = ({ navigation }) => {
   const {
-    darkMode,
     vibrationEnabled,
     soundEnabled,
     soundVolume,
     highScore,
     highestBlock,
-    toggleDarkMode,
     toggleVibration,
     toggleSound,
     setSoundVolume,
@@ -47,10 +45,10 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   const VolumeSlider = ({ value, onValueChange, title, enabled, icon }) => (
-    <View style={[styles.sliderContainer, darkMode ? styles.sliderContainerDark : styles.sliderContainerLight]}>
+    <View style={[styles.sliderContainer, styles.sliderContainerDark]}>
       <View style={styles.sliderHeader}>
         <Ionicons name={icon} size={20} color="#ffffff" />
-        <Text style={[styles.sliderTitle, darkMode ? styles.textLight : styles.textDark]}>{title}</Text>
+        <Text style={[styles.sliderTitle, styles.textLight]}>{title}</Text>
       </View>
       <View style={styles.sliderTrack}>
         {[0, 0.25, 0.5, 0.75, 1].map((step) => (
@@ -65,17 +63,17 @@ const SettingsScreen = ({ navigation }) => {
           />
         ))}
       </View>
-      <Text style={[styles.volumeText, darkMode ? styles.textLight : styles.textDark]}>{Math.round(value * 100)}%</Text>
+      <Text style={[styles.volumeText, styles.textLight]}>{Math.round(value * 100)}%</Text>
     </View>
   );
 
   const SettingRow = ({ icon, label, value, onToggle, color = "#4caf50" }) => (
-    <View style={[styles.settingRow, darkMode ? styles.settingRowDark : styles.settingRowLight]}>
+    <View style={[styles.settingRow, styles.settingRowDark]}>
       <View style={styles.settingLeft}>
         <View style={[styles.iconContainer, { backgroundColor: color }]}>
           <Ionicons name={icon} size={20} color="#ffffff" />
         </View>
-        <Text style={[styles.settingLabel, darkMode ? styles.textLight : styles.textDark]}>{label}</Text>
+        <Text style={[styles.settingLabel, styles.textLight]}>{label}</Text>
       </View>
       <Switch
         value={value}
@@ -88,14 +86,14 @@ const SettingsScreen = ({ navigation }) => {
   );
 
   const StatRow = ({ icon, label, value, color = "#4caf50" }) => (
-    <View style={[styles.statRow, darkMode ? styles.statRowDark : styles.statRowLight]}>
+    <View style={[styles.statRow, styles.statRowDark]}>
       <View style={styles.statLeft}>
         <View style={[styles.iconContainer, { backgroundColor: color }]}>
           <Ionicons name={icon} size={20} color="#ffffff" />
         </View>
-        <Text style={[styles.statLabel, darkMode ? styles.textLight : styles.textDark]}>{label}</Text>
+        <Text style={[styles.statLabel, styles.textLight]}>{label}</Text>
       </View>
-      <Text style={[styles.statValue, darkMode ? styles.textLight : styles.textDark]}>{value}</Text>
+      <Text style={[styles.statValue, styles.textLight]}>{value}</Text>
     </View>
   );
 
@@ -110,15 +108,15 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, darkMode ? styles.containerDark : styles.containerLight]}>
-      <StatusBar style={darkMode ? "light-content" : "dark-content"} backgroundColor={darkMode ? "#2c2c2c" : "#ffffff"} />
+    <SafeAreaView style={[styles.container, styles.containerDark]}>
+      <StatusBar style="light-content" backgroundColor="#2c2c2c" />
       
       {/* Header */}
-      <View style={[styles.header, darkMode ? styles.headerDark : styles.headerLight]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, darkMode ? styles.backButtonDark : styles.backButtonLight]}>
-          <Ionicons name="arrow-back" size={24} color={darkMode ? "#ffffff" : "#000000"} />
+      <View style={[styles.header, styles.headerDark]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, styles.backButtonDark]}>
+          <Ionicons name="arrow-back" size={24} color="#ffffff" />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, darkMode ? styles.textLight : styles.textDark]}>Settings</Text>
+        <Text style={[styles.headerTitle, styles.textLight]}>Settings</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -127,7 +125,7 @@ const SettingsScreen = ({ navigation }) => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="volume-high" size={24} color="#4caf50" />
-            <Text style={[styles.sectionTitle, darkMode ? styles.textLight : styles.textDark]}>Sound</Text>
+            <Text style={[styles.sectionTitle, styles.textLight]}>Sound</Text>
           </View>
           
           <SettingRow
@@ -144,7 +142,7 @@ const SettingsScreen = ({ navigation }) => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="game-controller" size={24} color="#ff9800" />
-            <Text style={[styles.sectionTitle, darkMode ? styles.textLight : styles.textDark]}>Game</Text>
+            <Text style={[styles.sectionTitle, styles.textLight]}>Game</Text>
           </View>
           
           <SettingRow
@@ -154,21 +152,13 @@ const SettingsScreen = ({ navigation }) => {
             onToggle={toggleVibration}
             color="#ff9800"
           />
-
-          <SettingRow
-            icon="moon"
-            label="Dark Mode"
-            value={darkMode}
-            onToggle={toggleDarkMode}
-            color="#9c27b0"
-          />
         </View>
 
         {/* Statistics */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="stats-chart" size={24} color="#ffd700" />
-            <Text style={[styles.sectionTitle, darkMode ? styles.textLight : styles.textDark]}>Statistics</Text>
+            <Text style={[styles.sectionTitle, styles.textLight]}>Statistics</Text>
           </View>
           
           <StatRow
@@ -188,9 +178,9 @@ const SettingsScreen = ({ navigation }) => {
 
         {/* Reset Button */}
         <View style={styles.section}>
-          <TouchableOpacity style={[styles.resetButton, darkMode ? styles.resetButtonDark : styles.resetButtonLight]} onPress={handleResetSettings}>
-            <Ionicons name="refresh" size={20} color={darkMode ? "#ffffff" : "#000000"} />
-            <Text style={[styles.resetButtonText, darkMode ? styles.textLight : styles.textDark]}>Reset All Settings</Text>
+          <TouchableOpacity style={[styles.resetButton, styles.resetButtonDark]} onPress={handleResetSettings}>
+            <Ionicons name="refresh" size={20} color="#ffffff" />
+            <Text style={[styles.resetButtonText, styles.textLight]}>Reset All Settings</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

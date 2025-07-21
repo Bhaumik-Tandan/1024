@@ -6,9 +6,24 @@ import {
   Dimensions,
   TouchableOpacity,
   Animated,
+  Platform,
 } from 'react-native';
 
-const { width } = Dimensions.get('window');
+// Web-compatible dimensions
+const getDimensions = () => {
+  try {
+    const dimensions = Dimensions.get('window');
+    return {
+      width: dimensions?.width || (Platform.OS === 'web' ? 400 : 400),
+    };
+  } catch (error) {
+    return {
+      width: Platform.OS === 'web' ? 400 : 400,
+    };
+  }
+};
+
+const { width } = getDimensions();
 const BOARD_SIZE = 9; // Changed from 5 to 9 rows
 const CELL_SIZE = (width - 40) / 5; // Keep 5 columns
 const GRID_SIZE = 5; // Changed from 4 to 5 columns

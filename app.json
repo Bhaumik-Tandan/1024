@@ -40,7 +40,7 @@
       "package": "game1024.app"
     },
     "web": {
-      "favicon": "./assets/icon.svg"
+      "favicon": "./assets/icon.png"
     },
     "extra": {
       "eas": {

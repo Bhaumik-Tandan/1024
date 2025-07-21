@@ -26,13 +26,12 @@ const GameGrid = ({
   gameOver,
   showGuide,
   panHandlers,
-  isTouchEnabled = true,
-  darkMode = true
+  isTouchEnabled = true
 }) => {
   const isDisabled = gameOver || !falling || (falling?.fastDrop && !falling?.static) || !isTouchEnabled;
   
   return (
-    <View style={[styles.board, darkMode ? styles.boardDark : styles.boardLight]} {...panHandlers}>
+    <View style={[styles.board, styles.boardDark]} {...panHandlers}>
 
       {/* Cell-based touch areas - tap any cell to place tile there */}
       {board.map((row, rowIdx) =>

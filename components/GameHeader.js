@@ -4,17 +4,15 @@ import { Ionicons } from '@expo/vector-icons';
 import useGameStore from '../store/gameStore';
 
 const GameHeader = ({ score, record, onPause }) => {
-  const { darkMode } = useGameStore();
-
   return (
-    <View style={[styles.topBar, darkMode ? styles.topBarDark : styles.topBarLight]}>
-      <View style={[styles.scoreBox, darkMode ? styles.scoreBoxDark : styles.scoreBoxLight]}>
-        <Text style={[styles.scoreValue, darkMode ? styles.textLight : styles.textDark]}>{score}</Text>
-        <Text style={[styles.scoreLabel, darkMode ? styles.labelLight : styles.labelDark]}>Score</Text>
+    <View style={[styles.topBar, styles.topBarDark]}>
+      <View style={[styles.scoreBox, styles.scoreBoxDark]}>
+        <Text style={[styles.scoreValue, styles.textLight]}>{score}</Text>
+        <Text style={[styles.scoreLabel, styles.labelLight]}>Score</Text>
       </View>
       
-      <TouchableOpacity style={[styles.pauseButton, darkMode ? styles.pauseButtonDark : styles.pauseButtonLight]} onPress={onPause} activeOpacity={0.7}>
-        <Ionicons name="pause" size={24} color={darkMode ? "#ffffff" : "#000000"} />
+      <TouchableOpacity style={[styles.pauseButton, styles.pauseButtonDark]} onPress={onPause} activeOpacity={0.7}>
+        <Ionicons name="pause" size={24} color="#ffffff" />
       </TouchableOpacity>
       
       <View style={styles.recordBox}>

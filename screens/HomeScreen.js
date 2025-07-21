@@ -7,17 +7,32 @@ import {
   SafeAreaView,
   StatusBar,
   Dimensions,
-  LinearGradient,
+  Platform,
 } from 'react-native';
 import useGameStore from '../store/gameStore';
 
-const { width, height } = Dimensions.get('window');
+// Web-compatible dimensions
+const getDimensions = () => {
+  try {
+    const dimensions = Dimensions.get('window');
+    return {
+      width: dimensions?.width || (Platform.OS === 'web' ? 400 : 400),
+      height: dimensions?.height || (Platform.OS === 'web' ? 800 : 800)
+    };
+  } catch (error) {
+    return {
+      width: Platform.OS === 'web' ? 400 : 400,
+      height: Platform.OS === 'web' ? 800 : 800
+    };
+  }
+};
+
+const { width, height } = getDimensions();
 
 const HomeScreen = ({ navigation }) => {
   const { 
     highScore, 
     highestBlock, 
-    darkMode, 
     hasSavedGame,
     clearSavedGame 
   } = useGameStore();
@@ -67,32 +82,32 @@ const HomeScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, darkMode ? styles.containerDark : styles.containerLight]}>
+    <SafeAreaView style={[styles.container, styles.containerDark]}>
       <StatusBar 
-        barStyle={darkMode ? "light-content" : "dark-content"} 
-        backgroundColor={darkMode ? "#1a1a1a" : "#faf8ef"} 
+        barStyle="light-content" 
+        backgroundColor="#1a1a1a" 
       />
       
       {/* Background Gradient */}
-      <View style={[styles.backgroundGradient, darkMode ? styles.backgroundGradientDark : styles.backgroundGradientLight]} />
+      <View style={[styles.backgroundGradient, styles.backgroundGradientDark]} />
       
       {/* Header Section */}
       <View style={styles.headerSection}>
-        <Text style={[styles.gameTitle, darkMode ? styles.textLight : styles.textDark]}>
+        <Text style={[styles.gameTitle, styles.textLight]}>
           1024
         </Text>
-        <Text style={[styles.gameSubtitle, darkMode ? styles.subtitleLight : styles.subtitleDark]}>
+        <Text style={[styles.gameSubtitle, styles.subtitleLight]}>
           Drop & Merge
         </Text>
       </View>
       
       {/* Score Section */}
       <View style={styles.scoreSection}>
-        <View style={[styles.scoreCard, darkMode ? styles.cardDark : styles.cardLight]}>
-          <Text style={[styles.scoreLabel, darkMode ? styles.labelLight : styles.labelDark]}>
+        <View style={[styles.scoreCard, styles.cardDark]}>
+          <Text style={[styles.scoreLabel, styles.labelLight]}>
             HIGH SCORE
           </Text>
-          <Text style={[styles.scoreValue, darkMode ? styles.textLight : styles.textDark]}>
+          <Text style={[styles.scoreValue, styles.textLight]}>
             {formatScore(highScore)}
           </Text>
         </View>
@@ -100,11 +115,11 @@ const HomeScreen = ({ navigation }) => {
       
       {/* Highest Block Section */}
       <View style={styles.blockSection}>
-        <View style={[styles.blockCard, darkMode ? styles.cardDark : styles.cardLight]}>
+        <View style={[styles.blockCard, styles.cardDark]}>
           <View style={[styles.blockDisplay, { backgroundColor: getBlockColor(highestBlock) }]}>
             <Text style={styles.blockValue}>{formatBlock(highestBlock)}</Text>
           </View>
-          <Text style={[styles.blockLabel, darkMode ? styles.labelLight : styles.labelDark]}>
+          <Text style={[styles.blockLabel, styles.labelLight]}>
             HIGHEST BLOCK
           </Text>
         </View>
@@ -144,11 +159,11 @@ const HomeScreen = ({ navigation }) => {
       {/* Settings Button */}
       <View style={styles.settingsSection}>
         <TouchableOpacity 
-          style={[styles.settingsButton, darkMode ? styles.settingsButtonDark : styles.settingsButtonLight]} 
+          style={[styles.settingsButton, styles.settingsButtonDark]} 
           onPress={handleSettingsPress}
           activeOpacity={0.7}
         >
-          <Text style={[styles.settingsText, darkMode ? styles.textLight : styles.textDark]}>
+          <Text style={[styles.settingsText, styles.textLight]}>
             SETTINGS
           </Text>
         </TouchableOpacity>

@@ -2,7 +2,7 @@ import React from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
+  Pressable,
   StyleSheet,
   Modal,
 } from 'react-native';
@@ -49,73 +49,92 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
         <View style={[styles.modalContainer, styles.modalContainerDark]}>
           <View style={styles.header}>
             <Text style={[styles.title, styles.textLight]}>Game Paused</Text>
-            <TouchableOpacity 
-              style={[styles.closeButton, styles.closeButtonDark]}
-              onPress={() => handleButtonPress('close')}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="close" size={24} color="#ffffff" />
-            </TouchableOpacity>
+                    <Pressable
+          style={({ pressed }) => [
+            styles.closeButton, 
+            styles.closeButtonDark, 
+            pressed && { opacity: 0.7 }
+          ]}
+          onPress={() => handleButtonPress('close')}
+                  >
+                <Ionicons name="close" size={24} color="#ffffff" />
+              </Pressable>
           </View>
 
           <View style={styles.content}>
-            <TouchableOpacity 
-              style={styles.mainButton}
+            <Pressable 
+              style={({ pressed }) => [
+                styles.mainButton,
+                pressed && { opacity: 0.7 }
+              ]}
               onPress={() => handleButtonPress('resume')}
-              activeOpacity={0.7}
             >
               <Ionicons name="play" size={32} color="#ffffff" />
               <Text style={styles.mainButtonText}>Resume Game</Text>
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity 
-              style={[styles.secondaryButton, styles.secondaryButtonDark]}
+            <Pressable 
+              style={({ pressed }) => [
+                styles.secondaryButton, 
+                styles.secondaryButtonDark,
+                pressed && { opacity: 0.7 }
+              ]}
               onPress={() => handleButtonPress('home')}
-              activeOpacity={0.7}
             >
               <Ionicons name="home" size={24} color="#ffffff" />
               <Text style={[styles.secondaryButtonText, styles.textLight]}>Back to Menu</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           <View style={styles.bottomRow}>
-            <TouchableOpacity 
-              style={[styles.iconButton, styles.vibrationButton, !vibrationEnabled && styles.disabledButton]}
+            <Pressable 
+              style={({ pressed }) => [
+                styles.iconButton, 
+                styles.vibrationButton, 
+                !vibrationEnabled && styles.disabledButton,
+                pressed && { opacity: 0.7 }
+              ]}
               onPress={() => {
                 vibrateOnButtonPress();
                 toggleVibration();
               }}
-              activeOpacity={0.7}
             >
               <MaterialCommunityIcons 
                 name={vibrationEnabled ? "vibrate" : "vibrate-off"} 
                 size={24} 
                 color="#ffffff" 
               />
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity 
-              style={[styles.iconButton, styles.soundButton, !soundEnabled && styles.disabledButton]}
+            <Pressable 
+              style={({ pressed }) => [
+                styles.iconButton, 
+                styles.soundButton, 
+                !soundEnabled && styles.disabledButton,
+                pressed && { opacity: 0.7 }
+              ]}
               onPress={() => {
                 vibrateOnButtonPress();
                 toggleSound();
               }}
-              activeOpacity={0.7}
             >
               <Ionicons 
                 name={soundEnabled ? "volume-high" : "volume-mute"} 
                 size={24} 
                 color="#ffffff" 
               />
-            </TouchableOpacity>
+            </Pressable>
 
-            <TouchableOpacity 
-              style={[styles.iconButton, styles.refreshButton]}
+            <Pressable 
+              style={({ pressed }) => [
+                styles.iconButton, 
+                styles.refreshButton,
+                pressed && { opacity: 0.7 }
+              ]}
               onPress={() => handleButtonPress('restart')}
-              activeOpacity={0.7}
             >
               <Ionicons name="refresh" size={24} color="#ffffff" />
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </View>
       </View>

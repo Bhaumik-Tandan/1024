@@ -32,8 +32,29 @@ const getDimensions = () => {
 };
 
 export const { width, height } = getDimensions();
-export const CELL_MARGIN = Math.max(2, Math.floor(width * 0.008)); // Smaller margin for more space
-export const CELL_SIZE = Math.floor((width - 40 - (COLS - 1) * CELL_MARGIN) / COLS); // Use more screen width
+
+// Web-responsive sizing
+const getResponsiveSizing = () => {
+  if (Platform.OS === 'web') {
+    // For web, use smaller fixed sizes for better desktop experience
+    const maxGameWidth = 480; // Maximum game width on web
+    const cellMargin = 6;
+    const cellSize = Math.floor((maxGameWidth - 40 - (COLS - 1) * cellMargin) / COLS);
+    return {
+      cellSize: Math.min(cellSize, 70), // Cap cell size at 70px for web
+      cellMargin: cellMargin
+    };
+  } else {
+    // For mobile, use responsive sizing based on screen width
+    const cellMargin = Math.max(2, Math.floor(width * 0.008));
+    const cellSize = Math.floor((width - 40 - (COLS - 1) * cellMargin) / COLS);
+    return { cellSize, cellMargin };
+  }
+};
+
+const { cellSize, cellMargin } = getResponsiveSizing();
+export const CELL_MARGIN = cellMargin;
+export const CELL_SIZE = cellSize;
 
 /**
  * Calculate cell positions on screen
@@ -48,16 +69,16 @@ export const COLORS = {
   // Empty cell
   0: '#2c2c2c',
   
-  // Small values (common) - soft, friendly colors
-  2: '#F8E1A6',      // Soft gold
+  // Small values (common) - vibrant, friendly colors
+  2: '#E91E63',      // Vibrant pink/magenta
   4: '#FFD54F',      // Amber
   8: '#FFA726',      // Orange
-  16: '#FF7043',     // Deep orange
-  32: '#E57373',     // Coral
+  16: '#FF5722',     // Bright orange-red
+  32: '#F44336',     // Bold red
   
   // Medium values - vibrant but balanced
-  64: '#BA68C8',     // Light purple
-  128: '#9575CD',    // Medium purple  
+  64: '#9C27B0',     // Bright purple
+  128: '#8D6E63',    // Brown/grey tone  
   256: '#7986CB',    // Indigo
   512: '#64B5F6',    // Blue
   
@@ -82,14 +103,14 @@ export const COLORS = {
  * Enhanced gradient colors for tiles - creates depth and visual appeal
  */
 export const TILE_GRADIENTS = {
-  2: ['#F8E1A6', '#F5D982'],
+  2: ['#E91E63', '#C2185B'],
   4: ['#FFD54F', '#FFC107'],
   8: ['#FFA726', '#FF8F00'],
-  16: ['#FF7043', '#E64A19'],
-  32: ['#E57373', '#D32F2F'],
+  16: ['#FF5722', '#E64A19'],
+  32: ['#F44336', '#C62828'],
   
-  64: ['#BA68C8', '#9C27B0'],
-  128: ['#9575CD', '#673AB7'],
+  64: ['#9C27B0', '#7B1FA2'],
+  128: ['#8D6E63', '#6D4C41'],
   256: ['#7986CB', '#3F51B5'],
   512: ['#64B5F6', '#2196F3'],
   

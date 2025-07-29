@@ -21,6 +21,11 @@ import { useFocusEffect } from '@react-navigation/native';
 import GameHeader from '../components/GameHeader';
 import GameGrid from '../components/GameGrid';
 import PauseModal from '../components/PauseModal';
+import RelaxationFeatures from '../components/RelaxationFeatures';
+import SpaceBackground from '../components/SpaceBackground';
+import PlanetTile from '../components/PlanetTile';
+import ElementTile from '../components/ElementTile';
+import SpaceFacts from '../components/SpaceFacts';
 import { useAnimationManager } from '../components/AnimationManager';
 import { 
   getRandomBlockValue, 
@@ -45,7 +50,10 @@ import {
   getTextColor,
   getTileStyle,
   isMilestoneTile,
-  getTileDecoration
+  getTileDecoration,
+  THEME,
+  FONT_SIZES,
+  isElement
 } from '../components/constants';
 import useGameStore from '../store/gameStore';
 import { vibrateOnTouch } from '../utils/vibration';
@@ -69,6 +77,11 @@ const DropNumberBoard = ({ navigation, route }) => {
   // Touch sensitivity control
   const [isTouchEnabled, setIsTouchEnabled] = useState(true);
   const touchTimeoutRef = useRef(null);
+  
+  // Space facts state
+  const [showSpaceFact, setShowSpaceFact] = useState(false);
+  const [currentFactValue, setCurrentFactValue] = useState(0);
+  const factTimeoutRef = useRef(null);
   
   // Game statistics
   const [gameStats, setGameStats] = useState({
@@ -263,15 +276,46 @@ const DropNumberBoard = ({ navigation, route }) => {
   }, [falling, gameOver, board, nextBlock]); // Added nextBlock to dependencies
 
   /**
-   * Cleanup touch timeout on component unmount
+   * Cleanup timeouts on component unmount
    */
   useEffect(() => {
     return () => {
       if (touchTimeoutRef.current) {
         clearTimeout(touchTimeoutRef.current);
       }
+      if (factTimeoutRef.current) {
+        clearTimeout(factTimeoutRef.current);
+      }
     };
   }, []);
+  
+  /**
+   * Show space fact for educational value
+   */
+  const showFactForValue = (value) => {
+    // Only show facts for milestone values or first time achievements
+    const milestoneValues = [4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096];
+    
+    if (milestoneValues.includes(value) && value > maxTileAchieved) {
+      setCurrentFactValue(value);
+      setShowSpaceFact(true);
+      
+      // Auto-hide fact after 8 seconds
+      if (factTimeoutRef.current) {
+        clearTimeout(factTimeoutRef.current);
+      }
+      factTimeoutRef.current = setTimeout(() => {
+        setShowSpaceFact(false);
+      }, 8000);
+    }
+  };
+  
+  const hideSpaceFact = () => {
+    setShowSpaceFact(false);
+    if (factTimeoutRef.current) {
+      clearTimeout(factTimeoutRef.current);
+    }
+  };
 
   /**
    * Handle user tapping a cell to drop the tile in that column
@@ -474,6 +518,12 @@ const DropNumberBoard = ({ navigation, route }) => {
           highestTile: newHighestTile,
         }));
         
+        // Show space fact for new milestone achievement
+        if (newHighestTile > maxTileAchieved) {
+          showFactForValue(newHighestTile);
+          setMaxTileAchieved(newHighestTile);
+        }
+        
         // Update score
         if (totalScore > 0) {
           setScore(newScore);
@@ -547,9 +597,10 @@ const DropNumberBoard = ({ navigation, route }) => {
         // Update board state
         setBoard(newBoard);
         
-        // Update max tile achieved
+        // Update max tile achieved and show space fact
         const currentMaxTile = Math.max(...newBoard.flat());
         if (currentMaxTile > maxTileAchieved) {
+          showFactForValue(currentMaxTile);
           setMaxTileAchieved(currentMaxTile);
         }
         
@@ -635,68 +686,62 @@ const DropNumberBoard = ({ navigation, route }) => {
     return 'extreme';
   };
 
+
+
   // UI rendering
   return (
     <View style={[styles.container, styles.containerDark]}>
+      {/* Deep Space Background */}
+      <SpaceBackground />
+      
       <GameHeader 
         score={score}
         record={highScore || 0}
         onPause={handlePause}
       />
       
-      <View
-        ref={boardRef}
-        onLayout={e => setBoardLeft(e.nativeEvent.layout.x)}
-      >
-        <GameGrid
-          board={board}
-          falling={falling}
-          mergingTiles={mergingTiles}
-          mergeResult={mergeResult}
-          mergeAnimations={mergeAnimations}
-          liquidBlobs={liquidBlobs}
-          onRowTap={handleRowTap}
-          gameOver={gameOver}
-          showGuide={showGuide}
-          panHandlers={panResponder.panHandlers}
-          isTouchEnabled={isTouchEnabled}
-        />
+      {/* Premium Game Board Container */}
+      <View style={styles.gameBoardContainer}>
+        <View
+          ref={boardRef}
+          onLayout={e => setBoardLeft(e.nativeEvent.layout.x)}
+          style={styles.gameBoard}
+        >
+          <GameGrid
+            board={board}
+            falling={falling}
+            mergingTiles={mergingTiles}
+            mergeResult={mergeResult}
+            mergeAnimations={mergeAnimations}
+            liquidBlobs={liquidBlobs}
+            onRowTap={handleRowTap}
+            gameOver={gameOver}
+            showGuide={showGuide}
+            panHandlers={panResponder.panHandlers}
+            isTouchEnabled={isTouchEnabled}
+          />
+        </View>
       </View>
       
-      {/* Next Block - centered and styled like tiles */}
+      {/* Next Block Preview - Centered at Bottom with Drop Space */}
       <View style={styles.nextBlockArea}>
-        <Text style={styles.nextBlockLabel}>NEXT</Text>
+        <Text style={styles.nextBlockLabel}>
+          Next
+        </Text>
         <View style={styles.nextBlockContainer}>
-          <View style={[
-            styles.nextBlockTile,
-            getTileStyle(nextBlock),
-          ]}>
-            {/* Special effects for next block if it's a milestone */}
-            {getTileDecoration(nextBlock)?.stars && (
-              <View style={styles.starsContainer}>
-                <Text style={styles.starIcon}>⭐</Text>
-                <Text style={[styles.starIcon, styles.starTop]}>⭐</Text>
-                <Text style={[styles.starIcon, styles.starBottom]}>⭐</Text>
-              </View>
-            )}
-            
-            <View style={styles.tileContent}>
-              {getTileDecoration(nextBlock)?.type === 'crown' && (
-                <Text style={styles.crownIcon}>👑</Text>
-              )}
-              
-              <Text style={[
-                styles.nextBlockValue,
-                {
-                  color: getTextColor(nextBlock),
-                },
-                isMilestoneTile(nextBlock) && styles.milestoneText,
-                getTileDecoration(nextBlock)?.type === 'crown' && styles.crownedText
-              ]}>
-                {nextBlock >= 1000 ? `${(nextBlock / 1000).toFixed(nextBlock % 1000 === 0 ? 0 : 1)}K` : nextBlock}
-              </Text>
-            </View>
-          </View>
+          {isElement(nextBlock) ? (
+            <ElementTile 
+              value={nextBlock} 
+              isActive={true}
+              pulseSpeed={0.5}
+            />
+          ) : (
+            <PlanetTile 
+              value={nextBlock} 
+              isOrbiting={true}
+              orbitSpeed={0.5}
+            />
+          )}
         </View>
       </View>
     
@@ -732,6 +777,19 @@ const DropNumberBoard = ({ navigation, route }) => {
         onClose={handleClosePause}
         onRestart={handleRestart}
       />
+      
+      {/* Relaxation & Stress Relief Features */}
+      <RelaxationFeatures 
+        isActive={!gameOver && !isPaused} 
+        intensity={0.4} // Subtle but noticeable
+      />
+      
+      {/* Interactive Space Facts */}
+      <SpaceFacts 
+        currentValue={currentFactValue}
+        isVisible={showSpaceFact}
+        onClose={hideSpaceFact}
+      />
     </View>
   );
 };
@@ -741,7 +799,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   containerDark: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: THEME.DARK.BACKGROUND_PRIMARY,
   },
   containerLight: {
     backgroundColor: '#f8f9fa',
@@ -753,57 +811,82 @@ const styles = StyleSheet.create({
     marginTop: 20,
     borderRadius: 1,
   },
-  nextBlockArea: {
-    alignItems: 'center',
-    marginTop: 20,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    backgroundColor: '#2a2a2a',
-    borderRadius: 12,
-    marginHorizontal: 20,
-    marginBottom: 20,
+  gameBoardContainer: {
+    marginHorizontal: 12,
+    marginTop: 0,
+    marginBottom: 180, // Much more space to prevent overlap
+    borderRadius: 24,
+    backgroundColor: 'rgba(25, 30, 40, 0.9)',
+    padding: 20,
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 15,
     borderWidth: 2,
-    borderColor: '#444444',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
+    borderColor: 'rgba(74, 144, 226, 0.2)',
+  },
+  
+  gameBoard: {
+    borderRadius: 20, // More rounded
+    backgroundColor: 'rgba(15, 20, 30, 0.95)', // Deeper, more elegant
+    padding: 12, // More spacing between tiles
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
     elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 144, 226, 0.15)', // Subtle inner border
   },
+  
+  nextBlockArea: {
+    position: 'absolute',
+    bottom: 30, // More space from bottom edge
+    left: '50%',
+    transform: [{ translateX: -100 }],
+    alignItems: 'center',
+    backgroundColor: 'rgba(25, 30, 40, 0.98)',
+    borderRadius: 25,
+    paddingVertical: 20,
+    paddingHorizontal: 30,
+    width: 200,
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 15,
+    borderWidth: 3,
+    borderColor: 'rgba(74, 144, 226, 0.4)',
+    zIndex: 100,
+  },
+  
   nextBlockLabel: {
-    color: '#cccccc',
-    fontSize: 14,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-    marginBottom: 10,
+    color: '#E0E0E0',
+    fontSize: FONT_SIZES.SMALL * 0.9,
+    fontWeight: '700',
+    marginBottom: 8,
+    letterSpacing: 1.2,
     textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
+  
   nextBlockContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  nextBlockTile: {
-    width: CELL_SIZE,
-    height: CELL_SIZE,
-    borderRadius: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: 'transparent',
-    // Add explicit styling for better visibility on iPad
-    minWidth: 60,
-    minHeight: 60,
-    maxWidth: 100,
-    maxHeight: 100,
-  },
-  nextBlockValue: {
-    fontSize: Math.max(14, Math.min(24, CELL_SIZE / 3)),
-    fontWeight: 'bold',
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    backgroundColor: 'rgba(15, 20, 30, 0.9)',
+    borderRadius: 20,
+    padding: 15, // More padding for larger container
+    transform: [{ scale: 1.2 }], // Larger scale for bigger preview
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 10,
+    borderWidth: 2,
+    borderColor: 'rgba(74, 144, 226, 0.3)',
   },
   
   // Enhanced tile styles

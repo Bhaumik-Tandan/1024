@@ -1,137 +1,160 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import useGameStore from '../store/gameStore';
+import { THEME, FONT_SIZES } from './constants';
 
 const GameHeader = ({ score, record, onPause }) => {
   return (
-    <View style={[styles.topBar, styles.topBarDark]}>
-      <View style={[styles.scoreBox, styles.scoreBoxDark]}>
-        <Text style={[styles.scoreValue, styles.textLight]}>{score}</Text>
-        <Text style={[styles.scoreLabel, styles.labelLight]}>Score</Text>
+    <View style={styles.header}>
+      {/* Score Section */}
+      <View style={styles.scoreContainer}>
+        <Text style={styles.scoreLabel}>SCORE</Text>
+        <Text style={styles.scoreValue}>{score.toLocaleString()}</Text>
       </View>
-      
-      <TouchableOpacity style={[styles.pauseButton, styles.pauseButtonDark]} onPress={onPause} activeOpacity={0.7}>
-        <Ionicons name="pause" size={24} color="#ffffff" />
+
+      {/* Pause Button */}
+      <TouchableOpacity 
+        style={styles.pauseButton} 
+        onPress={onPause}
+        activeOpacity={0.8}
+      >
+        <View style={styles.pauseIcon}>
+          <View style={styles.pauseBar} />
+          <View style={styles.pauseBar} />
+        </View>
       </TouchableOpacity>
-      
-      <View style={styles.recordBox}>
-        <Text style={styles.recordLabel}>Record</Text>
-        <Text style={styles.recordValue}>{record}</Text>
+
+      {/* Record Section */}
+      <View style={styles.recordContainer}>
+        <Text style={styles.recordLabel}>RECORD</Text>
+        <Text style={styles.recordValue}>{record.toLocaleString()}</Text>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  topBar: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-  },
-  topBarDark: {
-    backgroundColor: '#1a1a1a',
-    borderBottomColor: '#333',
-  },
-  topBarLight: {
-    backgroundColor: '#f8f9fa',
-    borderBottomColor: '#dee2e6',
-    shadowColor: 'rgba(0,0,0,0.1)',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  scoreBox: {
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    alignItems: 'center',
-    minWidth: 80,
+    paddingVertical: 8, // Further reduced padding
+    marginTop: 0, // Remove top margin
+    marginBottom: 5, // Small bottom margin for separation
+    // Premium glass effect
+    backgroundColor: THEME.DARK.BACKGROUND_SECONDARY + 'CC',
+    borderRadius: 16,
+    marginHorizontal: 10,
+    // Enhanced shadows
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  scoreBoxDark: {
-    backgroundColor: '#2a2a2a',
-  },
-  scoreBoxLight: {
-    backgroundColor: '#ffffff',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+    // Subtle border
     borderWidth: 1,
-    borderColor: '#dee2e6',
-    shadowColor: 'rgba(0,0,0,0.1)',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    borderColor: THEME.DARK.BORDER_COLOR + '60',
   },
-  scoreValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  
+  scoreContainer: {
+    alignItems: 'flex-start',
+    backgroundColor: THEME.DARK.SCORE_BOX_DARK,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    minWidth: 100,
+    // Premium shadow
+    shadowColor: THEME.DARK.NEON_GLOW,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+    // Border accent
+    borderWidth: 1,
+    borderColor: THEME.DARK.NEON_GLOW + '40',
   },
-  textLight: {
-    color: '#fff',
-  },
-  textDark: {
-    color: '#212529',
-  },
+  
   scoreLabel: {
-    fontSize: 12,
+    color: THEME.DARK.TEXT_SECONDARY,
+    fontSize: FONT_SIZES.SMALL,
     fontWeight: '600',
-    marginTop: 2,
+    letterSpacing: 1,
+    marginBottom: 2,
   },
-  labelLight: {
-    color: '#aaa',
+  
+  scoreValue: {
+    color: THEME.DARK.NEON_GLOW,
+    fontSize: FONT_SIZES.LARGE,
+    fontWeight: 'bold',
+    textShadowColor: THEME.DARK.NEON_GLOW + '60',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
-  labelDark: {
-    color: '#6c757d',
-  },
+  
   pauseButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    backgroundColor: THEME.DARK.BACKGROUND_BOARD,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
+    // Premium button styling
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: THEME.DARK.BORDER_COLOR,
   },
-  pauseButtonDark: {
-    backgroundColor: '#444',
-  },
-  pauseButtonLight: {
-    backgroundColor: '#f0f0f0',
-  },
-  recordBox: {
-    backgroundColor: '#4a90e2',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+  
+  pauseIcon: {
+    flexDirection: 'row',
     alignItems: 'center',
-    minWidth: 70,
-    shadowColor: '#4a90e2',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    justifyContent: 'center',
   },
+  
+  pauseBar: {
+    width: 4,
+    height: 16,
+    backgroundColor: THEME.DARK.TEXT_PRIMARY,
+    marginHorizontal: 2,
+    borderRadius: 2,
+  },
+  
+  recordContainer: {
+    alignItems: 'flex-end',
+    backgroundColor: THEME.DARK.RECORD_BOX,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    minWidth: 100,
+    // Premium shadow
+    shadowColor: THEME.DARK.RECORD_BOX,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+    // Border accent
+    borderWidth: 1,
+    borderColor: THEME.DARK.WORKSHOP_ACCENT + '60',
+  },
+  
   recordLabel: {
-    color: '#fff',
-    fontSize: 10,
+    color: THEME.DARK.TEXT_PRIMARY + 'DD',
+    fontSize: FONT_SIZES.SMALL,
     fontWeight: '600',
+    letterSpacing: 1,
+    marginBottom: 2,
   },
+  
   recordValue: {
-    color: '#fff',
-    fontSize: 16,
+    color: THEME.DARK.TEXT_PRIMARY,
+    fontSize: FONT_SIZES.LARGE,
     fontWeight: 'bold',
-    marginTop: 2,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
 });
 

@@ -49,6 +49,10 @@ const HomeScreen = ({ navigation }) => {
     navigation.navigate('Settings');
   };
 
+  const handleAstronomyPress = () => {
+    navigation.navigate('Astronomy');
+  };
+
   const handleNewGamePress = () => {
     clearSavedGame();
     navigation.navigate('Drop Number Board');
@@ -156,8 +160,18 @@ const HomeScreen = ({ navigation }) => {
         )}
       </View>
       
-      {/* Settings Button */}
+      {/* Navigation Buttons */}
       <View style={styles.settingsSection}>
+        <TouchableOpacity 
+          style={[styles.astronomyButton, styles.buttonShadow]} 
+          onPress={handleAstronomyPress}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.astronomyText}>
+            🌌 EXPLORE SPACE
+          </Text>
+        </TouchableOpacity>
+        
         <TouchableOpacity 
           style={[styles.settingsButton, styles.settingsButtonDark]} 
           onPress={handleSettingsPress}
@@ -389,6 +403,23 @@ const styles = StyleSheet.create({
   settingsSection: {
     alignItems: 'center',
     paddingBottom: height * 0.05,
+  },
+  
+  astronomyButton: {
+    backgroundColor: '#6a5acd',
+    width: width * 0.8,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  
+  astronomyText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
   
   settingsButton: {

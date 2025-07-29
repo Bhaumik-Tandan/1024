@@ -5,6 +5,7 @@ import PAGES from '../constants/pages';
 import DropNumberBoard from '../screens/DropNumberBoard';
 import HomeScreen from '../screens/HomeScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import AstronomyScreen from '../screens/AstronomyScreen';
 import { NavigationContainer } from '@react-navigation/native';
 
 const Stack = createNativeStackNavigator();
@@ -32,6 +33,13 @@ const RootNavigator = (
                     headerShown: false,
                 }}
                 component={SettingsScreen}
+            />
+            <Stack.Screen
+                name={PAGES.ASTRONOMY}
+                options={{
+                    headerShown: false,
+                }}
+                component={AstronomyScreen}
             />
         </Stack.Group>
     </Stack.Navigator>

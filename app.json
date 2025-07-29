@@ -1,16 +1,18 @@
 {
   "expo": {
-    "name": "1024-game",
-    "slug": "1024-game",
+    "name": "Cosmic Planet Fusion",
+    "slug": "cosmic-planet-fusion",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
+    "description": "The ultimate space puzzle experience. Merge cosmic planets, explore deep space physics, and discover amazing celestial bodies in this mesmerizing astronomical fusion game.",
+    "keywords": ["space", "planets", "astronomy", "puzzle", "cosmic", "physics", "relaxation", "fusion", "celestial"],
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FF6B6B"
+      "backgroundColor": "#0A0A1A"
     },
     "ios": {
       "supportsTablet": true,
@@ -18,29 +20,35 @@
       "splash": {
         "image": "./assets/splash.png",
         "resizeMode": "contain",
-        "backgroundColor": "#FF6B6B"
+        "backgroundColor": "#0A0A1A"
       },
-      "bundleIdentifier": "game1024.app",
+      "bundleIdentifier": "com.cosmic.planetfusion",
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": ["audio"],
+        "NSAppleMusicUsageDescription": "This app uses audio for ambient space sounds and cosmic audio effects",
+        "NSMicrophoneUsageDescription": "This app may use microphone for breathing exercise synchronization"
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FF6B6B"
+        "backgroundColor": "#0A0A1A"
       },
       "icon": "./assets/icon.png",
       "splash": {
         "image": "./assets/splash-android.png",
         "resizeMode": "contain",
-        "backgroundColor": "#FF6B6B"
+        "backgroundColor": "#0A0A1A"
       },
       "edgeToEdgeEnabled": true,
-      "package": "game1024.app"
+      "package": "com.cosmic.planetfusion",
+      "permissions": ["VIBRATE", "INTERNET", "ACCESS_NETWORK_STATE"]
     },
     "web": {
-      "favicon": "./assets/icon.png"
+      "favicon": "./assets/icon.png",
+      "name": "Cosmic Planet Fusion",
+      "shortName": "CosmicFusion",
+      "description": "Merge planets and explore the cosmos in this mesmerizing space puzzle game"
     },
     "extra": {
       "eas": {

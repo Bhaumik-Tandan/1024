@@ -1,7 +1,9 @@
 {
-  "name": "1024-game",
+  "name": "cosmic-planet-fusion",
   "version": "1.0.0",
   "main": "index.js",
+  "description": "A mesmerizing space puzzle game featuring realistic planet physics and cosmic exploration",
+  "keywords": ["cosmic", "planets", "space", "astronomy", "physics", "puzzle", "mobile-game", "react-native"],
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",

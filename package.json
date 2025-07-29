@@ -1,9 +1,9 @@
 {
-  "name": "cosmic-planet-fusion",
+  "name": "expo-react-native-template",
   "version": "1.0.0",
   "main": "index.js",
-  "description": "A mesmerizing space puzzle game featuring realistic planet physics and cosmic exploration",
-  "keywords": ["cosmic", "planets", "space", "astronomy", "physics", "puzzle", "mobile-game", "react-native"],
+  "description": "A clean Expo React Native template for assignments and projects",
+  "keywords": ["expo", "react-native", "template", "mobile-app", "assignment"],
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -19,10 +19,7 @@
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-navigation/native": "^7.1.14",
     "@react-navigation/native-stack": "^7.3.21",
-    "@react-navigation/stack": "^7.4.2",
     "expo": "53.0.20",
-    "expo-av": "^15.1.7",
-    "expo-font": "~13.3.2",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
     "react-dom": "19.0.0",
@@ -30,16 +27,11 @@
     "react-native-gesture-handler": "~2.24.0",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
-    "react-native-web": "^0.20.0",
-    "zustand": "^5.0.6"
+    "react-native-web": "^0.20.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
-    "@babel/preset-env": "^7.28.0",
-    "@babel/preset-react": "^7.27.1",
-    "babel-jest": "^30.0.4",
-    "babel-preset-expo": "~13.0.0",
-    "jest": "~29.7.0"
+    "babel-preset-expo": "~13.0.0"
   },
   "private": true
 }

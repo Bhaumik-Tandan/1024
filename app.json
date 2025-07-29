@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "Cosmic Planet Fusion",
-    "slug": "cosmic-planet-fusion",
+    "name": "Expo React Native Template",
+    "slug": "expo-react-native-template",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "description": "The ultimate space puzzle experience. Merge cosmic planets, explore deep space physics, and discover amazing celestial bodies in this mesmerizing astronomical fusion game.",
-    "keywords": ["space", "planets", "astronomy", "puzzle", "cosmic", "physics", "relaxation", "fusion", "celestial"],
+    "description": "A clean Expo React Native template for assignments and projects",
+    "keywords": ["expo", "react-native", "template", "mobile-app"],
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A0A1A"
+      "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true,
@@ -20,40 +20,27 @@
       "splash": {
         "image": "./assets/splash.png",
         "resizeMode": "contain",
-        "backgroundColor": "#0A0A1A"
+        "backgroundColor": "#ffffff"
       },
-      "bundleIdentifier": "com.cosmic.planetfusion",
-      "infoPlist": {
-        "UIBackgroundModes": ["audio"],
-        "NSAppleMusicUsageDescription": "This app uses audio for ambient space sounds and cosmic audio effects",
-        "NSMicrophoneUsageDescription": "This app may use microphone for breathing exercise synchronization"
-      }
+      "bundleIdentifier": "com.yourname.templateapp"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0A0A1A"
+        "backgroundColor": "#ffffff"
       },
       "icon": "./assets/icon.png",
       "splash": {
-        "image": "./assets/splash-android.png",
+        "image": "./assets/splash.png",
         "resizeMode": "contain",
-        "backgroundColor": "#0A0A1A"
+        "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "com.cosmic.planetfusion",
-      "permissions": ["VIBRATE", "INTERNET", "ACCESS_NETWORK_STATE"]
+      "package": "com.yourname.templateapp"
     },
     "web": {
       "favicon": "./assets/icon.png",
-      "name": "Cosmic Planet Fusion",
-      "shortName": "CosmicFusion",
-      "description": "Merge planets and explore the cosmos in this mesmerizing space puzzle game"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "f24f5cb5-20a6-4366-8cb3-5cad10095bcb"
-      }
+      "name": "Expo React Native Template",
+      "shortName": "Template"
     }
   }
 }

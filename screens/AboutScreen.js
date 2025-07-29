@@ -7,20 +7,27 @@ import {
   SafeAreaView,
 } from 'react-native';
 
-const HomeScreen = ({ navigation }) => {
+const AboutScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Welcome to React Native</Text>
-        <Text style={styles.subtitle}>
-          This is a clean template for your assignments
+        <Text style={styles.title}>About This Template</Text>
+        <Text style={styles.description}>
+          This is a clean Expo React Native template that includes:
         </Text>
+        
+        <View style={styles.featureList}>
+          <Text style={styles.feature}>• React Navigation setup</Text>
+          <Text style={styles.feature}>• Basic screen examples</Text>
+          <Text style={styles.feature}>• Clean project structure</Text>
+          <Text style={styles.feature}>• Ready for your assignments</Text>
+        </View>
         
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate('About')}
+          onPress={() => navigation.goBack()}
         >
-          <Text style={styles.buttonText}>Go to About</Text>
+          <Text style={styles.buttonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -39,16 +46,24 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 20,
     textAlign: 'center',
   },
-  subtitle: {
+  description: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 30,
+    marginBottom: 20,
     textAlign: 'center',
+  },
+  featureList: {
+    marginBottom: 30,
+  },
+  feature: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: '#333',
   },
   button: {
     backgroundColor: '#007AFF',
@@ -63,4 +78,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen; 
+export default AboutScreen; 

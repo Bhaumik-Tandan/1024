@@ -1,8 +1,6 @@
 const PAGES = {
-    DROP_NUMBER_BOARD: 'Drop Number Board',
-    HOME: 'Home',
-    SETTINGS: 'Settings',
-    ASTRONOMY: 'Astronomy',
+  HOME: 'Home',
+  ABOUT: 'About',
 };
 
 export default PAGES; 

@@ -1,49 +1,30 @@
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
 import PAGES from '../constants/pages';
-import DropNumberBoard from '../screens/DropNumberBoard';
 import HomeScreen from '../screens/HomeScreen';
-import SettingsScreen from '../screens/SettingsScreen';
-import AstronomyScreen from '../screens/AstronomyScreen';
-import { NavigationContainer } from '@react-navigation/native';
+import AboutScreen from '../screens/AboutScreen';
 
 const Stack = createNativeStackNavigator();
-const RootNavigator = (
+
+const RootNavigator = () => {
+  return (
     <NavigationContainer>
-    <Stack.Navigator initialRouteName={PAGES.DROP_NUMBER_BOARD}>
-        <Stack.Group>
-            <Stack.Screen
-                name={PAGES.DROP_NUMBER_BOARD}
-                options={{
-                    headerShown: false,
-                }}
-                component={DropNumberBoard}
-            />
-            <Stack.Screen
-                name={PAGES.HOME}
-                options={{
-                    headerShown: false,
-                }}
-                component={HomeScreen}
-            />
-            <Stack.Screen
-                name={PAGES.SETTINGS}
-                options={{
-                    headerShown: false,
-                }}
-                component={SettingsScreen}
-            />
-            <Stack.Screen
-                name={PAGES.ASTRONOMY}
-                options={{
-                    headerShown: false,
-                }}
-                component={AstronomyScreen}
-            />
-        </Stack.Group>
-    </Stack.Navigator>
+      <Stack.Navigator initialRouteName={PAGES.HOME}>
+        <Stack.Screen
+          name={PAGES.HOME}
+          component={HomeScreen}
+          options={{ title: 'Home' }}
+        />
+        <Stack.Screen
+          name={PAGES.ABOUT}
+          component={AboutScreen}
+          options={{ title: 'About' }}
+        />
+      </Stack.Navigator>
     </NavigationContainer>
-);
+  );
+};
 
 export default RootNavigator;

@@ -7,8 +7,8 @@ function createSpacePngData() {
   console.log('');
   
   console.log('✅ Generated optimized SVG files:');
-  console.log('   - assets/splash-space.svg');
-  console.log('   - assets/icon-space.svg');
+  console.log('   - assets/sources/splash-space.svg');
+  console.log('   - assets/sources/icon-space.svg');
   console.log('');
   
   console.log('📋 CONVERSION OPTIONS:');
@@ -21,7 +21,7 @@ function createSpacePngData() {
   console.log('');
   
   console.log('🌐 OPTION 2: Online Converters');
-  console.log('   - Copy SVG content from assets/splash-space.svg');
+  console.log('   - Copy SVG content from assets/sources/splash-space.svg');
   console.log('   - Paste into: svgtopng.com or convertio.co');
   console.log('   - Download as PNG with exact dimensions');
   console.log('');

@@ -2,16 +2,19 @@ import { Platform } from 'react-native';
 import useGameStore from '../store/gameStore';
 
 // Only import Audio on native platforms
-let Audio = null;
+let createAudioPlayer = null;
+let setAudioModeAsync = null;
 if (Platform.OS !== 'web') {
-  Audio = require('expo-av').Audio;
+  const audio = require('expo-audio');
+  createAudioPlayer = audio.createAudioPlayer;
+  setAudioModeAsync = audio.setAudioModeAsync;
 }
 
 class SoundManager {
   constructor() {
-    this.mergeSound = null;
-    this.intermediateMergeSound = null;
-    this.dropSound = null;
+    this.mergePlayer = null;
+    this.intermediateMergePlayer = null;
+    this.dropPlayer = null;
     this.isInitialized = false;
     this.isWebPlatform = Platform.OS === 'web';
   }
@@ -25,18 +28,16 @@ class SoundManager {
 
     try {
       // Configure audio mode for playback only (no permissions needed)
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        staysActiveInBackground: false,
-        playsInSilentModeIOS: true,
+      await setAudioModeAsync({
+        allowsRecording: false,
+        shouldPlayInBackground: false,
+        playsInSilentMode: true,
         shouldDuckAndroid: true,
-        playThroughEarpieceAndroid: false,
+        shouldRouteThroughEarpiece: false,
       });
       
-      // Load sounds
-      await this.loadMergeSound();
-      await this.loadIntermediateMergeSound();
-      await this.loadDropSound();
+      // Create audio players
+      this.createAudioPlayers();
       
       this.isInitialized = true;
       // Sound manager initialized successfully
@@ -45,173 +46,157 @@ class SoundManager {
     }
   }
 
-  async loadMergeSound() {
-    if (this.isWebPlatform || !Audio) return;
+  createAudioPlayers() {
+    if (this.isWebPlatform || !createAudioPlayer) return;
     
     try {
-      const { sound } = await Audio.Sound.createAsync(
-        require('../assets/mergeSound.wav'),
-        { 
-          shouldPlay: false,
-          volume: 0.7,
-          isLooping: false,
-        }
-      );
+      // Create audio players for each sound
+      this.mergePlayer = createAudioPlayer(require('../assets/audio/mergeSound.wav'));
+      this.intermediateMergePlayer = createAudioPlayer(require('../assets/audio/intermediateMerge.wav'));
+      this.dropPlayer = createAudioPlayer(require('../assets/audio/drop.wav'));
       
-      this.mergeSound = sound;
+      // Set volume levels
+      if (this.mergePlayer) this.mergePlayer.volume = 0.7;
+      if (this.intermediateMergePlayer) this.intermediateMergePlayer.volume = 0.6;
+      if (this.dropPlayer) this.dropPlayer.volume = 0.5;
+      
     } catch (error) {
-      // Failed to load merge sound
+      // Failed to create audio players
     }
+  }
+
+  // Legacy methods to maintain compatibility - these are now no-ops for individual loading
+  async loadMergeSound() {
+    // No longer needed with expo-audio, players are created in initialize
   }
 
   async loadIntermediateMergeSound() {
-    if (this.isWebPlatform || !Audio) return;
-    
-    try {
-      const { sound } = await Audio.Sound.createAsync(
-        require('../assets/intermediateMerge.wav'),
-        { 
-          shouldPlay: false,
-          volume: 0.6,
-          isLooping: false,
-        }
-      );
-      
-      this.intermediateMergeSound = sound;
-    } catch (error) {
-      // Failed to load intermediate merge sound
-    }
+    // No longer needed with expo-audio, players are created in initialize
   }
 
   async loadDropSound() {
-    if (this.isWebPlatform || !Audio) return;
-    
-    try {
-      const { sound } = await Audio.Sound.createAsync(
-        require('../assets/drop.wav'),
-        { 
-          shouldPlay: false,
-          volume: 0.5,
-          isLooping: false,
-        }
-      );
-      
-      this.dropSound = sound;
-    } catch (error) {
-      // Failed to load drop sound
-    }
+    // No longer needed with expo-audio, players are created in initialize
   }
 
   async playMergeSound() {
-    if (this.isWebPlatform) return;
+    if (this.isWebPlatform || !this.mergePlayer) return;
     
     try {
-      const { soundEnabled, soundVolume } = useGameStore.getState();
-      
-      if (!soundEnabled || !this.mergeSound || !this.isInitialized) {
-        return;
-      }
-      
-      // Ensure sound is in playable state
-      const status = await this.mergeSound.getStatusAsync();
-      if (!status.isLoaded) {
-        // Merge sound not loaded
-        return;
-      }
-      
-      // Update volume and play
-      await this.mergeSound.setVolumeAsync(soundVolume);
-      await this.mergeSound.replayAsync();
+      this.mergePlayer.seekTo(0); // Reset to beginning
+      this.mergePlayer.play();
     } catch (error) {
       // Failed to play merge sound
     }
   }
 
   async playIntermediateMergeSound() {
-    if (this.isWebPlatform) return;
+    if (this.isWebPlatform || !this.intermediateMergePlayer) return;
     
     try {
-      const { soundEnabled, soundVolume } = useGameStore.getState();
-      
-      if (!soundEnabled || !this.intermediateMergeSound || !this.isInitialized) {
-        return;
-      }
-      
-      const status = await this.intermediateMergeSound.getStatusAsync();
-      if (!status.isLoaded) {
-        // Intermediate merge sound not loaded
-        return;
-      }
-      
-      await this.intermediateMergeSound.setVolumeAsync(soundVolume * 0.85);
-      await this.intermediateMergeSound.replayAsync();
+      this.intermediateMergePlayer.seekTo(0); // Reset to beginning
+      this.intermediateMergePlayer.play();
     } catch (error) {
       // Failed to play intermediate merge sound
     }
   }
 
   async playDropSound() {
-    if (this.isWebPlatform) return;
+    if (this.isWebPlatform || !this.dropPlayer) return;
     
     try {
-      const { soundEnabled, soundVolume } = useGameStore.getState();
-      
-      if (!soundEnabled || !this.dropSound || !this.isInitialized) {
-        return;
-      }
-      
-      const status = await this.dropSound.getStatusAsync();
-      if (!status.isLoaded) {
-        // Drop sound not loaded
-        return;
-      }
-      
-      await this.dropSound.setVolumeAsync(soundVolume * 0.7);
-      await this.dropSound.replayAsync();
+      this.dropPlayer.seekTo(0); // Reset to beginning
+      this.dropPlayer.play();
     } catch (error) {
       // Failed to play drop sound
     }
   }
 
-  async updateVolume(volume) {
+  async stopAllSounds() {
     if (this.isWebPlatform) return;
     
     try {
-      if (this.mergeSound) {
-        await this.mergeSound.setVolumeAsync(volume);
+      if (this.mergePlayer) {
+        this.mergePlayer.pause();
       }
-      if (this.intermediateMergeSound) {
-        await this.intermediateMergeSound.setVolumeAsync(volume * 0.85);
+      if (this.intermediateMergePlayer) {
+        this.intermediateMergePlayer.pause();
       }
-      if (this.dropSound) {
-        await this.dropSound.setVolumeAsync(volume * 0.7);
+      if (this.dropPlayer) {
+        this.dropPlayer.pause();
       }
     } catch (error) {
-      // Failed to update sound volume
+      // Failed to stop sounds
     }
   }
 
-  async cleanup() {
+  async unloadAllSounds() {
     if (this.isWebPlatform) return;
     
     try {
-      if (this.mergeSound) {
-        await this.mergeSound.unloadAsync();
-        this.mergeSound = null;
+      if (this.mergePlayer) {
+        this.mergePlayer.remove();
+        this.mergePlayer = null;
       }
-      if (this.intermediateMergeSound) {
-        await this.intermediateMergeSound.unloadAsync();
-        this.intermediateMergeSound = null;
+      if (this.intermediateMergePlayer) {
+        this.intermediateMergePlayer.remove();
+        this.intermediateMergePlayer = null;
       }
-      if (this.dropSound) {
-        await this.dropSound.unloadAsync();
-        this.dropSound = null;
+      if (this.dropPlayer) {
+        this.dropPlayer.remove();
+        this.dropPlayer = null;
       }
-      this.isInitialized = false;
     } catch (error) {
-      // Failed to cleanup sound manager
+      // Failed to unload sounds
+    }
+  }
+
+  async setVolume(volume) {
+    if (this.isWebPlatform) return;
+    
+    try {
+      if (this.mergePlayer) {
+        this.mergePlayer.volume = volume * 0.7; // Maintain relative volume levels
+      }
+      if (this.intermediateMergePlayer) {
+        this.intermediateMergePlayer.volume = volume * 0.6;
+      }
+      if (this.dropPlayer) {
+        this.dropPlayer.volume = volume * 0.5;
+      }
+    } catch (error) {
+      // Failed to set volume
+    }
+  }
+
+  playSound(soundType) {
+    if (!this.isInitialized || this.isWebPlatform) return;
+    
+    switch (soundType) {
+      case 'merge':
+        this.playMergeSound();
+        break;
+      case 'intermediateMerge':
+        this.playIntermediateMergeSound();
+        break;
+      case 'drop':
+        this.playDropSound();
+        break;
+      default:
+        break;
+    }
+  }
+
+  checkSoundEnabled() {
+    const state = useGameStore.getState();
+    return state.soundEnabled;
+  }
+
+  playSoundIfEnabled(soundType) {
+    if (this.checkSoundEnabled()) {
+      this.playSound(soundType);
     }
   }
 }
 
-export default new SoundManager(); 
+const soundManager = new SoundManager();
+export default soundManager; 

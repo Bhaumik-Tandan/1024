@@ -163,8 +163,8 @@ function createIcon() {
 console.log('Generating space-themed assets...');
 
 // Write SVG files
-fs.writeFileSync('./assets/splash-space.svg', createSplashScreen());
-fs.writeFileSync('./assets/icon-space.svg', createIcon());
+fs.writeFileSync('./assets/sources/splash-space.svg', createSplashScreen());
+fs.writeFileSync('./assets/sources/icon-space.svg', createIcon());
 
 console.log('Space-themed SVG assets generated successfully!');
 console.log('');

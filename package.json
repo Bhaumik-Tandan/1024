@@ -18,8 +18,8 @@
     "@react-navigation/native": "^7.1.14",
     "@react-navigation/native-stack": "^7.3.21",
     "@react-navigation/stack": "^7.4.2",
-        "expo": "53.0.20",
-    "expo-audio": "~2.3.0",
+    "expo": "53.0.20",
+    "expo-audio": "~0.4.8",
     "expo-font": "~13.3.2",
     "expo-linear-gradient": "^14.1.5",
     "expo-splash-screen": "^0.30.10",
@@ -31,6 +31,7 @@
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-web": "^0.20.0",
+    "sharp": "^0.34.3",
     "zustand": "^5.0.6"
   },
   "devDependencies": {

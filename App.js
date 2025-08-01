@@ -5,31 +5,11 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Navigator from './navigator';
 import soundManager from './utils/soundManager';
 
-// Only import Audio on native platforms
-let Audio = null;
-if (Platform.OS !== 'web') {
-  Audio = require('expo-av').Audio;
-}
-
 export default function App() {
   useEffect(() => {
     const initializeAudio = async () => {
       try {
-        // Skip audio initialization on web
-        if (Platform.OS === 'web') {
-          return;
-        }
-        
-        // iOS-specific audio session activation
-        if (Platform.OS === 'ios' && Audio) {
-          await Audio.setAudioModeAsync({
-            playsInSilentModeIOS: true,
-            allowsRecordingIOS: false,
-            staysActiveInBackground: false,
-          });
-        }
-        
-        // Initialize sound manager
+        // Initialize sound manager (handles audio mode configuration internally)
         await soundManager.initialize();
       } catch (error) {
         // Audio initialization failed silently - continue without sound
@@ -41,7 +21,7 @@ export default function App() {
     
     // Cleanup sound manager when app is unmounted
     return () => {
-      soundManager.cleanup();
+      soundManager.unloadAllSounds();
     };
   }, []);
 

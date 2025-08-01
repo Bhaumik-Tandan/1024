@@ -360,6 +360,11 @@ const DropNumberBoard = ({ navigation, route }) => {
       landingRow = canMergeInFull.mergeRow;
     }
     
+    // Play drop sound immediately when user taps
+    vibrateOnTouch().catch(err => {
+      // Drop sound error
+    });
+    
     // Disable touch temporarily to prevent rapid successive taps
     setIsTouchEnabled(false);
     
@@ -483,10 +488,7 @@ const DropNumberBoard = ({ navigation, route }) => {
    */
   const handleTileLanded = (row, col, value) => {
     try {
-      // Always play drop sound when a tile lands
-      vibrateOnTouch().catch(err => {
-        // Drop sound error
-      });
+      // Note: Drop sound is now played immediately when user taps, not when tile lands
       
       // Check if the newly landed tile is touching other tiles for additional vibration
       const isTouchingTiles = hasAdjacentTiles(board, row, col);
@@ -560,10 +562,7 @@ const DropNumberBoard = ({ navigation, route }) => {
    */
   const handleFullColumnTileLanded = async (row, col, value) => {
     try {
-      // Always play drop sound when a tile lands
-      vibrateOnTouch().catch(err => {
-        // Drop sound error
-      });
+      // Note: Drop sound is now played immediately when user taps, not when tile lands
       
       // Process the full column drop through the special game engine with animation support
       const result = await processFullColumnDrop(board, value, col, showMergeResultAnimation);

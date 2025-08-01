@@ -41,7 +41,6 @@ import useGameStore from '../store/gameStore';
 import { vibrateOnTouch } from '../utils/vibration';
 import soundManager from '../utils/soundManager';
 import SpaceBackground from '../components/SpaceBackground';
-import RelaxationFeatures from '../components/RelaxationFeatures';
 import SpaceFacts from '../components/SpaceFacts';
 import PlanetTile from '../components/PlanetTile';
 import ElementTile from '../components/ElementTile';
@@ -621,7 +620,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         timestamp: Date.now(),
       };
       saveGame(gameState);
-    }, 5000); // Save every 5 seconds instead of every state change
+    }, 10000); // Save every 10 seconds instead of 5 to reduce processing overhead
     
     return () => clearInterval(autoSaveInterval);
   }, [board, score, nextBlock, previewBlock, gameStats, gameOver, isPaused, saveGame]);
@@ -787,11 +786,12 @@ const DropNumberBoard = ({ navigation, route }) => {
     falling.anim.setValue(startPosition);
     Animated.timing(falling.anim, {
       toValue: endPosition,
-      duration: 400, // Slower drop animation (was 150ms, now 400ms for better visibility)
-      useNativeDriver: false,
+      duration: 150, // Fast drop animation for immediate response (reduced from 400ms)
+      useNativeDriver: true, // Enable native driver for better performance
     }).start();
     
-    // Disable touch temporarily AFTER starting animation to prevent rapid successive taps
+    // Keep touch enabled during animation for better responsiveness
+    // Only disable for a minimal time to prevent double-taps
     setIsTouchEnabled(false);
     
     // Clear any existing timeout
@@ -799,16 +799,16 @@ const DropNumberBoard = ({ navigation, route }) => {
       clearTimeout(touchTimeoutRef.current);
     }
     
-    // Re-enable touch after a delay (touch debounce) - reduced for better responsiveness
+    // Re-enable touch immediately after next tick to prevent double-tap only
     touchTimeoutRef.current = setTimeout(() => {
       setIsTouchEnabled(true);
-    }, 100); // Reduced from 180ms to 100ms for faster response
+    }, 50); // Minimal delay just to prevent accidental double-taps
     
     // Handle landing after animation completes
     const fastDropTimer = setTimeout(() => {
       handleTileLanded(landingRow, landingCol, tileValueToDrop);
       clearFalling();
-    }, 400); // Match the animation duration
+    }, 150); // Match the reduced animation duration
     
     return () => clearTimeout(fastDropTimer);
   };
@@ -870,49 +870,86 @@ const DropNumberBoard = ({ navigation, route }) => {
   /**
    * Handle tile landing and process all game logic
    * Uses the enhanced game engine with chain reactions and scoring - MASTER BRANCH STYLE
+   * Optimized for better responsiveness
    */
   const handleTileLanded = (row, col, value) => {
     try {
-      // Play drop sound when tile lands (no vibration on drop)
-      soundManager.playDropSound();
+      // Play drop sound when tile lands (no vibration on drop) - don't await
+      soundManager.playDropSound().catch(() => {
+        // Silent fail for sound
+      });
       
       // Process the tile landing through the game engine
-      handleBlockLanding(
-        board, 
-        row, 
-        col, 
-        value, 
-        showMergeResultAnimation
-      ).then(result => {
-        const { 
-          newBoard, 
-          totalScore, 
-          chainReactionCount = 0, 
-          iterations = 0 
-        } = result;
-        
-        // Update board state FIRST (this is key for proper merge detection)
-        setBoard(newBoard);
-        
-        // Update score if points were gained
-        if (totalScore > 0) {
-          setScore(prevScore => prevScore + totalScore);
-          // Play merge sound and vibrate only on successful combinations
-          soundManager.playMergeSound();
-          vibrateOnTouch().catch(err => {
-            // Vibration only on merge
-          });
-        }
-        
-        // Check for game over condition
-        if (isGameOver(newBoard)) {
-          setGameOver(true);
-        }
-      }).catch(error => {
-        // Error in handleTileLanded
+      // Use requestAnimationFrame to defer heavy processing off main thread
+      requestAnimationFrame(() => {
+        handleBlockLanding(
+          board, 
+          row, 
+          col, 
+          value, 
+          showMergeResultAnimation
+        ).then(result => {
+          const { 
+            newBoard, 
+            totalScore, 
+            chainReactionCount = 0, 
+            iterations = 0 
+          } = result;
+          
+          // Batch all state updates together to reduce render cycles
+          const newHighestTile = Math.max(gameStats.highestTile, ...newBoard.flat());
+          const newScore = totalScore > 0 ? score + totalScore : score;
+          
+          // Batch state updates to reduce render cycles
+          setBoard(newBoard);
+          
+          // Update score if points were gained
+          if (totalScore > 0) {
+            setScore(newScore);
+            
+            // Update game stats with new values
+            setGameStats(prevStats => ({
+              ...prevStats,
+              tilesPlaced: prevStats.tilesPlaced + 1,
+              mergesPerformed: prevStats.mergesPerformed + 1,
+              chainReactions: prevStats.chainReactions + chainReactionCount,
+              highestTile: newHighestTile,
+            }));
+            
+            // Play merge sound and vibrate only on successful combinations (async)
+            soundManager.playMergeSound().catch(() => {});
+            vibrateOnTouch().catch(() => {});
+          } else {
+            // Update stats without merge
+            setGameStats(prevStats => ({
+              ...prevStats,
+              tilesPlaced: prevStats.tilesPlaced + 1,
+              chainReactions: prevStats.chainReactions + chainReactionCount,
+              highestTile: newHighestTile,
+            }));
+          }
+          
+          // Check for game over condition
+          if (isGameOver(newBoard)) {
+            setGameOver(true);
+          }
+          
+          // Defer store updates to next tick to avoid blocking render
+          setTimeout(() => {
+            if (newHighestTile > gameStats.highestTile) {
+              updateHighestBlock(newHighestTile);
+            }
+            if (totalScore > 0) {
+              updateScore(newScore);
+            }
+          }, 0);
+          
+        }).catch(error => {
+          // Error in handleBlockLanding - silent fail to maintain game flow
+        });
       });
     } catch (error) {
-      // Error in handleTileLanded
+      // Error in handleTileLanded - silent fail to maintain game flow
     }
   };
 
@@ -1351,12 +1388,6 @@ const DropNumberBoard = ({ navigation, route }) => {
         onHome={handleHome}
         onClose={handleClosePause}
         onRestart={handleRestart}
-      />
-      
-      {/* Relaxation & Stress Relief Features */}
-      <RelaxationFeatures 
-        isActive={!gameOver && !isPaused} 
-        intensity={0.4} // Subtle but noticeable
       />
       
       {/* Interactive Space Facts */}

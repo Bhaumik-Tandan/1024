@@ -921,13 +921,13 @@ export const ANIMATION_CONFIG = {
     BOUNCE: 'bounce',
   },
   
-  // Common animation durations (from GameRules) - Faster for better responsiveness
+  // Common animation durations - Optimized for responsiveness
   DURATION: {
-    FAST: 100,
-    NORMAL: 180,
-    SLOW: 350,
-    FALL: 7000, // 7 seconds for normal fall
-    FAST_DROP: 150, // 0.15 seconds for fast drop
+    FAST: 50,        // Reduced from 100ms for immediate response
+    NORMAL: 120,     // Reduced from 180ms for better flow
+    SLOW: 250,       // Reduced from 350ms
+    FALL: 7000,      // 7 seconds for normal fall (unchanged)
+    FAST_DROP: 150,  // Optimized for immediate response (was 150, confirmed)
   },
   
   // Scale factors for animations

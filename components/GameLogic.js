@@ -1061,3 +1061,35 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
   };
 };
 
+// Emergency animation cleanup to prevent stuck states
+export const clearAllAnimations = (animationManager) => {
+  if (animationManager) {
+    animationManager.clearMergeAnimations();
+    animationManager.clearFalling();
+  }
+};
+
+// Optimized merge processing to prevent animation buildup
+export const processMergeOptimized = (board, animationManager, onScoreUpdate) => {
+  // Clear any existing animations first
+  if (animationManager) {
+    animationManager.clearMergeAnimations();
+  }
+  
+  // Process merges with minimal delay
+  const mergeResult = findAndProcessMerges(board);
+  
+  if (mergeResult.merged && animationManager) {
+    // Use fastest animation settings
+    animationManager.showMergeResultAnimation(
+      mergeResult.row,
+      mergeResult.col, 
+      mergeResult.newValue,
+      mergeResult.mergingPositions,
+      mergeResult.isChainReaction
+    );
+  }
+  
+  return mergeResult;
+};
+

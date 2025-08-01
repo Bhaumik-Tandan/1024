@@ -86,20 +86,20 @@ export const useAnimationManager = () => {
     setMergingTiles(prev => [...prev, mergingTile]);
     
     Animated.parallel([
-      Animated.timing(mergeAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: false,
-      }),
+              Animated.timing(mergeAnim, {
+          toValue: 0,
+          duration: 120,
+          useNativeDriver: false,
+        }),
       Animated.sequence([
         Animated.timing(scaleAnim, {
           toValue: 1.3,
-          duration: 100,
+          duration: 60,
           useNativeDriver: false,
         }),
         Animated.timing(scaleAnim, {
           toValue: 1,
-          duration: 100,
+          duration: 60,
           useNativeDriver: false,
         }),
       ]),
@@ -116,6 +116,7 @@ export const useAnimationManager = () => {
     // Generate unique IDs using counter
     setAnimationCounter(prev => prev + 1);
     const baseId = `elements-collision-${Date.now()}-${animationCounter}`;
+    const createdAt = Date.now(); // Add timestamp for tracking
     
     // Create collision animations for merging planets with movement toward center
     const mergingAnimations = mergingTilesPositions.map((pos, index) => {
@@ -137,6 +138,7 @@ export const useAnimationManager = () => {
         glow: glowAnim,
         targetRow: row,
         targetCol: col,
+        createdAt, // Add timestamp
       };
     });
     
@@ -155,6 +157,7 @@ export const useAnimationManager = () => {
       opacity: resultOpacityAnim,
       glow: resultGlowAnim,
       rotate: resultRotateAnim,
+      createdAt, // Add timestamp
     };
     
     // Create collision effects for visual impact
@@ -173,10 +176,10 @@ export const useAnimationManager = () => {
     setMergeAnimations([...mergingAnimations, resultAnimation]);
     setCollisionEffects([collisionEffect]);
     
-    // Animation timing - FASTER for better responsiveness
-    const duration = isChainReaction ? 250 : 400;
-    const moveDuration = duration * 0.25;
-    const collisionDuration = duration * 0.2;
+    // Animation timing - ULTRA FAST for instant responsiveness  
+    const duration = isChainReaction ? 120 : 180;
+    const moveDuration = duration * 0.3;
+    const collisionDuration = duration * 0.15;
     const birthDuration = duration * 0.55;
     
     // PHASE 1: GRAVITATIONAL ATTRACTION - Planets move toward collision center
@@ -331,12 +334,12 @@ export const useAnimationManager = () => {
       Animated.parallel(formationPhase),
       Animated.parallel(cleanupPhase),
     ]).start(() => {
-      // Cleanup animations
+      // Cleanup animations - immediate cleanup for responsiveness
       setTimeout(() => {
         setMergeAnimations(prev => prev.filter(anim => !anim.id.startsWith(baseId)));
         setCollisionEffects([]);
         setEnergyBursts([]);
-      }, 100);
+      }, 50);
     });
   };
 

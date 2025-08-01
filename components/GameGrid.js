@@ -222,8 +222,8 @@ const GameGrid = ({
 
       {/* ENHANCED ELEMENTS-STYLE COLLISION ANIMATIONS */}
       {mergeAnimations.map((anim) => {
-        // Check if this is a result animation
-        const isResult = anim.scale._value === 0 || anim.id.includes('-result');
+        // Check if this is a result animation using a safer method
+        const isResult = anim.id.includes('-result');
         
         if (isResult) {
           // Render result planet with formation effects
@@ -237,13 +237,13 @@ const GameGrid = ({
                 opacity: anim.opacity,
                 transform: [
                   { scale: anim.scale },
-                  { rotate: `${anim.rotate?._value || 0}deg` }
+                  { rotate: `${0}deg` }
                 ],
                 zIndex: 1100,
                 // Formation glow effect
                 shadowColor: '#FFD700',
                 shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: anim.glow?._value || 0,
+                shadowOpacity: 0.5,
                 shadowRadius: 20,
                 elevation: 25,
               }}
@@ -251,7 +251,7 @@ const GameGrid = ({
               <Animated.View
                 style={{
                   borderRadius: CELL_SIZE / 2,
-                  backgroundColor: `rgba(255, 215, 0, ${(anim.glow?._value || 0) * 0.3})`,
+                  backgroundColor: `rgba(255, 215, 0, 0.3)`,
                   padding: 2,
                 }}
               >
@@ -274,8 +274,8 @@ const GameGrid = ({
                   borderRadius: CELL_SIZE * 0.8,
                   borderWidth: 2,
                   borderColor: '#FFD700',
-                  opacity: (anim.glow?._value || 0) * 0.7,
-                  transform: [{ scale: 1 + ((anim.glow?._value || 0) * 0.3) }],
+                  opacity: 0.7,
+                  transform: [{ scale: 1.3 }],
                 }}
               />
             </Animated.View>
@@ -299,7 +299,7 @@ const GameGrid = ({
                 // Pre-collision energy glow
                 shadowColor: '#00BFFF',
                 shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: (anim.glow?._value || 0) * 0.8,
+                shadowOpacity: 0.4,
                 shadowRadius: 15,
                 elevation: 20,
               }}
@@ -307,7 +307,7 @@ const GameGrid = ({
               <Animated.View
                 style={{
                   borderRadius: CELL_SIZE / 2,
-                  backgroundColor: `rgba(0, 191, 255, ${(anim.glow?._value || 0) * 0.2})`,
+                  backgroundColor: `rgba(0, 191, 255, 0.2)`,
                   padding: 1,
           }}
         >
@@ -330,8 +330,8 @@ const GameGrid = ({
                   borderRadius: CELL_SIZE * 0.7,
                   borderWidth: 1,
                   borderColor: '#00BFFF',
-                  opacity: (anim.glow?._value || 0) * 0.5,
-                  transform: [{ scale: 1 + ((anim.glow?._value || 0) * 0.4) }],
+                  opacity: 0.5,
+                  transform: [{ scale: 1.4 }],
                 }}
               />
             </Animated.View>

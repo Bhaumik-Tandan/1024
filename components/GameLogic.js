@@ -802,27 +802,29 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
       showMergeResultAnimation(finalResultRow, finalResultCol, newValue, mergingTilePositions, isChainReaction, resolve);
     });
     
-    // Play sound at the right moment - timed to match animation collision phase
-    // For chain reactions: movement phase is 105ms, collision starts around 105ms
-    // For normal merges: movement phase is 54ms, collision starts around 54ms
-    const soundDelay = isChainReaction ? 105 : 54; // Time sound to collision phase start
-    setTimeout(() => {
-      if (isChainReaction) {
-        // For chain reaction merges, play intermediate merge sound
-        vibrateOnIntermediateMerge().catch(err => {
-          // Intermediate merge sound/vibration error
-        });
-      }
-      // Note: For initial merges (isChainReaction = false), sound will be handled by the main game engine
-    }, soundDelay);
+    // Play sound immediately when merge animation starts for responsive feedback
+    if (isChainReaction) {
+      vibrateOnIntermediateMerge().catch(err => {
+        // Intermediate merge sound/vibration error (silently handled)
+      });
+    } else {
+      vibrateOnMerge().catch(err => {
+        // Regular merge sound/vibration error (silently handled)
+      });
+    }
     
     // Wait for animation to complete
     await animationPromise;
   } else {
-    // If no animation, play sound immediately for chain reactions
+    // If no animation, play sound immediately
     if (isChainReaction) {
       vibrateOnIntermediateMerge().catch(err => {
-        // Intermediate merge sound/vibration error
+        // Intermediate merge sound/vibration error (silently handled)
+      });
+    } else {
+      // For regular merges, play regular merge sound
+      vibrateOnMerge().catch(err => {
+        // Regular merge sound/vibration error (silently handled)
       });
     }
   }
@@ -898,12 +900,46 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
     const resultRow = connectedTiles.length === 2 ? finalRow : null;
     const resultCol = connectedTiles.length === 2 ? col : null;
     
+    // First, check if this initial merge will trigger chain reactions
+    let willTriggerChains = false;
+    if (connectedTiles.length >= 2) {
+      // Simulate the merge to see if it will create conditions for chain reactions
+      const testBoard = newBoard.map(row => [...row]); // Deep copy
+      
+      // Temporarily perform the merge on test board
+      const mergedValue = connectedTiles.reduce((sum, tile) => sum + tile.value, 0);
+      connectedTiles.forEach(tile => {
+        testBoard[tile.row][tile.col] = 0;
+      });
+      const mergeResultRow = resultRow !== null ? resultRow : connectedTiles[0].row;
+      const mergeResultCol = resultCol !== null ? resultCol : connectedTiles[0].col;
+      testBoard[mergeResultRow][mergeResultCol] = mergedValue;
+      
+      // Apply gravity and check for potential merges
+      for (let c = 0; c < COLS; c++) {
+        applyUpwardGravity(testBoard, c);
+      }
+      
+      // Check if any merges are possible after this
+      for (let r = 0; r < ROWS && !willTriggerChains; r++) {
+        for (let c = 0; c < COLS && !willTriggerChains; c++) {
+          if (testBoard[r][c] !== 0) {
+            const potentialConnected = findConnectedTiles(testBoard, r, c);
+            if (potentialConnected.length >= 2) {
+              willTriggerChains = true;
+            }
+          }
+        }
+      }
+      
+    }
+    
     const initialMergeResult = await checkAndMergeConnectedGroup(
       newBoard, 
       finalRow, 
       col, 
       showMergeResultAnimation,
-      false, // Not a chain reaction - full animation
+      willTriggerChains, // Mark as chain reaction if it will trigger chains
       resultRow, // For 2-tile merges, use dropped tile position
       resultCol, // For 2-tile merges, use dropped tile position
       col       // Origin column (where the drop occurred)
@@ -926,6 +962,7 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
   let iterations = 0;
   
   while (chainReactionActive && iterations < GAME_RULES.chainReactions.maxIterations) {
+    
     chainReactionActive = false;
     iterations++;
     
@@ -961,31 +998,61 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
         // Check bounds
         if (pos.row >= 0 && pos.row < ROWS && pos.col >= 0 && pos.col < COLS) {
           if (newBoard[pos.row][pos.col] !== 0) {
-            const chainMergeResult = await checkAndMergeConnectedGroup(
-              newBoard, 
-              pos.row, 
-              pos.col, 
-              showMergeResultAnimation,
-              true, // This is a chain reaction - faster animation
-              null, // Use default position for chain reactions
-              null, // Use default position for chain reactions
-              col   // Origin column (where the original drop occurred)
-            );
-            
-            if (chainMergeResult.merged) {
-              const bonusScore = iterations > 1 ? 
-                ScoringSystem.calculateMergeScore(chainMergeResult.score, 2, true) : 
-                chainMergeResult.score;
-              totalScore += bonusScore;
-              chainReactionActive = true;
-              chainReactionCount++;
+            const testConnected = findConnectedTiles(newBoard, pos.row, pos.col);
+            if (testConnected.length >= 2) {
               
-              // Update the current merge position for next iteration
-              currentMergePosition = { 
-                row: chainMergeResult.newRow, 
-                col: chainMergeResult.newCol 
-              };
-              break; // Found a merge, continue the chain
+              // Check if this will be the final merge in the chain
+              const testBoard = newBoard.map(row => [...row]);
+              // Simulate this merge
+              testConnected.forEach(tile => {
+                testBoard[tile.row][tile.col] = 0;
+              });
+              testBoard[testConnected[0].row][testConnected[0].col] = testConnected.reduce((sum, t) => sum + t.value, 0);
+              
+              // Apply gravity and check for more potential merges
+              for (let testCol = 0; testCol < COLS; testCol++) {
+                applyUpwardGravity(testBoard, testCol);
+              }
+              
+              // Check if any more merges are possible
+              let hasMoreMerges = false;
+              for (let testRow = 0; testRow < ROWS && !hasMoreMerges; testRow++) {
+                for (let testColCheck = 0; testColCheck < COLS && !hasMoreMerges; testColCheck++) {
+                  if (testBoard[testRow][testColCheck] !== 0) {
+                    const potentialConnected = findConnectedTiles(testBoard, testRow, testColCheck);
+                    if (potentialConnected.length >= 2) {
+                      hasMoreMerges = true;
+                    }
+                  }
+                }
+              }
+              
+              const mergeResult = await checkAndMergeConnectedGroup(
+                newBoard, 
+                pos.row, 
+                pos.col, 
+                showMergeResultAnimation,
+                hasMoreMerges, // Only intermediate sound if MORE merges will follow
+                null, // Use default position for chain reactions
+                null, // Use default position for chain reactions
+                col   // Origin column (where the original drop occurred)
+              );
+              
+              if (mergeResult.merged) {
+                const bonusScore = iterations > 1 ? 
+                  ScoringSystem.calculateMergeScore(mergeResult.score, 2, true) : 
+                  mergeResult.score;
+                totalScore += bonusScore;
+                chainReactionActive = true;
+                chainReactionCount++;
+                
+                // Set this as the new merge position for chain reactions
+                currentMergePosition = { 
+                  row: mergeResult.newRow, 
+                  col: mergeResult.newCol 
+                };
+                break; // Break to restart chain from this position
+              }
             }
           }
         }
@@ -1002,31 +1069,61 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           if (newBoard[r][c] !== 0) {
-            const mergeResult = await checkAndMergeConnectedGroup(
-              newBoard, 
-              r, 
-              c, 
-              showMergeResultAnimation,
-              true, // This is a chain reaction - faster animation
-              null, // Use default position for chain reactions
-              null, // Use default position for chain reactions
-              col   // Origin column (where the original drop occurred)
-            );
-            
-            if (mergeResult.merged) {
-              const bonusScore = iterations > 1 ? 
-                ScoringSystem.calculateMergeScore(mergeResult.score, 2, true) : 
-                mergeResult.score;
-              totalScore += bonusScore;
-              chainReactionActive = true;
-              chainReactionCount++;
+            const testConnected = findConnectedTiles(newBoard, r, c);
+            if (testConnected.length >= 2) {
               
-              // Set this as the new merge position for chain reactions
-              currentMergePosition = { 
-                row: mergeResult.newRow, 
-                col: mergeResult.newCol 
-              };
-              break; // Break to restart chain from this position
+              // Check if this will be the final merge in the chain
+              const testBoard = newBoard.map(row => [...row]);
+              // Simulate this merge
+              testConnected.forEach(tile => {
+                testBoard[tile.row][tile.col] = 0;
+              });
+              testBoard[testConnected[0].row][testConnected[0].col] = testConnected.reduce((sum, t) => sum + t.value, 0);
+              
+              // Apply gravity and check for more potential merges
+              for (let testCol = 0; testCol < COLS; testCol++) {
+                applyUpwardGravity(testBoard, testCol);
+              }
+              
+              // Check if any more merges are possible
+              let hasMoreMerges = false;
+              for (let testRow = 0; testRow < ROWS && !hasMoreMerges; testRow++) {
+                for (let testColCheck = 0; testColCheck < COLS && !hasMoreMerges; testColCheck++) {
+                  if (testBoard[testRow][testColCheck] !== 0) {
+                    const potentialConnected = findConnectedTiles(testBoard, testRow, testColCheck);
+                    if (potentialConnected.length >= 2) {
+                      hasMoreMerges = true;
+                    }
+                  }
+                }
+              }
+              
+              const mergeResult = await checkAndMergeConnectedGroup(
+                newBoard, 
+                r, 
+                c, 
+                showMergeResultAnimation,
+                hasMoreMerges, // Only intermediate sound if MORE merges will follow
+                null, // Use default position for chain reactions
+                null, // Use default position for chain reactions
+                col   // Origin column (where the original drop occurred)
+              );
+              
+              if (mergeResult.merged) {
+                const bonusScore = iterations > 1 ? 
+                  ScoringSystem.calculateMergeScore(mergeResult.score, 2, true) : 
+                  mergeResult.score;
+                totalScore += bonusScore;
+                chainReactionActive = true;
+                chainReactionCount++;
+                
+                // Set this as the new merge position for chain reactions
+                currentMergePosition = { 
+                  row: mergeResult.newRow, 
+                  col: mergeResult.newCol 
+                };
+                break; // Break to restart chain from this position
+              }
             }
           }
         }
@@ -1044,14 +1141,10 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
     totalScore += chainBonus;
   }
   
-  // STEP 7: Handle final merge sound
-  if (hadInitialMerge || chainReactionCount > 0) {
-    // Play final merge sound if there was any merge activity
-    // This covers both single merges and the final sound after chain reactions
-    vibrateOnMerge().catch(err => {
-      // Final merge sound/vibration error
-    });
-  }
+  // Note: Chain merge sounds are now handled properly:
+  // - Each intermediate merge plays intermediate sound
+  // - The final merge in the chain plays regular merge sound immediately
+  // - No need for separate delayed final sound
   
   // STEP 8: Validate final board state
   if (!GameValidator.isValidBoard(newBoard)) {

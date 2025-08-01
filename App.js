@@ -28,7 +28,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={{ flex: 1, backgroundColor: '#0a0a1a' }}>
-        <StatusBar style="light" backgroundColor="#0a0a1a" />
+        <StatusBar style="light" backgroundColor="#0a0a1a" hidden={true} />
         <Navigator />
       </SafeAreaView>
     </SafeAreaProvider>

@@ -86,11 +86,11 @@ export const useAnimationManager = () => {
     setMergingTiles(prev => [...prev, mergingTile]);
     
     Animated.parallel([
-              Animated.timing(mergeAnim, {
-          toValue: 0,
-          duration: 120,
-          useNativeDriver: false,
-        }),
+      Animated.timing(mergeAnim, {
+        toValue: 0,
+        duration: 120,
+        useNativeDriver: false,
+      }),
       Animated.sequence([
         Animated.timing(scaleAnim, {
           toValue: 1.3,
@@ -176,12 +176,12 @@ export const useAnimationManager = () => {
     setMergeAnimations([...mergingAnimations, resultAnimation]);
     setCollisionEffects([collisionEffect]);
     
-    // Animation timing - Balanced for visibility and responsiveness
-    // Increased chain reaction duration so users can see intermediate states
-    const duration = isChainReaction ? 350 : 180; // Increased from 120ms to 350ms for chain reactions
-    const moveDuration = duration * 0.3;  // 105ms for chain, 54ms for normal
-    const collisionDuration = duration * 0.15; // 52ms for chain, 27ms for normal  
-    const birthDuration = duration * 0.55; // 192ms for chain, 99ms for normal
+    // Animation timing - Restored to old system's responsive timing
+    // Use the original 120ms timing for chain reactions like the old createMergeAnimation
+    const duration = isChainReaction ? 120 : 180; // Back to original 120ms for chains!
+    const moveDuration = duration * 0.25;  // 30ms for chain, 45ms for normal - much faster
+    const collisionDuration = duration * 0.15; // 18ms for chain, 27ms for normal  
+    const birthDuration = duration * 0.6; // 72ms for chain, 108ms for normal
     
     // PHASE 1: GRAVITATIONAL ATTRACTION - Planets move toward collision center
     const attractionPhase = mergingAnimations.map(anim => {
@@ -320,11 +320,11 @@ export const useAnimationManager = () => {
       ]),
     ];
     
-    // PHASE 4: CLEANUP - Fade out effects
+    // PHASE 4: CLEANUP - Fast fade out like the old system
     const cleanupPhase = [
       Animated.timing(collisionEffect.opacity, {
         toValue: 0,
-        duration: 300,
+        duration: isChainReaction ? 60 : 120, // Much faster cleanup for chains
         useNativeDriver: false,
       }),
     ];
@@ -336,17 +336,16 @@ export const useAnimationManager = () => {
       Animated.parallel(formationPhase),
       Animated.parallel(cleanupPhase),
     ]).start(() => {
-      // Cleanup animations - immediate cleanup for responsiveness
-      setTimeout(() => {
-        setMergeAnimations(prev => prev.filter(anim => !anim.id.startsWith(baseId)));
-        setCollisionEffects([]);
-        setEnergyBursts([]);
-        
-        // Call completion callback if provided
-        if (onComplete) {
-          onComplete();
-        }
-      }, 50);
+      // Immediate cleanup like the old createMergeAnimation system
+      // No extra delays for responsive chain merge timing
+      setMergeAnimations(prev => prev.filter(anim => !anim.id.startsWith(baseId)));
+      setCollisionEffects([]);
+      setEnergyBursts([]);
+      
+      // Immediate callback like the old system
+      if (onComplete) {
+        onComplete();
+      }
     });
   };
 

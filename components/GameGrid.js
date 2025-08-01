@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { 
   ROWS, 
@@ -18,25 +18,123 @@ import {
 } from './constants';
 import PlanetTile from './PlanetTile';
 
+// Runtime measured positions for accurate column detection
+let measuredColumnPositions = [];
+
+// Measure actual column positions at runtime
+const measureColumnPositions = (layout, rowRef) => {
+  if (rowRef && rowRef.current) {
+    const positions = [];
+    for (let col = 0; col < COLS; col++) {
+      // Calculate center X position for each column
+      const cellWidth = layout.width / COLS;
+      const centerX = col * cellWidth + cellWidth / 2;
+      positions.push({
+        col,
+        centerX,
+        leftBound: col * cellWidth,
+        rightBound: (col + 1) * cellWidth
+      });
+    }
+    measuredColumnPositions = positions;
+  }
+};
+
+// Get column from X coordinate using measured positions
+const getColumnFromMeasuredX = (x) => {
+  if (measuredColumnPositions.length === 0) {
+    // Fallback to simple calculation if not measured yet
+    const columnWidth = CELL_SIZE + CELL_MARGIN;
+    return Math.min(Math.floor(x / columnWidth), COLS - 1);
+  }
+  
+  // Use measured positions for accurate detection
+  for (const pos of measuredColumnPositions) {
+    if (x >= pos.leftBound && x <= pos.rightBound) {
+      return pos.col;
+    }
+  }
+  
+  // Find closest column if outside bounds
+  let closestCol = 0;
+  let minDistance = Math.abs(x - measuredColumnPositions[0].centerX);
+  
+  for (let i = 1; i < measuredColumnPositions.length; i++) {
+    const distance = Math.abs(x - measuredColumnPositions[i].centerX);
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestCol = i;
+    }
+  }
+  
+  return closestCol;
+};
+
+// Get exact position for falling tiles using measured positions
+const getExactCellPosition = (col) => {
+  if (measuredColumnPositions.length > 0 && measuredColumnPositions[col]) {
+    return measuredColumnPositions[col].centerX - CELL_SIZE / 2;
+  }
+  // Fallback to calculated position
+  return col * (CELL_SIZE + CELL_MARGIN);
+};
+
 const GameGrid = ({ 
   board, 
   falling, 
   mergingTiles, 
   mergeResult, 
   mergeAnimations,
-  liquidBlobs, // Add liquid blobs prop
+  collisionEffects, // Add collision effects prop
+  energyBursts, // Add energy bursts prop
   onRowTap, 
+  onScreenTap, 
   gameOver,
   showGuide,
   panHandlers,
   isTouchEnabled = true
 }) => {
   const isDisabled = gameOver || !falling || (falling?.fastDrop && !falling?.static) || !isTouchEnabled;
+  const gridRef = useRef(null);
+  const [debugColumn, setDebugColumn] = useState(-1); // For visual debugging
+  
+  // Enhanced screen tap handler with accurate coordinates
+  const handleGridTap = (event) => {
+    if (gridRef.current) {
+      // Get touch position relative to grid container
+      const { locationX } = event.nativeEvent;
+      
+      // Detect column using measured positions
+      const detectedColumn = getColumnFromMeasuredX(locationX);
+      
+      // Visual debugging - highlight detected column briefly
+      setDebugColumn(detectedColumn);
+      setTimeout(() => setDebugColumn(-1), 500);
+      
+      // Call the parent's screen tap handler with accurate column
+      if (onScreenTap) {
+        onScreenTap({ 
+          nativeEvent: { 
+            locationX,
+            detectedColumn // Pass detected column directly
+          } 
+        });
+      }
+    }
+  };
   
   return (
     <View style={[styles.board, styles.boardDeepSpace]} {...panHandlers}>
-      {/* Game grid container with proper bounds */}
-      <View style={styles.gridContainer}>
+      {/* Game grid container with precise measurement and tap detection */}
+      <View 
+        ref={gridRef}
+        style={styles.gridContainer}
+        onLayout={(event) => {
+          measureColumnPositions(event.nativeEvent.layout, gridRef);
+        }}
+        onStartShouldSetResponder={() => true}
+        onResponderGrant={handleGridTap}
+      >
         {/* Render grid as rows and columns using flexbox */}
         {board.map((row, rowIdx) => (
           <View 
@@ -58,7 +156,15 @@ const GameGrid = ({
               return (
                 <View 
                   key={`cell-${rowIdx}-${colIdx}`} 
-                  style={styles.cellContainer}
+                  style={[
+                    styles.cellContainer,
+                    // Visual debugging - highlight detected column
+                    debugColumn === colIdx && rowIdx === 0 && {
+                      backgroundColor: 'rgba(255, 255, 0, 0.3)',
+                      borderWidth: 2,
+                      borderColor: 'yellow'
+                    }
+                  ]}
                 >
                   <TouchableOpacity
                     style={[styles.cellTouchable, cellStyle]}
@@ -86,55 +192,244 @@ const GameGrid = ({
          ))}
       </View>
 
-      {/* Falling block animation using PlanetTile - only show when not in preview mode */}
+      {/* Falling astronomical body - FIXED positioning for perfect alignment */}
       {falling && !falling.inPreview && (
         <Animated.View
           style={{
             position: 'absolute',
-            left: falling.col * (CELL_SIZE + 16) + 20, // Adjust for flexbox spacing
-            top: falling.static ? (ROWS - 1) * (CELL_SIZE + 16) + 20 : 20,
-            transform: falling.static ? [] : [{ translateY: falling.anim }],
+            left: getExactCellPosition(falling.col),
+            top: getCellTop(ROWS - 1), // Bottom row position
+            transform: [{ translateY: falling.anim }], // Animation moves upward (negative values)
             zIndex: 1000,
+            // Debug border to verify alignment
+            borderWidth: __DEV__ ? 1 : 0,
+            borderColor: 'yellow',
+            shadowColor: '#00BFFF',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.6,
+            shadowRadius: 10,
+            elevation: 15,
           }}
         >
           <PlanetTile 
             value={falling.value}
             size={CELL_SIZE}
             isOrbiting={true}
-            orbitSpeed={2} // Faster rotation for falling tiles
+            orbitSpeed={2}
           />
         </Animated.View>
       )}
 
-      {/* Merging tiles animations using PlanetTile */}
-      {mergingTiles.map((tile) => (
-        <Animated.View
-          key={tile.id}
-          style={{
-            position: 'absolute',
-            left: tile.col * (CELL_SIZE + 16) + 20, // Adjust for flexbox spacing
-            top: tile.row * (CELL_SIZE + 16) + 20,
-            opacity: tile.anim,
-            transform: [{ scale: tile.scale }],
-            zIndex: 1000,
-          }}
-        >
-          <PlanetTile 
-            value={tile.value}
-            size={CELL_SIZE}
-            isOrbiting={true}
-            orbitSpeed={3} // Even faster rotation for merging animation
+      {/* ENHANCED ELEMENTS-STYLE COLLISION ANIMATIONS */}
+      {mergeAnimations.map((anim) => {
+        // Check if this is a result animation
+        const isResult = anim.scale._value === 0 || anim.id.includes('-result');
+        
+        if (isResult) {
+          // Render result planet with formation effects
+          return (
+            <Animated.View
+              key={anim.id}
+              style={{
+                position: 'absolute',
+                left: getExactCellPosition(anim.col),
+                top: getCellTop(anim.row),
+                opacity: anim.opacity,
+                transform: [
+                  { scale: anim.scale },
+                  { rotate: `${anim.rotate?._value || 0}deg` }
+                ],
+                zIndex: 1100,
+                // Formation glow effect
+                shadowColor: '#FFD700',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: anim.glow?._value || 0,
+                shadowRadius: 20,
+                elevation: 25,
+              }}
+            >
+              <Animated.View
+                style={{
+                  borderRadius: CELL_SIZE / 2,
+                  backgroundColor: `rgba(255, 215, 0, ${(anim.glow?._value || 0) * 0.3})`,
+                  padding: 2,
+                }}
+              >
+                <PlanetTile 
+                  value={anim.value}
+                  size={CELL_SIZE}
+                  isOrbiting={true}
+                  orbitSpeed={2}
+                />
+              </Animated.View>
+              
+              {/* Formation energy ring */}
+              <Animated.View
+                style={{
+                  position: 'absolute',
+                  left: -CELL_SIZE * 0.3,
+                  top: -CELL_SIZE * 0.3,
+                  width: CELL_SIZE * 1.6,
+                  height: CELL_SIZE * 1.6,
+                  borderRadius: CELL_SIZE * 0.8,
+                  borderWidth: 2,
+                  borderColor: '#FFD700',
+                  opacity: (anim.glow?._value || 0) * 0.7,
+                  transform: [{ scale: 1 + ((anim.glow?._value || 0) * 0.3) }],
+                }}
+              />
+            </Animated.View>
+          );
+        } else {
+          // Render colliding planets with movement toward center
+          return (
+            <Animated.View
+              key={anim.id}
+              style={{
+                position: 'absolute',
+                left: getExactCellPosition(anim.col),
+                top: getCellTop(anim.row),
+                opacity: anim.opacity,
+                transform: [
+                  { translateX: anim.moveX || 0 },
+                  { translateY: anim.moveY || 0 },
+                  { scale: anim.scale }
+                ],
+                zIndex: 1000,
+                // Pre-collision energy glow
+                shadowColor: '#00BFFF',
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: (anim.glow?._value || 0) * 0.8,
+                shadowRadius: 15,
+                elevation: 20,
+              }}
+            >
+              <Animated.View
+                style={{
+                  borderRadius: CELL_SIZE / 2,
+                  backgroundColor: `rgba(0, 191, 255, ${(anim.glow?._value || 0) * 0.2})`,
+                  padding: 1,
+                }}
+              >
+                <PlanetTile 
+                  value={anim.value}
+                  size={CELL_SIZE}
+                  isOrbiting={true}
+                  orbitSpeed={3}
+                />
+              </Animated.View>
+              
+              {/* Pre-collision energy field */}
+              <Animated.View
+                style={{
+                  position: 'absolute',
+                  left: -CELL_SIZE * 0.2,
+                  top: -CELL_SIZE * 0.2,
+                  width: CELL_SIZE * 1.4,
+                  height: CELL_SIZE * 1.4,
+                  borderRadius: CELL_SIZE * 0.7,
+                  borderWidth: 1,
+                  borderColor: '#00BFFF',
+                  opacity: (anim.glow?._value || 0) * 0.5,
+                  transform: [{ scale: 1 + ((anim.glow?._value || 0) * 0.4) }],
+                }}
+              />
+            </Animated.View>
+          );
+        }
+      })}
+
+      {/* ELEMENTS-STYLE COLLISION EFFECTS */}
+      {collisionEffects && collisionEffects.map((effect) => (
+        <View key={effect.id} style={{ position: 'absolute', left: getExactCellPosition(effect.col), top: getCellTop(effect.row) }}>
+          {/* Bright impact flash */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              left: -CELL_SIZE * 0.5,
+              top: -CELL_SIZE * 0.5,
+              width: CELL_SIZE * 2,
+              height: CELL_SIZE * 2,
+              borderRadius: CELL_SIZE,
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              opacity: Animated.multiply(effect.opacity, effect.flash || 0),
+              transform: [{ scale: Animated.add(1, Animated.multiply(effect.flash || 0, 0.5)) }],
+            }}
           />
-        </Animated.View>
+          
+          {/* Expanding shockwave */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              left: -CELL_SIZE * 1.5,
+              top: -CELL_SIZE * 1.5,
+              width: CELL_SIZE * 4,
+              height: CELL_SIZE * 4,
+              borderRadius: CELL_SIZE * 2,
+              borderWidth: 3,
+              borderColor: '#FF6B35',
+              opacity: Animated.multiply(effect.opacity, Animated.subtract(1, effect.shockwave || 0)),
+              transform: [{ scale: Animated.add(0.3, Animated.multiply(effect.shockwave || 0, 2)) }],
+            }}
+          />
+          
+          {/* Energy ring explosion */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              left: -CELL_SIZE,
+              top: -CELL_SIZE,
+              width: CELL_SIZE * 3,
+              height: CELL_SIZE * 3,
+              borderRadius: CELL_SIZE * 1.5,
+              borderWidth: 2,
+              borderColor: '#FFD700',
+              opacity: Animated.multiply(effect.opacity, Animated.subtract(1, effect.energyRing || 0)),
+              transform: [{ scale: Animated.add(0.2, Animated.multiply(effect.energyRing || 0, 2.5)) }],
+            }}
+          />
+          
+          {/* Collision sparks */}
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, index) => (
+            <Animated.View
+              key={index}
+              style={{
+                position: 'absolute',
+                left: -2,
+                top: -2,
+                width: 4,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: '#FF6B35',
+                opacity: Animated.multiply(effect.opacity, Animated.subtract(1, effect.sparks || 0)),
+                transform: [
+                  { 
+                    translateX: Animated.multiply(
+                      effect.sparks || 0, 
+                      Math.cos(angle * Math.PI / 180) * CELL_SIZE * 1.5
+                    )
+                  },
+                  { 
+                    translateY: Animated.multiply(
+                      effect.sparks || 0, 
+                      Math.sin(angle * Math.PI / 180) * CELL_SIZE * 1.5
+                    )
+                  },
+                  { scale: Animated.subtract(1, effect.sparks || 0) }
+                ],
+              }}
+            />
+          ))}
+        </View>
       ))}
 
-      {/* Merge result animation using PlanetTile */}
+      {/* Merge result animation using exact positions - DEPRECATED, now handled above */}
       {mergeResult && (
         <Animated.View
           style={{
             position: 'absolute',
-            left: mergeResult.col * (CELL_SIZE + 16) + 20, // Adjust for flexbox spacing
-            top: mergeResult.row * (CELL_SIZE + 16) + 20,
+            left: getExactCellPosition(mergeResult.col),
+            top: getCellTop(mergeResult.row),
             opacity: mergeResult.anim,
             transform: [{ scale: mergeResult.scale }],
             zIndex: 1000,
@@ -144,232 +439,13 @@ const GameGrid = ({
             value={mergeResult.value}
             size={CELL_SIZE}
             isOrbiting={true}
-            orbitSpeed={1.5} // Moderate rotation for merge result
+            orbitSpeed={1.5}
           />
         </Animated.View>
       )}
 
-      {/* Enhanced merge animations using PlanetTile with cosmic glow */}
-      {mergeAnimations.map((anim) => (
-        <Animated.View
-          key={anim.id}
-          style={{
-            position: 'absolute',
-            left: anim.col * (CELL_SIZE + 16) + 20, // Adjust for flexbox spacing
-            top: anim.row * (CELL_SIZE + 16) + 20,
-            opacity: anim.opacity,
-            transform: [{ scale: anim.scale }],
-            zIndex: 1000,
-          }}
-        >
-          {/* Enhanced cosmic glow effect */}
-          <Animated.View
-            style={{
-              position: 'absolute',
-              width: CELL_SIZE + 20,
-              height: CELL_SIZE + 20,
-              left: -10,
-              top: -10,
-              borderRadius: (CELL_SIZE + 20) / 2,
-              opacity: anim.glow,
-              backgroundColor: getPlanetType(anim.value).accent || '#00BFFF',
-              shadowColor: getPlanetType(anim.value).accent || '#00BFFF',
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.8,
-              shadowRadius: 15,
-              elevation: 20,
-            }}
-          />
-          
-          <PlanetTile 
-            value={anim.value}
-            size={CELL_SIZE}
-            isOrbiting={true}
-            orbitSpeed={4} // Very fast rotation for dramatic merge effect
-          />
-        </Animated.View>
-      ))}
-
-      {/* Liquid blob animations */}
-      {liquidBlobs && liquidBlobs.map((blob) => {
-        // Calculate the dimensions for the liquid blob
-        const blobWidth = (blob.maxCol - blob.minCol + 1) * CELL_SIZE + (blob.maxCol - blob.minCol) * CELL_MARGIN;
-        const blobHeight = (blob.maxRow - blob.minRow + 1) * CELL_SIZE + (blob.maxRow - blob.minRow) * CELL_MARGIN;
-        const blobLeft = getCellLeft(blob.minCol);
-        const blobTop = getCellTop(blob.minRow);
-        
-        return (
-          <Animated.View
-            key={blob.id}
-            style={[
-              styles.liquidBlob,
-              {
-                position: 'absolute',
-                left: blobLeft,
-                top: blobTop,
-                width: blobWidth,
-                height: blobHeight,
-                opacity: blob.opacity,
-                transform: [{ scale: blob.scale }],
-              },
-            ]}
-          >
-            {/* Main liquid blob with enhanced morphing */}
-            <Animated.View
-              style={[
-                styles.liquidShape,
-                {
-                  backgroundColor: COLORS[blob.value] || COLORS[0],
-                  opacity: blob.opacity.interpolate({
-                    inputRange: [0, 0.3, 0.7, 1],
-                    outputRange: [0, 0.6, 0.9, 0.8],
-                  }),
-                  transform: [
-                    { scaleX: blob.morph.interpolate({
-                      inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1],
-                      outputRange: [1, 1.1, 1.4, 1.2, 1.1, 1],
-                    })},
-                    { scaleY: blob.morph.interpolate({
-                      inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1],
-                      outputRange: [1, 0.9, 0.7, 0.8, 0.9, 1],
-                    })},
-                    { rotateZ: blob.morph.interpolate({
-                      inputRange: [0, 0.3, 0.7, 1],
-                      outputRange: ['0deg', '2deg', '-1deg', '0deg'],
-                    })},
-                  ],
-                },
-              ]}
-            />
-            
-            {/* Secondary liquid wave */}
-            <Animated.View
-              style={[
-                styles.liquidWave,
-                {
-                  backgroundColor: COLORS[blob.value] || COLORS[0],
-                  opacity: blob.morph.interpolate({
-                    inputRange: [0, 0.3, 0.6, 1],
-                    outputRange: [0, 0.4, 0.6, 0],
-                  }),
-                  transform: [
-                    { scale: blob.morph.interpolate({
-                      inputRange: [0, 0.3, 0.6, 1],
-                      outputRange: [0.8, 1.2, 1.5, 1.8],
-                    })},
-                  ],
-                },
-              ]}
-            />
-            
-            {/* Enhanced liquid droplets/particles with more frames */}
-            {blob.mergingPositions.map((pos, index) => {
-              const dropletLeft = getCellLeft(pos.col) - blobLeft;
-              const dropletTop = getCellTop(pos.row) - blobTop;
-              const resultLeft = getCellLeft(blob.resultCol) - blobLeft;
-              const resultTop = getCellTop(blob.resultRow) - blobTop;
-              
-              // Create curved path for more natural flow
-              const midX = (dropletLeft + resultLeft) / 2 + Math.sin(index) * 20;
-              const midY = (dropletTop + resultTop) / 2 - 30; // Arc upward
-              
-              return (
-                <Animated.View
-                  key={`droplet-${index}`}
-                  style={[
-                    styles.liquidDroplet,
-                    {
-                      position: 'absolute',
-                      left: blob.progress.interpolate({
-                        inputRange: [0, 0.3, 0.7, 1],
-                        outputRange: [dropletLeft, midX, midX, resultLeft],
-                      }),
-                      top: blob.progress.interpolate({
-                        inputRange: [0, 0.3, 0.7, 1],
-                        outputRange: [dropletTop, midY, midY, resultTop],
-                      }),
-                      width: CELL_SIZE * blob.progress.interpolate({
-                        inputRange: [0, 0.2, 0.5, 0.8, 1],
-                        outputRange: [0.3, 0.4, 0.35, 0.25, 0.15],
-                      }),
-                      height: CELL_SIZE * blob.progress.interpolate({
-                        inputRange: [0, 0.2, 0.5, 0.8, 1],
-                        outputRange: [0.3, 0.4, 0.35, 0.25, 0.15],
-                      }),
-                      backgroundColor: COLORS[pos.value] || COLORS[0],
-                      opacity: blob.progress.interpolate({
-                        inputRange: [0, 0.1, 0.3, 0.7, 0.9, 1],
-                        outputRange: [1, 0.9, 0.8, 0.6, 0.3, 0],
-                      }),
-                      transform: [
-                        { scale: blob.progress.interpolate({
-                          inputRange: [0, 0.2, 0.4, 0.6, 0.8, 1],
-                          outputRange: [1, 1.3, 1.1, 1.2, 0.8, 0.4],
-                        })},
-                        { rotateZ: blob.progress.interpolate({
-                          inputRange: [0, 0.5, 1],
-                          outputRange: ['0deg', `${index * 45}deg`, `${index * 90}deg`],
-                        })},
-                      ],
-                    },
-                  ]}
-                />
-              );
-            })}
-            
-            {/* Enhanced liquid splash effect with multiple waves */}
-            <Animated.View
-              style={[
-                styles.liquidSplash,
-                {
-                  position: 'absolute',
-                  left: getCellLeft(blob.resultCol) - blobLeft - CELL_SIZE * 0.3,
-                  top: getCellTop(blob.resultRow) - blobTop - CELL_SIZE * 0.3,
-                  width: CELL_SIZE * 1.6,
-                  height: CELL_SIZE * 1.6,
-                  backgroundColor: COLORS[blob.value] || COLORS[0],
-                  opacity: blob.progress.interpolate({
-                    inputRange: [0, 0.5, 0.7, 0.9, 1],
-                    outputRange: [0, 0, 0.5, 0.2, 0],
-                  }),
-                  transform: [
-                    { scale: blob.progress.interpolate({
-                      inputRange: [0, 0.5, 0.7, 0.9, 1],
-                      outputRange: [0, 0, 1.2, 1.8, 2.2],
-                    })},
-                  ],
-                },
-              ]}
-            />
-            
-            {/* Secondary splash ring */}
-            <Animated.View
-              style={[
-                styles.liquidSplash,
-                {
-                  position: 'absolute',
-                  left: getCellLeft(blob.resultCol) - blobLeft - CELL_SIZE * 0.1,
-                  top: getCellTop(blob.resultRow) - blobTop - CELL_SIZE * 0.1,
-                  width: CELL_SIZE * 1.2,
-                  height: CELL_SIZE * 1.2,
-                  backgroundColor: COLORS[blob.value] || COLORS[0],
-                  opacity: blob.progress.interpolate({
-                    inputRange: [0, 0.6, 0.8, 1],
-                    outputRange: [0, 0, 0.3, 0],
-                  }),
-                  transform: [
-                    { scale: blob.progress.interpolate({
-                      inputRange: [0, 0.6, 0.8, 1],
-                      outputRange: [0, 0, 1, 1.5],
-                    })},
-                  ],
-                },
-              ]}
-            />
-          </Animated.View>
-        );
-      })}
-
+      {/* Remove liquid blob animations - elements branch style doesn't need them */}
+      
       {/* Gesture Guide Overlay */}
       {showGuide && (
         <View style={styles.guideOverlay} pointerEvents="none">

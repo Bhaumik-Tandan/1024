@@ -866,7 +866,7 @@ export const THEME = {
 };
 
 /**
- * Animation configuration
+ * Animation configuration for cosmic collisions and astronomical effects
  */
 export const ANIMATION_CONFIG = {
   // Easing functions
@@ -874,23 +874,29 @@ export const ANIMATION_CONFIG = {
     EASE_OUT: 'ease-out',
     EASE_IN: 'ease-in',
     BOUNCE: 'bounce',
+    COSMIC_DRIFT: 'ease-in-out', // For weightless space movement
   },
   
-  // Common animation durations - Optimized for responsiveness
+  // Common animation durations - Optimized for astronomical drama
   DURATION: {
-    FAST: 50,        // Reduced from 100ms for immediate response
-    NORMAL: 120,     // Reduced from 180ms for better flow
-    SLOW: 250,       // Reduced from 350ms
-    FALL: 7000,      // 7 seconds for normal fall (unchanged)
-    FAST_DROP: 150,  // Optimized for immediate response (was 150, confirmed)
+    FAST: 100,         // Quick UI responses
+    NORMAL: 300,       // Standard transitions  
+    SLOW: 800,         // Dramatic cosmic movements
+    FALL: 2000,        // 2 seconds for celestial bodies falling through space
+    FAST_DROP: 1200,   // 1.2 seconds for targeted drops
+    COSMIC_COLLISION: 1500, // 1.5 seconds for dramatic astronomical mergers
+    ORBITAL_DECAY: 800,     // Time for bodies to spiral into each other
+    GRAVITATIONAL_WAVE: 600, // Duration of space-time ripples
   },
   
-  // Scale factors for animations
+  // Scale factors for cosmic animations
   SCALE: {
-    SHRINK: 0.8,
+    SHRINK: 0.7,
     NORMAL: 1.0,
-    GROW: 1.2,
-    BOUNCE: 1.3,
+    GROW: 1.4,
+    BOUNCE: 1.6,
+    STELLAR_EXPLOSION: 2.2, // For dramatic stellar collision effects
+    GRAVITATIONAL_LENSING: 1.8, // For space-time distortion effects
   },
 };
 

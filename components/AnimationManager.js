@@ -7,7 +7,8 @@ export const useAnimationManager = () => {
   const [mergingTiles, setMergingTiles] = useState([]);
   const [mergeResult, setMergeResult] = useState(null);
   const [mergeAnimations, setMergeAnimations] = useState([]);
-  const [liquidBlobs, setLiquidBlobs] = useState([]); // New state for liquid animations
+  const [collisionEffects, setCollisionEffects] = useState([]); // New state for collision effects
+  const [energyBursts, setEnergyBursts] = useState([]); // New state for energy bursts
   const [animationCounter, setAnimationCounter] = useState(0);
 
   const startFallingAnimation = (col, value, toRow, isFastDrop = false) => {
@@ -107,61 +108,43 @@ export const useAnimationManager = () => {
     });
   };
 
-  // Enhanced liquid-like merging animation
+  // ENHANCED ELEMENTS-STYLE COLLISION ANIMATION SYSTEM
   const showMergeResultAnimation = (row, col, value, mergingTilesPositions = [], isChainReaction = false) => {
+    // Clear any existing animations first to prevent conflicts
+    clearMergeAnimations();
+    
     // Generate unique IDs using counter
     setAnimationCounter(prev => prev + 1);
-    const baseId = `merge-${Date.now()}-${animationCounter}`;
+    const baseId = `elements-collision-${Date.now()}-${animationCounter}`;
     
-    // Create animations for merging tiles
+    // Create collision animations for merging planets with movement toward center
     const mergingAnimations = mergingTilesPositions.map((pos, index) => {
       const scaleAnim = new Animated.Value(1);
       const opacityAnim = new Animated.Value(1);
+      const moveXAnim = new Animated.Value(0);
+      const moveYAnim = new Animated.Value(0);
       const glowAnim = new Animated.Value(0);
       
       return {
-        id: `${baseId}-source-${index}`,
+        id: `${baseId}-planet-${index}`,
         row: pos.row,
         col: pos.col,
         value: pos.value,
         scale: scaleAnim,
         opacity: opacityAnim,
+        moveX: moveXAnim,
+        moveY: moveYAnim,
         glow: glowAnim,
+        targetRow: row,
+        targetCol: col,
       };
     });
     
-    // Create liquid blob animation
-    const liquidBlobAnim = new Animated.Value(0);
-    const liquidScaleAnim = new Animated.Value(0);
-    const liquidOpacityAnim = new Animated.Value(0);
-    const liquidMorphAnim = new Animated.Value(0);
-    
-    // Calculate the bounding box for the liquid blob
-    const minRow = Math.min(...mergingTilesPositions.map(p => p.row));
-    const maxRow = Math.max(...mergingTilesPositions.map(p => p.row));
-    const minCol = Math.min(...mergingTilesPositions.map(p => p.col));
-    const maxCol = Math.max(...mergingTilesPositions.map(p => p.col));
-    
-    const liquidBlob = {
-      id: `${baseId}-liquid`,
-      minRow,
-      maxRow,
-      minCol,
-      maxCol,
-      resultRow: row,
-      resultCol: col,
-      value: value,
-      scale: liquidScaleAnim,
-      opacity: liquidOpacityAnim,
-      morph: liquidMorphAnim,
-      progress: liquidBlobAnim,
-      mergingPositions: mergingTilesPositions,
-    };
-    
-    // Create the result tile animation
+    // Create result planet animation with spectacular entrance
     const resultScaleAnim = new Animated.Value(0);
     const resultOpacityAnim = new Animated.Value(0);
     const resultGlowAnim = new Animated.Value(0);
+    const resultRotateAnim = new Animated.Value(0);
     
     const resultAnimation = {
       id: `${baseId}-result`,
@@ -171,233 +154,196 @@ export const useAnimationManager = () => {
       scale: resultScaleAnim,
       opacity: resultOpacityAnim,
       glow: resultGlowAnim,
+      rotate: resultRotateAnim,
     };
     
-    // Set all animations
+    // Create collision effects for visual impact
+    const collisionEffect = {
+      id: `${baseId}-collision`,
+      row,
+      col,
+      shockwave: new Animated.Value(0),
+      sparks: new Animated.Value(0),
+      flash: new Animated.Value(0),
+      energyRing: new Animated.Value(0),
+      opacity: new Animated.Value(1),
+    };
+    
+    // Set animations
     setMergeAnimations([...mergingAnimations, resultAnimation]);
-    setLiquidBlobs(prev => [...prev, liquidBlob]);
+    setCollisionEffects([collisionEffect]);
     
-    // FASTER animation timing with more frames
-    const baseDuration = isChainReaction ? 120 : 250; // Reduced from 200/400
-    const liquidDuration = isChainReaction ? 250 : 450; // Reduced from 400/700
-    const resultDuration = isChainReaction ? 120 : 220; // Reduced from 200/350
+    // Animation timing - FASTER for better responsiveness
+    const duration = isChainReaction ? 250 : 400;
+    const moveDuration = duration * 0.25;
+    const collisionDuration = duration * 0.2;
+    const birthDuration = duration * 0.55;
     
-    // Phase 1: Initial glow and subtle scale up (more frames)
-    const phase1Animations = mergingAnimations.map(anim => 
-      Animated.parallel([
-        Animated.timing(anim.glow, {
-          toValue: 0.6,
-          duration: baseDuration * 0.4,
+    // PHASE 1: GRAVITATIONAL ATTRACTION - Planets move toward collision center
+    const attractionPhase = mergingAnimations.map(anim => {
+      // Calculate movement toward collision center
+      const deltaX = (anim.targetCol - anim.col) * (CELL_SIZE * 0.4);
+      const deltaY = (anim.targetRow - anim.row) * (CELL_SIZE * 0.4);
+      
+      return Animated.parallel([
+        // Move toward center
+        Animated.timing(anim.moveX, {
+          toValue: deltaX,
+          duration: moveDuration,
           useNativeDriver: false,
         }),
-        Animated.timing(anim.scale, {
-          toValue: 1.08,
-          duration: baseDuration * 0.4,
+        Animated.timing(anim.moveY, {
+          toValue: deltaY,
+          duration: moveDuration,
           useNativeDriver: false,
         }),
-      ])
-    );
-    
-    // Phase 1.5: Full glow and scale (additional frame)
-    const phase1_5Animations = mergingAnimations.map(anim => 
-      Animated.parallel([
+        // Build up energy glow
         Animated.timing(anim.glow, {
           toValue: 1,
-          duration: baseDuration * 0.2,
+          duration: moveDuration,
           useNativeDriver: false,
         }),
+        // Slight scale up from gravitational forces
         Animated.timing(anim.scale, {
           toValue: 1.15,
-          duration: baseDuration * 0.2,
+          duration: moveDuration,
           useNativeDriver: false,
         }),
-      ])
-    );
+      ]);
+    });
     
-    // Phase 2: Create liquid blob effect (more granular)
-    const liquidPhase1 = Animated.parallel([
-      // Show liquid blob gradually
-      Animated.timing(liquidOpacityAnim, {
-        toValue: 0.7,
-        duration: liquidDuration * 0.2,
-        useNativeDriver: false,
-      }),
-      // Initial scale up
-      Animated.timing(liquidScaleAnim, {
-        toValue: 0.6,
-        duration: liquidDuration * 0.2,
-        useNativeDriver: false,
-      }),
-    ]);
-    
-    const liquidPhase2 = Animated.parallel([
-      // Full liquid opacity
-      Animated.timing(liquidOpacityAnim, {
-        toValue: 1,
-        duration: liquidDuration * 0.2,
-        useNativeDriver: false,
-      }),
-      // Full liquid scale
-      Animated.timing(liquidScaleAnim, {
-        toValue: 1,
-        duration: liquidDuration * 0.2,
-        useNativeDriver: false,
-      }),
-      // Start morphing
-      Animated.timing(liquidMorphAnim, {
-        toValue: 0.5,
-        duration: liquidDuration * 0.3,
-        useNativeDriver: false,
-      }),
-      // Start liquid progress
-      Animated.timing(liquidBlobAnim, {
-        toValue: 0.5,
-        duration: liquidDuration * 0.3,
-        useNativeDriver: false,
-      }),
-    ]);
-    
-    const liquidPhase3 = Animated.parallel([
-      // Complete morphing
-      Animated.timing(liquidMorphAnim, {
-        toValue: 1,
-        duration: liquidDuration * 0.3,
-        useNativeDriver: false,
-      }),
-      // Complete liquid progress
-      Animated.timing(liquidBlobAnim, {
-        toValue: 1,
-        duration: liquidDuration * 0.3,
-        useNativeDriver: false,
-      }),
-    ]);
-    
-    // Phase 3: Fade out tiles as they "melt" into liquid (more gradual)
-    const meltPhase1 = Animated.parallel(mergingAnimations.map(anim => 
+    // PHASE 2: COLLISION MOMENT - Dramatic impact with effects
+    const collisionPhase = [
+      // Planets rapidly disappear
+      ...mergingAnimations.map(anim => 
+        Animated.parallel([
+          Animated.timing(anim.scale, {
+            toValue: 0.2,
+            duration: collisionDuration,
+            useNativeDriver: false,
+          }),
+          Animated.timing(anim.opacity, {
+            toValue: 0,
+            duration: collisionDuration,
+            useNativeDriver: false,
+          }),
+        ])
+      ),
+      // Collision visual effects
       Animated.parallel([
-        Animated.timing(anim.opacity, {
-          toValue: 0.7,
-          duration: liquidDuration * 0.3,
+        // Bright flash at moment of impact
+        Animated.sequence([
+          Animated.timing(collisionEffect.flash, {
+            toValue: 1,
+            duration: collisionDuration * 0.3,
+            useNativeDriver: false,
+          }),
+          Animated.timing(collisionEffect.flash, {
+            toValue: 0,
+            duration: collisionDuration * 0.7,
+            useNativeDriver: false,
+          }),
+        ]),
+        // Expanding shockwave
+        Animated.timing(collisionEffect.shockwave, {
+          toValue: 1,
+          duration: collisionDuration * 1.5,
           useNativeDriver: false,
         }),
-        Animated.timing(anim.scale, {
-          toValue: 0.9,
-          duration: liquidDuration * 0.3,
+        // Energy sparks bursting outward
+        Animated.timing(collisionEffect.sparks, {
+          toValue: 1,
+          duration: collisionDuration,
           useNativeDriver: false,
         }),
-      ])
-    ));
+        // Energy ring expansion
+        Animated.timing(collisionEffect.energyRing, {
+          toValue: 1,
+          duration: collisionDuration * 1.2,
+          useNativeDriver: false,
+        }),
+      ]),
+    ];
     
-    const meltPhase2 = Animated.parallel(mergingAnimations.map(anim => 
+    // PHASE 3: STELLAR FORMATION - New planet emerges dramatically
+    const formationPhase = [
+      // Result planet dramatic entrance
       Animated.parallel([
-        Animated.timing(anim.opacity, {
-          toValue: 0,
-          duration: liquidDuration * 0.3,
+        // Scale up with overshoot and settle
+        Animated.sequence([
+          Animated.timing(resultScaleAnim, {
+            toValue: 1.4,
+            duration: birthDuration * 0.4,
+            useNativeDriver: false,
+          }),
+          Animated.timing(resultScaleAnim, {
+            toValue: 0.9,
+            duration: birthDuration * 0.3,
+            useNativeDriver: false,
+          }),
+          Animated.timing(resultScaleAnim, {
+            toValue: 1,
+            duration: birthDuration * 0.3,
+            useNativeDriver: false,
+          }),
+        ]),
+        // Opacity fade in
+        Animated.timing(resultOpacityAnim, {
+          toValue: 1,
+          duration: birthDuration * 0.6,
           useNativeDriver: false,
         }),
-        Animated.timing(anim.scale, {
-          toValue: 0.7,
-          duration: liquidDuration * 0.3,
+        // Rotation during formation
+        Animated.timing(resultRotateAnim, {
+          toValue: 360,
+          duration: birthDuration,
           useNativeDriver: false,
         }),
-      ])
-    ));
+        // Formation glow effect
+        Animated.sequence([
+          Animated.timing(resultGlowAnim, {
+            toValue: 1,
+            duration: birthDuration * 0.5,
+            useNativeDriver: false,
+          }),
+          Animated.timing(resultGlowAnim, {
+            toValue: 0.2,
+            duration: birthDuration * 0.5,
+            useNativeDriver: false,
+          }),
+        ]),
+      ]),
+    ];
     
-    // Phase 4: Result emerges from liquid (more dramatic)
-    const resultPhase1 = Animated.parallel([
-      Animated.timing(resultOpacityAnim, {
-        toValue: 0.8,
-        duration: resultDuration * 0.4,
-        useNativeDriver: false,
-      }),
-      Animated.timing(resultScaleAnim, {
-        toValue: 1.2,
-        duration: resultDuration * 0.4,
-        useNativeDriver: false,
-      }),
-    ]);
-    
-    const resultPhase2 = Animated.parallel([
-      Animated.timing(resultOpacityAnim, {
-        toValue: 1,
-        duration: resultDuration * 0.3,
-        useNativeDriver: false,
-      }),
-      Animated.timing(resultScaleAnim, {
-        toValue: 1.4,
-        duration: resultDuration * 0.3,
-        useNativeDriver: false,
-      }),
-      Animated.timing(resultGlowAnim, {
-        toValue: 1,
-        duration: resultDuration * 0.4,
-        useNativeDriver: false,
-      }),
-    ]);
-    
-    // Phase 5: Fade out liquid and stabilize result (more gradual)
-    const stabilizePhase1 = Animated.parallel([
-      Animated.timing(liquidOpacityAnim, {
-        toValue: 0.5,
-        duration: resultDuration * 0.4,
-        useNativeDriver: false,
-      }),
-      Animated.timing(resultScaleAnim, {
-        toValue: 1.2,
-        duration: resultDuration * 0.3,
-        useNativeDriver: false,
-      }),
-    ]);
-    
-    const stabilizePhase2 = Animated.parallel([
-      Animated.timing(liquidOpacityAnim, {
+    // PHASE 4: CLEANUP - Fade out effects
+    const cleanupPhase = [
+      Animated.timing(collisionEffect.opacity, {
         toValue: 0,
-        duration: resultDuration * 0.4,
+        duration: 300,
         useNativeDriver: false,
       }),
-      Animated.timing(resultScaleAnim, {
-        toValue: 1,
-        duration: resultDuration * 0.3,
-        useNativeDriver: false,
-      }),
-      Animated.timing(resultGlowAnim, {
-        toValue: 0,
-        duration: resultDuration * 0.6,
-        useNativeDriver: false,
-      }),
-    ]);
+    ];
     
-    // Execute enhanced liquid animation sequence with more frames
+    // Execute the complete elements-style collision sequence
     Animated.sequence([
-      // Phase 1: Initial highlight
-      Animated.parallel(phase1Animations),
-      // Phase 1.5: Full highlight
-      Animated.parallel(phase1_5Animations),
-      // Phase 2: Start liquid creation
-      liquidPhase1,
-      // Phase 2.5: Continue liquid creation and start melting
-      Animated.parallel([liquidPhase2, meltPhase1]),
-      // Phase 3: Complete liquid and continue melting
-      Animated.parallel([liquidPhase3, meltPhase2]),
-      // Phase 4: Start result emergence
-      resultPhase1,
-      // Phase 4.5: Complete result emergence
-      resultPhase2,
-      // Phase 5: Start stabilization
-      stabilizePhase1,
-      // Phase 5.5: Complete stabilization
-      stabilizePhase2,
+      Animated.parallel(attractionPhase),
+      Animated.parallel(collisionPhase),
+      Animated.parallel(formationPhase),
+      Animated.parallel(cleanupPhase),
     ]).start(() => {
+      // Cleanup animations
       setTimeout(() => {
         setMergeAnimations(prev => prev.filter(anim => !anim.id.startsWith(baseId)));
-        setLiquidBlobs(prev => prev.filter(blob => !blob.id.startsWith(baseId)));
-      }, 50); // Reduced cleanup delay
+        setCollisionEffects([]);
+        setEnergyBursts([]);
+      }, 100);
     });
   };
 
   const clearMergeAnimations = () => {
     setMergeAnimations([]);
-    setLiquidBlobs([]);
+    setCollisionEffects([]);
+    setEnergyBursts([]);
     setAnimationCounter(0);
   };
 
@@ -407,7 +353,8 @@ export const useAnimationManager = () => {
     mergingTiles,
     mergeResult,
     mergeAnimations,
-    liquidBlobs, // Export liquid blobs for rendering
+    collisionEffects, // Export collision effects for rendering
+    energyBursts, // Export energy bursts for rendering
     startFallingAnimation,
     updateFallingCol,
     fastDropAnimation,

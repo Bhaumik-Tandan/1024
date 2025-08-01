@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { vibrateLight } from '../utils/vibration';
+import { vibrateOnButtonPress } from '../utils/vibration';
 import useGameStore from '../store/gameStore';
 
 const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
@@ -16,7 +16,7 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
 
   const handleButtonPress = (action) => {
     // Vibrate on button press
-    vibrateLight();
+    vibrateOnButtonPress();
     
     // Execute the action
     switch (action) {
@@ -95,7 +95,7 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
                 pressed && { opacity: 0.7 }
               ]}
               onPress={() => {
-                vibrateLight();
+                vibrateOnButtonPress();
                 toggleVibration();
               }}
             >
@@ -114,7 +114,7 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
                 pressed && { opacity: 0.7 }
               ]}
               onPress={() => {
-                vibrateLight();
+                vibrateOnButtonPress();
                 toggleSound();
               }}
             >

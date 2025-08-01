@@ -15,6 +15,9 @@ import {
   TouchableOpacity,
   Animated,
   PanResponder,
+  Dimensions,
+  Platform,
+  Easing, // Add Easing import
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -95,14 +98,17 @@ const DropNumberBoard = ({ navigation, route }) => {
   // Use the animation manager
   const {
     falling,
-    setFalling,
+    setFalling, // Add back setFalling since it's used in the code
     mergingTiles,
     mergeResult,
     mergeAnimations,
-    liquidBlobs, // Add liquid blobs
+    collisionEffects, // Add collision effects
+    energyBursts, // Add energy bursts
+    startFallingAnimation,
     updateFallingCol,
     fastDropAnimation,
     clearFalling,
+    createMergeAnimation,
     showMergeResultAnimation,
     clearMergeAnimations,
   } = useAnimationManager();
@@ -243,11 +249,11 @@ const DropNumberBoard = ({ navigation, route }) => {
         return;
       }
       
-      // Create static falling tile that stays in preview (not on board)
+      // Create static falling tile that starts from bottom (original gravity)
       const fallingTile = {
         col: spawnCol,
         value: nextBlock,
-        anim: new Animated.Value(0), // Start at bottom position
+        anim: new Animated.Value(0), // Start at bottom row position
         toRow: 0, // Will be updated when user taps a row
         fastDrop: false,
         static: true, // Add static flag to indicate it's not moving
@@ -276,8 +282,35 @@ const DropNumberBoard = ({ navigation, route }) => {
   }, []);
 
   /**
-   * Handle user tapping a cell to drop the tile in that column
-   * Implements column-based dropping mechanism - finds first available cell in column
+   * Handle user tapping anywhere on screen - uses measured column detection
+   * Always drops from bottom - tap X position determines the column
+   */
+  const handleScreenTap = (event) => {
+    // Touch sensitivity control - prevent rapid successive taps
+    if (!isTouchEnabled) {
+      return;
+    }
+    
+    // Validate tap conditions
+    if (!falling || falling.fastDrop || gameOver || isPaused) {
+      return;
+    }
+    
+    // Emergency cleanup if animations are stuck
+    if (mergeAnimations.length > 10) {
+      clearMergeAnimations();
+    }
+    
+    // Use the pre-calculated column from enhanced grid detection
+    const targetColumn = event.nativeEvent.detectedColumn ?? 0; // Default to column 0 if detection fails
+    
+    // Use the existing logic but with the accurately detected column
+    handleRowTap(0, targetColumn); // Row doesn't matter, only column
+  };
+
+  /**
+   * Handle user tapping any cell in a column to drop the tile in that column
+   * Always drops from bottom - tap only selects the column, not the row
    * Includes touch sensitivity controls to prevent rapid successive taps
    */
   const handleRowTap = (targetRow, targetCol = null) => {
@@ -291,10 +324,10 @@ const DropNumberBoard = ({ navigation, route }) => {
       return;
     }
     
-    // If no column specified, use the falling tile's current column (old behavior)
+    // Use the column from the tap - ignore the row (always drop from bottom)
     const col = targetCol !== null ? targetCol : falling.col;
     
-    // Column-based targeting - find the first available empty cell in the tapped column
+    // Column-based targeting - find the first available empty cell in the column (from top)
     let landingCol = col;
     let landingRow = -1;
     
@@ -352,17 +385,17 @@ const DropNumberBoard = ({ navigation, route }) => {
     };
     setFalling(updatedFalling);
     
-    // Animate from current position to target cell (both horizontal and vertical movement)
-    const startPosition = (ROWS - 1) * (CELL_SIZE + CELL_MARGIN); // Bottom position
-    const endPosition = landingRow * (CELL_SIZE + CELL_MARGIN); // Target position
+    // Animate from BOTTOM ROW to target position (always start from bottom visually)
+    const bottomRowPosition = 0; // Bottom row visual position
+    const targetRowPosition = (landingRow - (ROWS - 1)) * (CELL_SIZE + CELL_MARGIN); // Target position (negative for upward)
     
-
-    
-    falling.anim.setValue(startPosition);
+    // Always start the animation from the bottom row
+    falling.anim.setValue(bottomRowPosition);
     Animated.timing(falling.anim, {
-      toValue: endPosition,
-      duration: GAME_CONFIG.TIMING.FAST_DROP_DURATION,
+      toValue: targetRowPosition,
+      duration: GAME_CONFIG.TIMING.COSMIC_DROP_DURATION,
       useNativeDriver: false,
+      easing: Easing.out(Easing.quad),
     }).start();
     
     // Handle landing after animation completes
@@ -375,7 +408,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         handleTileLanded(landingRow, landingCol, tileValueToDrop);
       }
       clearFalling();
-    }, GAME_CONFIG.TIMING.FAST_DROP_DURATION);
+    }, GAME_CONFIG.TIMING.COSMIC_DROP_DURATION);
     
     return () => clearTimeout(fastDropTimer);
   };
@@ -657,10 +690,12 @@ const DropNumberBoard = ({ navigation, route }) => {
           mergingTiles={mergingTiles}
           mergeResult={mergeResult}
           mergeAnimations={mergeAnimations}
-          liquidBlobs={liquidBlobs}
+          collisionEffects={collisionEffects} // Pass collision effects
+          energyBursts={energyBursts} // Pass energy bursts
           onRowTap={handleRowTap}
+          onScreenTap={handleScreenTap}
           gameOver={gameOver}
-          showGuide={showGuide}
+          showGuide={false}
           panHandlers={panResponder.panHandlers}
           isTouchEnabled={isTouchEnabled}
         />

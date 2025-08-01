@@ -15,7 +15,7 @@ import {
   THEME
 } from './constants';
 
-const PlanetTile = ({ value, isOrbiting = true, orbitSpeed = 1, size }) => {
+const PlanetTile = ({ value, isOrbiting = true, orbitSpeed = 1, size, isColliding = false, gravitationalField = 0 }) => {
   const rotationAnim = useRef(new Animated.Value(0)).current;
   const pulseOpacityAnim = useRef(new Animated.Value(0.3)).current;
   const pulseScaleAnim = useRef(new Animated.Value(1)).current;
@@ -26,52 +26,33 @@ const PlanetTile = ({ value, isOrbiting = true, orbitSpeed = 1, size }) => {
   
   useEffect(() => {
     if (isOrbiting && value > 0) {
-      // Optimized planet rotation - Native Driver
+      // Simple rotation for normal gameplay
       const rotationAnimation = Animated.loop(
         Animated.timing(rotationAnim, {
           toValue: 1,
-          duration: 20000 / orbitSpeed, // Slower rotation for performance
-          useNativeDriver: true, // Native driver for transform
+          duration: 15000 / orbitSpeed,
+          useNativeDriver: true,
         })
       );
       
-      // Reduced stellar pulse - only for very large celestial bodies
+      // Only add stellar pulse for very large celestial bodies (simplified)
       const planet = getPlanetType(value);
-      if (planet.glow && value >= 32768) { // Only for highest tier stars
-        // Simplified opacity pulse - Native Driver
+      if (planet.glow && value >= 32768) {
         const opacityPulse = Animated.loop(
           Animated.sequence([
             Animated.timing(pulseOpacityAnim, {
               toValue: 0.6,
-              duration: 6000, // Slower pulse for performance
-              useNativeDriver: true, // Native driver for opacity
+              duration: 3000,
+              useNativeDriver: true,
             }),
             Animated.timing(pulseOpacityAnim, {
-              toValue: 0.2,
-              duration: 6000,
+              toValue: 0.3,
+              duration: 3000,
               useNativeDriver: true,
             }),
           ])
         );
-        
-        // Simplified scale pulse - Native Driver
-        const scalePulse = Animated.loop(
-          Animated.sequence([
-            Animated.timing(pulseScaleAnim, {
-              toValue: 1.02, // Reduced scale change
-              duration: 6000,
-              useNativeDriver: true, // Native driver for transform
-            }),
-            Animated.timing(pulseScaleAnim, {
-              toValue: 1,
-              duration: 6000,
-              useNativeDriver: true,
-            }),
-          ])
-        );
-        
         opacityPulse.start();
-        scalePulse.start();
       }
       
       rotationAnimation.start();
@@ -80,11 +61,10 @@ const PlanetTile = ({ value, isOrbiting = true, orbitSpeed = 1, size }) => {
         rotationAnimation.stop();
         if (planet.glow && value >= 32768) {
           pulseOpacityAnim.stopAnimation();
-          pulseScaleAnim.stopAnimation();
         }
       };
     }
-  }, [isOrbiting, orbitSpeed, value, rotationAnim, pulseOpacityAnim, pulseScaleAnim]);
+  }, [isOrbiting, orbitSpeed, value, rotationAnim, pulseOpacityAnim]);
 
   if (value === 0) {
     // Empty space cell - deep space background
@@ -120,7 +100,7 @@ const PlanetTile = ({ value, isOrbiting = true, orbitSpeed = 1, size }) => {
       position: 'relative',
     }}>
       
-      {/* Main Planet Container */}
+      {/* Main Cosmic Body Container with Gravitational Effects */}
       <Animated.View style={{
         width: planetSize,
         height: planetSize,
@@ -128,33 +108,55 @@ const PlanetTile = ({ value, isOrbiting = true, orbitSpeed = 1, size }) => {
         alignItems: 'center',
         transform: [
           { rotate: rotation },
-          { scale: pulseScaleAnim }
+          { scale: pulseScaleAnim },
         ],
         shadowColor: planet.glow ? planet.primary : '#000',
         shadowOffset: { width: 0, height: planet.glow ? 0 : 4 },
-        shadowOpacity: planet.glow ? 0.6 : 0.3,
-        shadowRadius: planet.glow ? 12 : 6,
-        elevation: planet.glow ? 10 : 6,
+        shadowOpacity: planet.glow ? 0.8 : 0.4,
+        shadowRadius: planet.glow ? 18 : 8, // Enhanced glow for stars
+        elevation: planet.glow ? 15 : 8,
       }}>
         
-        {/* Enhanced Planet with Realistic Gradients */}
+        {/* Enhanced Cosmic Body with Realistic Gradients */}
         <RealisticPlanet 
           planet={planet} 
           size={planetSize} 
           value={value}
           pulseScaleAnim={pulseScaleAnim}
+          isColliding={isColliding}
         />
         
-        {/* Stellar glow for stars */}
+        {/* Enhanced Stellar Corona for massive stars during collisions */}
         {planet.glow && value >= 32768 && (
           <Animated.View style={{
             position: 'absolute',
-            width: planetSize + 12,
-            height: planetSize + 12,
-            borderRadius: (planetSize + 12) / 2,
-            borderWidth: 2,
+            width: planetSize + 24,
+            height: planetSize + 24,
+            borderRadius: (planetSize + 24) / 2,
+            borderWidth: 3,
             borderColor: planet.accent,
+            opacity: pulseOpacityAnim.interpolate({
+              inputRange: [0.3, 0.6],
+              outputRange: [0.4, 0.9]
+            }),
+          }} />
+        )}
+        
+        {/* Stellar flare effects for high-energy collisions */}
+        {planet.glow && value >= 32768 && (
+          <Animated.View style={{
+            position: 'absolute',
+            width: planetSize + 16,
+            height: planetSize + 16,
+            borderRadius: (planetSize + 16) / 2,
+            borderWidth: 2,
+            borderColor: '#FFD700',
             opacity: pulseOpacityAnim,
+            shadowColor: '#FFD700',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.8,
+            shadowRadius: 20,
+            elevation: 25,
           }} />
         )}
       </Animated.View>
@@ -208,9 +210,28 @@ const PlanetTile = ({ value, isOrbiting = true, orbitSpeed = 1, size }) => {
   );
 };
 
-// Realistic Planet component for authentic celestial bodies
-const RealisticPlanet = ({ planet, size, value, pulseScaleAnim }) => {
+// Realistic Planet component for authentic celestial bodies with collision physics
+const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = false }) => {
   const getRealisticPlanetStyle = () => {
+    const baseStyle = getBasePlanetStyle(planet);
+    
+    // Enhance collision effects for dramatic astronomical mergers
+    if (isColliding) {
+      return {
+        ...baseStyle,
+        style: {
+          ...baseStyle.style,
+          shadowOpacity: Math.min(baseStyle.style.shadowOpacity + 0.4, 1.0),
+          shadowRadius: baseStyle.style.shadowRadius + 8,
+          borderWidth: baseStyle.style.borderWidth + 1,
+        }
+      };
+    }
+    
+    return baseStyle;
+  };
+  
+  const getBasePlanetStyle = (planet) => {
     switch (planet.type) {
       case 'mercury':
         return {

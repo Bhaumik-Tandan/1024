@@ -283,10 +283,10 @@ const GameGrid = ({
         } else {
           // Render colliding planets with movement toward center
           return (
-            <Animated.View
+        <Animated.View
               key={anim.id}
-              style={{
-                position: 'absolute',
+          style={{
+            position: 'absolute',
                 left: getExactCellPosition(anim.col),
                 top: getCellTop(anim.row),
                 opacity: anim.opacity,
@@ -295,7 +295,7 @@ const GameGrid = ({
                   { translateY: anim.moveY || 0 },
                   { scale: anim.scale }
                 ],
-                zIndex: 1000,
+            zIndex: 1000,
                 // Pre-collision energy glow
                 shadowColor: '#00BFFF',
                 shadowOffset: { width: 0, height: 0 },
@@ -309,12 +309,12 @@ const GameGrid = ({
                   borderRadius: CELL_SIZE / 2,
                   backgroundColor: `rgba(0, 191, 255, ${(anim.glow?._value || 0) * 0.2})`,
                   padding: 1,
-                }}
-              >
-                <PlanetTile 
+          }}
+        >
+          <PlanetTile 
                   value={anim.value}
-                  size={CELL_SIZE}
-                  isOrbiting={true}
+            size={CELL_SIZE}
+            isOrbiting={true}
                   orbitSpeed={3}
                 />
               </Animated.View>
@@ -445,7 +445,7 @@ const GameGrid = ({
       )}
 
       {/* Remove liquid blob animations - elements branch style doesn't need them */}
-      
+
       {/* Gesture Guide Overlay */}
       {showGuide && (
         <View style={styles.guideOverlay} pointerEvents="none">

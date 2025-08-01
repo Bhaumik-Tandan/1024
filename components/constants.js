@@ -829,9 +829,13 @@ export const THEME = {
     SHADOW_COLOR: '#000000',
     COSMIC_ACCENT: '#00BFFF',           // Deep sky blue
     STELLAR_GLOW: '#FFD700',            // Gold stellar glow
+    NEON_GLOW: '#00FFFF',               // Cyan neon glow for score display
     NEBULA_PINK: '#FF69B4',             // Hot pink nebula
     COSMIC_PURPLE: '#8A2BE2',           // Blue violet
     STARFIELD: '#FFFFFF',               // White stars
+    SCORE_BOX_DARK: '#1A1A2E',          // Score box background
+    RECORD_BOX: '#2D1B69',              // Record box background
+    WORKSHOP_ACCENT: '#4169E1',         // Workshop/border accent
   },
   
   // Light theme (for day mode)
@@ -847,16 +851,11 @@ export const THEME = {
   
   // Enhanced cosmic colors
   TEXT_ACCENT: '#00BFFF',             // Deep sky blue
+  
+  // Space UI elements - keeping only the ones not in DARK theme
   SUCCESS_COLOR: '#32CD32',           // Lime green
   WARNING_COLOR: '#FFD700',           // Gold
   ERROR_COLOR: '#FF6347',             // Tomato
-  
-  // Space UI elements
-  SCORE_BOX_DARK: '#1A1A2E',
-  SCORE_BOX_LIGHT: '#F0F8FF', 
-  RECORD_BOX: '#00BFFF',              // Cosmic blue record box
-  RANK_BOX_DARK: '#2D1B69',
-  RANK_BOX_LIGHT: '#E6E6FA',
   
   // Space station materials
   HULL_METAL: '#708090',

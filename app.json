@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Cosmic Collision",
-    "slug": "cosmic-collision",
+    "name": "Space Drop",
+    "slug": "space-drop",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,7 +20,7 @@
         "resizeMode": "contain",
         "backgroundColor": "#0A0A1A"
       },
-      "bundleIdentifier": "com.cosmic.collision",
+      "bundleIdentifier": "com.space.drop",
       "infoPlist": {
         "UIBackgroundModes": ["audio"]
       }
@@ -37,7 +37,7 @@
         "backgroundColor": "#0A0A1A"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.cosmic.collision"
+      "package": "com.space.drop"
     },
     "web": {
       "favicon": "./assets/icon.png"

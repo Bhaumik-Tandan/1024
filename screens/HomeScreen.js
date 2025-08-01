@@ -346,7 +346,7 @@ const HomeScreen = ({ navigation }) => {
               }
             ]}
           >
-            COSMIC
+            SPACE
           </Animated.Text>
           <Animated.Text 
             style={[
@@ -356,7 +356,7 @@ const HomeScreen = ({ navigation }) => {
               }
             ]}
           >
-            COLLISION
+            DROP
           </Animated.Text>
         </View>
         

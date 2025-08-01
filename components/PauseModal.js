@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { vibrateOnButtonPress } from '../utils/vibration';
+import { vibrateLight } from '../utils/vibration';
 import useGameStore from '../store/gameStore';
 
 const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
@@ -16,7 +16,7 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
 
   const handleButtonPress = (action) => {
     // Vibrate on button press
-    vibrateOnButtonPress();
+    vibrateLight();
     
     // Execute the action
     switch (action) {
@@ -48,7 +48,7 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
       <View style={styles.overlay}>
         <View style={[styles.modalContainer, styles.modalContainerDark]}>
           <View style={styles.header}>
-            <Text style={[styles.title, styles.textLight]}>Game Paused</Text>
+            <Text style={[styles.title, styles.textLight]}>🌌 Universe Paused</Text>
                     <Pressable
           style={({ pressed }) => [
             styles.closeButton, 
@@ -70,7 +70,7 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
               onPress={() => handleButtonPress('resume')}
             >
               <Ionicons name="play" size={32} color="#ffffff" />
-              <Text style={styles.mainButtonText}>Resume Game</Text>
+              <Text style={styles.mainButtonText}>🚀 Continue Creation</Text>
             </Pressable>
 
             <Pressable 
@@ -82,7 +82,7 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
               onPress={() => handleButtonPress('home')}
             >
               <Ionicons name="home" size={24} color="#ffffff" />
-              <Text style={[styles.secondaryButtonText, styles.textLight]}>Back to Menu</Text>
+              <Text style={[styles.secondaryButtonText, styles.textLight]}>🏠 Return to Cosmos</Text>
             </Pressable>
           </View>
 
@@ -95,7 +95,7 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
                 pressed && { opacity: 0.7 }
               ]}
               onPress={() => {
-                vibrateOnButtonPress();
+                vibrateLight();
                 toggleVibration();
               }}
             >
@@ -114,7 +114,7 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
                 pressed && { opacity: 0.7 }
               ]}
               onPress={() => {
-                vibrateOnButtonPress();
+                vibrateLight();
                 toggleSound();
               }}
             >
@@ -145,7 +145,7 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(10, 10, 30, 0.9)', // Deep space overlay
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -165,7 +165,16 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   modalContainerDark: {
-    backgroundColor: '#2c2c2c',
+    backgroundColor: '#1a1a2e', // Deep space background
+    borderWidth: 2,
+    borderColor: '#4a4a7a', // Cosmic purple border
+    shadowColor: '#6a5acd', // Cosmic purple shadow
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.6,
+    shadowRadius: 15,
   },
   modalContainerLight: {
     backgroundColor: '#f8f9fa',

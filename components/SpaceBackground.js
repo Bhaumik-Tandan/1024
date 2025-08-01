@@ -24,14 +24,16 @@ const SpaceBackground = () => {
       backgroundColor: THEME.DARK.BACKGROUND_PRIMARY,
     }}>
       
-      {/* Distant Starfield - Reduced for performance */}
-      <StarField starCount={50} />
+      {/* Optimized Starfield - Balanced performance */}
+      <StarField starCount={35} />
       
-      {/* Nebula Clouds */}
+      {/* Simple distant stars - static for performance */}
+      <StaticStars starCount={25} />
+      
+      {/* Reduced Nebula Clouds */}
       <NebulaClouds />
       
-      {/* Animated Cosmic Dust - Reduced for performance */}
-      <CosmicDust />
+      {/* Cosmic dust removed for performance */}
     </View>
   );
 };
@@ -55,65 +57,44 @@ const StarField = ({ starCount }) => {
   );
 };
 
-// Individual animated star - Fixed animation drivers
+// Individual animated star - Optimized for performance
 const AnimatedStar = ({ index }) => {
-  const twinkleAnim = useRef(new Animated.Value(0.3)).current;
-  const positionAnim = useRef(new Animated.Value(0)).current;
+  const twinkleAnim = useRef(new Animated.Value(0.4)).current;
   
   useEffect(() => {
-    // Twinkling effect - JS Driver
+    // Simplified twinkling - Native Driver
     const twinkleAnimation = Animated.loop(
       Animated.sequence([
         Animated.timing(twinkleAnim, {
           toValue: 1,
-          duration: 2000 + Math.random() * 3000,
-          useNativeDriver: false, // JS driver for consistency
+          duration: 2000 + Math.random() * 2000, // Faster duration
+          useNativeDriver: true, // Native driver for better performance
         }),
         Animated.timing(twinkleAnim, {
-          toValue: 0.3,
-          duration: 1000 + Math.random() * 2000,
-          useNativeDriver: false, // JS driver for consistency
+          toValue: 0.4,
+          duration: 1500 + Math.random() * 1500,
+          useNativeDriver: true, // Native driver for better performance
         }),
       ])
     );
     
-    // Slow drift motion - JS Driver
-    const positionAnimation = Animated.loop(
-      Animated.timing(positionAnim, {
-        toValue: 1,
-        duration: 30000 + Math.random() * 20000,
-        useNativeDriver: false, // JS driver for consistency
-      })
-    );
-    
-    // Stagger animations
+    // Stagger animations for performance
     setTimeout(() => {
       twinkleAnimation.start();
-      positionAnimation.start();
-    }, index * 50);
+    }, index * 100); // Less frequent staggering
     
     return () => {
       twinkleAnimation.stop();
-      positionAnimation.stop();
     };
-  }, [index, twinkleAnim, positionAnim]);
+  }, [index, twinkleAnim]);
 
-  // Random star properties
-  const starSize = 1 + Math.random() * 2;
+  // Simplified star properties
+  const starSize = 1 + Math.random() * 1.5; // Smaller range
   const initialX = Math.random() * width;
   const initialY = Math.random() * height;
-  const driftX = (Math.random() - 0.5) * 15;
-  const driftY = (Math.random() - 0.5) * 15;
-
-  const translateX = positionAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, driftX],
-  });
-
-  const translateY = positionAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, driftY],
-  });
+  
+  // Simplified colors for performance
+  const starColor = Math.random() > 0.5 ? '#FFFFFF' : '#F0F8FF';
 
   return (
     <Animated.View
@@ -124,94 +105,104 @@ const AnimatedStar = ({ index }) => {
         width: starSize,
         height: starSize,
         borderRadius: starSize / 2,
-        backgroundColor: THEME.DARK.STARFIELD,
-        opacity: twinkleAnim, // Opacity animation
-        transform: [
-          { translateX }, // Transform animation - JS driver
-          { translateY },
-        ],
+        backgroundColor: starColor,
+        opacity: twinkleAnim, // Simple opacity animation with native driver
       }}
     />
   );
 };
 
-// Nebula cloud effects
+// Static background stars for performance
+const StaticStars = ({ starCount }) => {
+  // Generate static stars only once
+  const staticStars = React.useMemo(() => {
+    return [...Array(starCount)].map((_, index) => {
+      const starSize = 0.5 + Math.random() * 1;
+      const x = Math.random() * width;
+      const y = Math.random() * height;
+      const opacity = 0.3 + Math.random() * 0.4;
+      const color = ['#FFFFFF', '#F0F8FF', '#FFE4E1'][Math.floor(Math.random() * 3)];
+      
+      return (
+        <View
+          key={`static-${index}`}
+          style={{
+            position: 'absolute',
+            left: x,
+            top: y,
+            width: starSize,
+            height: starSize,
+            borderRadius: starSize / 2,
+            backgroundColor: color,
+            opacity: opacity,
+          }}
+        />
+      );
+    });
+  }, [starCount]);
+
+  return (
+    <View style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+    }}>
+      {staticStars}
+    </View>
+  );
+};
+
+// Simplified nebula cloud effects
 const NebulaClouds = () => {
   return (
     <>
-      {/* Purple Nebula */}
+      {/* Reduced to 2 nebulas for performance */}
       <NebulaCloud
         color={THEME.DARK.COSMIC_PURPLE}
-        size={200}
-        position={{ top: height * 0.1, left: -30 }}
-        duration={40000}
+        size={150} // Smaller size
+        position={{ top: height * 0.15, left: -20 }}
+        duration={50000} // Slower animation
       />
       
-      {/* Pink Nebula */}
-      <NebulaCloud
-        color={THEME.DARK.NEBULA_PINK}
-        size={180}
-        position={{ bottom: height * 0.2, right: -20 }}
-        duration={35000}
-      />
-      
-      {/* Blue Nebula */}
       <NebulaCloud
         color={THEME.DARK.COSMIC_ACCENT}
-        size={150}
-        position={{ top: height * 0.6, left: width * 0.4 }}
-        duration={45000}
+        size={120} // Smaller size
+        position={{ bottom: height * 0.25, right: -15 }}
+        duration={45000} // Slower animation
       />
     </>
   );
 };
 
-// Individual nebula cloud - Fixed drivers
+// Individual nebula cloud - Optimized
 const NebulaCloud = ({ color, size, position, duration }) => {
   const opacityAnim = useRef(new Animated.Value(0.1)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
   
   useEffect(() => {
-    // Opacity animation - JS Driver
+    // Simplified opacity animation - Native Driver
     const opacityAnimation = Animated.loop(
       Animated.sequence([
         Animated.timing(opacityAnim, {
-          toValue: 0.25,
+          toValue: 0.2, // Reduced max opacity
           duration: duration,
-          useNativeDriver: false, // Opacity requires JS driver
+          useNativeDriver: true, // Native driver for performance
         }),
         Animated.timing(opacityAnim, {
           toValue: 0.1,
           duration: duration,
-          useNativeDriver: false,
-        }),
-      ])
-    );
-    
-    // Scale animation - JS Driver
-    const scaleAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1.1,
-          duration: duration * 1.2,
-          useNativeDriver: false, // JS driver for consistency
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 0.8,
-          duration: duration * 1.2,
-          useNativeDriver: false, // JS driver for consistency
+          useNativeDriver: true,
         }),
       ])
     );
     
     opacityAnimation.start();
-    scaleAnimation.start();
     
     return () => {
       opacityAnimation.stop();
-      scaleAnimation.stop();
     };
-  }, [opacityAnim, scaleAnim, duration]);
+  }, [opacityAnim, duration]);
 
   return (
     <Animated.View
@@ -222,104 +213,7 @@ const NebulaCloud = ({ color, size, position, duration }) => {
         height: size,
         borderRadius: size / 2,
         backgroundColor: color,
-        opacity: opacityAnim, // Opacity animation
-        transform: [{ scale: scaleAnim }], // Transform animation
-      }}
-    />
-  );
-};
-
-// Cosmic dust particles - Reduced for performance
-const CosmicDust = () => {
-  const dustParticles = [...Array(8)].map((_, index) => (
-    <DustParticle key={index} index={index} />
-  ));
-
-  return (
-    <View style={{
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-    }}>
-      {dustParticles}
-    </View>
-  );
-};
-
-// Individual dust particle - Fixed drivers
-const DustParticle = ({ index }) => {
-  const moveAnim = useRef(new Animated.Value(0)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-  
-  useEffect(() => {
-    const delay = index * 800;
-    
-    // Movement animation - JS Driver
-    const moveAnimation = Animated.loop(
-      Animated.timing(moveAnim, {
-        toValue: 1,
-        duration: 15000 + Math.random() * 10000,
-        useNativeDriver: false, // JS driver for consistency
-      })
-    );
-    
-    // Opacity animation - JS Driver  
-    const opacityAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacityAnim, {
-          toValue: 0.6,
-          duration: 4000,
-          useNativeDriver: false, // Opacity requires JS driver
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 0,
-          duration: 4000,
-          useNativeDriver: false,
-        }),
-      ])
-    );
-    
-    setTimeout(() => {
-      moveAnimation.start();
-      opacityAnimation.start();
-    }, delay);
-    
-    return () => {
-      moveAnimation.stop();
-      opacityAnimation.stop();
-    };
-  }, [index, moveAnim, opacityAnim]);
-
-  const startX = Math.random() * width;
-  const startY = height + 10;
-  const endX = startX + (Math.random() - 0.5) * 80;
-  const endY = -10;
-
-  const translateX = moveAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [startX, endX],
-  });
-
-  const translateY = moveAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [startY, endY],
-  });
-
-  return (
-    <Animated.View
-      style={{
-        position: 'absolute',
-        width: 1.5,
-        height: 1.5,
-        borderRadius: 0.75,
-        backgroundColor: THEME.DARK.STELLAR_GLOW,
-        opacity: opacityAnim, // Opacity animation
-        transform: [
-          { translateX }, // Transform animation
-          { translateY },
-        ],
+        opacity: opacityAnim, // Native driver opacity
       }}
     />
   );

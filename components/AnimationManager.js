@@ -84,22 +84,23 @@ export const useAnimationManager = () => {
     
     setMergingTiles(prev => [...prev, mergingTile]);
     
+    // Simplified merge animation with native driver
     Animated.parallel([
       Animated.timing(mergeAnim, {
         toValue: 0,
-        duration: 200,
-        useNativeDriver: false,
+        duration: 150, // Faster animation
+        useNativeDriver: true, // Native driver for opacity
       }),
       Animated.sequence([
         Animated.timing(scaleAnim, {
-          toValue: 1.3,
-          duration: 100,
-          useNativeDriver: false,
+          toValue: 1.2, // Reduced scale
+          duration: 75,
+          useNativeDriver: true, // Native driver for transform
         }),
         Animated.timing(scaleAnim, {
           toValue: 1,
-          duration: 100,
-          useNativeDriver: false,
+          duration: 75,
+          useNativeDriver: true,
         }),
       ]),
     ]).start(() => {
@@ -107,17 +108,18 @@ export const useAnimationManager = () => {
     });
   };
 
-  // Enhanced liquid-like merging animation
+  // Enhanced liquid-like planet collision animation
   const showMergeResultAnimation = (row, col, value, mergingTilesPositions = [], isChainReaction = false) => {
     // Generate unique IDs using counter
     setAnimationCounter(prev => prev + 1);
     const baseId = `merge-${Date.now()}-${animationCounter}`;
     
-    // Create animations for merging tiles
+    // Create realistic gravitational pull animations for merging tiles
     const mergingAnimations = mergingTilesPositions.map((pos, index) => {
       const scaleAnim = new Animated.Value(1);
       const opacityAnim = new Animated.Value(1);
       const glowAnim = new Animated.Value(0);
+      const gravitationalPull = new Animated.Value(0); // New gravitational effect
       
       return {
         id: `${baseId}-source-${index}`,
@@ -127,16 +129,18 @@ export const useAnimationManager = () => {
         scale: scaleAnim,
         opacity: opacityAnim,
         glow: glowAnim,
+        gravitationalPull, // Add gravitational animation
       };
     });
     
-    // Create liquid blob animation
+    // Create enhanced cosmic collision blob animation
     const liquidBlobAnim = new Animated.Value(0);
     const liquidScaleAnim = new Animated.Value(0);
     const liquidOpacityAnim = new Animated.Value(0);
     const liquidMorphAnim = new Animated.Value(0);
+    const explosionRadius = new Animated.Value(0); // New explosion effect
     
-    // Calculate the bounding box for the liquid blob
+    // Calculate the bounding box for the cosmic collision
     const minRow = Math.min(...mergingTilesPositions.map(p => p.row));
     const maxRow = Math.max(...mergingTilesPositions.map(p => p.row));
     const minCol = Math.min(...mergingTilesPositions.map(p => p.col));
@@ -155,13 +159,15 @@ export const useAnimationManager = () => {
       opacity: liquidOpacityAnim,
       morph: liquidMorphAnim,
       progress: liquidBlobAnim,
+      explosionRadius, // Add explosion animation
       mergingPositions: mergingTilesPositions,
     };
     
-    // Create the result tile animation
+    // Create the stellar formation result animation
     const resultScaleAnim = new Animated.Value(0);
     const resultOpacityAnim = new Animated.Value(0);
     const resultGlowAnim = new Animated.Value(0);
+    const stellarPulse = new Animated.Value(1); // New stellar formation pulse
     
     const resultAnimation = {
       id: `${baseId}-result`,
@@ -171,6 +177,7 @@ export const useAnimationManager = () => {
       scale: resultScaleAnim,
       opacity: resultOpacityAnim,
       glow: resultGlowAnim,
+      stellarPulse, // Add stellar formation effect
     };
     
     // Set all animations
@@ -405,8 +412,11 @@ export const useAnimationManager = () => {
     falling,
     setFalling,
     mergingTiles,
+    setMergingTiles, // Add missing setter
     mergeResult,
+    setMergeResult, // Add missing setter
     mergeAnimations,
+    setMergeAnimations, // Add missing setter
     liquidBlobs, // Export liquid blobs for rendering
     startFallingAnimation,
     updateFallingCol,

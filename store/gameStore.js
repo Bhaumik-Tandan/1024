@@ -60,11 +60,11 @@ const createGameStore = () => {
           try {
             localStorage.setItem('game-state', JSON.stringify(savedGameData));
           } catch (e) {
-            console.warn('Failed to save to localStorage:', e);
+            // Failed to save to localStorage
           }
         }
       } catch (error) {
-        console.warn('Failed to save game:', error);
+        // Failed to save game
       }
     },
     
@@ -76,13 +76,13 @@ const createGameStore = () => {
             const saved = localStorage.getItem('game-state');
             return saved ? JSON.parse(saved) : null;
           } catch (e) {
-            console.warn('Failed to load from localStorage:', e);
+            // Failed to load from localStorage
             return null;
           }
         }
         return storeData.savedGame || null;
       } catch (error) {
-        console.warn('Failed to load saved game:', error);
+        // Failed to load saved game
         return null;
       }
     },
@@ -97,11 +97,11 @@ const createGameStore = () => {
           try {
             localStorage.removeItem('game-state');
           } catch (e) {
-            console.warn('Failed to clear localStorage:', e);
+            // Failed to clear localStorage
           }
         }
       } catch (error) {
-        console.warn('Failed to clear saved game:', error);
+        // Failed to clear saved game
       }
     },
     
@@ -196,7 +196,7 @@ if (Platform.OS === 'web') {
               hasSavedGame: true 
             });
           } catch (error) {
-            console.warn('Failed to save game:', error);
+            // Failed to save game
           }
         },
         
@@ -205,7 +205,7 @@ if (Platform.OS === 'web') {
             const { savedGame } = get();
             return savedGame || null;
           } catch (error) {
-            console.warn('Failed to load saved game:', error);
+            // Failed to load saved game
             return null;
           }
         },
@@ -217,7 +217,7 @@ if (Platform.OS === 'web') {
               hasSavedGame: false 
             });
           } catch (error) {
-            console.warn('Failed to clear saved game:', error);
+            // Failed to clear saved game
           }
         },
         

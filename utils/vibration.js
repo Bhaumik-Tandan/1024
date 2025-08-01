@@ -1,59 +1,76 @@
-import { Platform } from 'react-native';
-import useGameStore from '../store/gameStore';
-import soundManager from './soundManager';
+import { Vibration, Platform } from 'react-native';
 
-// Only import Vibration on native platforms
-let Vibration = null;
-if (Platform.OS !== 'web') {
-  Vibration = require('react-native').Vibration;
-}
+/**
+ * Haptic feedback utility for game interactions
+ */
 
-// Vibration and sound for final merge or single merge
-export const vibrateOnMerge = async () => {
-  const { vibrationEnabled } = useGameStore.getState();
-  
-  if (vibrationEnabled && Platform.OS !== 'web' && Vibration) {
-    // Vibrate for 100ms when tiles merge
-    Vibration.vibrate(100);
-  }
-  
-  // Play final merge sound
-  await soundManager.playMergeSound();
+// Vibration patterns (duration in milliseconds)
+const VIBRATION_PATTERNS = {
+  light: Platform.OS === 'ios' ? [50] : [0, 50],
+  medium: Platform.OS === 'ios' ? [100] : [0, 100],
+  heavy: Platform.OS === 'ios' ? [200] : [0, 200],
+  success: [0, 50, 100, 50],
+  error: [0, 100, 50, 100, 50, 100],
 };
 
-// Vibration and sound for intermediate merge in chain
-export const vibrateOnIntermediateMerge = async () => {
-  const { vibrationEnabled } = useGameStore.getState();
-  
-  if (vibrationEnabled && Platform.OS !== 'web' && Vibration) {
-    // Shorter vibration for intermediate merges
-    Vibration.vibrate(60);
-  }
-  
-  // Play intermediate merge sound
-  await soundManager.playIntermediateMergeSound();
-};
-
-// Just vibration without sound (for cases where sound is handled separately)
-export const vibrateOnly = () => {
-  const { vibrationEnabled } = useGameStore.getState();
-  
-  if (vibrationEnabled && Platform.OS !== 'web' && Vibration) {
-    // Vibrate for 100ms when tiles merge
-    Vibration.vibrate(100);
-  }
-};
-
+/**
+ * Vibrate on touch interaction
+ */
 export const vibrateOnTouch = async () => {
-  // Play drop/touch sound (no vibration for drop)
-  await soundManager.playDropSound();
+  try {
+    if (Platform.OS === 'ios') {
+      // iOS uses ImpactFeedbackGenerator for better haptics
+      // Fallback to Vibration if not available
+      Vibration.vibrate(VIBRATION_PATTERNS.light);
+    } else {
+      // Android vibration
+      Vibration.vibrate(VIBRATION_PATTERNS.light);
+    }
+  } catch (error) {
+    // Vibration error
+  }
 };
 
-export const vibrateOnButtonPress = () => {
-  const { vibrationEnabled } = useGameStore.getState();
-  
-  if (vibrationEnabled && Platform.OS !== 'web' && Vibration) {
-    // Short vibration for button presses
-    Vibration.vibrate(50);
+/**
+ * Vibrate on successful merge
+ */
+export const vibrateOnMerge = async () => {
+  try {
+    Vibration.vibrate(VIBRATION_PATTERNS.success);
+  } catch (error) {
+    // Merge vibration error
+  }
+};
+
+/**
+ * Vibrate on game over
+ */
+export const vibrateOnGameOver = async () => {
+  try {
+    Vibration.vibrate(VIBRATION_PATTERNS.error);
+  } catch (error) {
+    // Game over vibration error
+  }
+};
+
+/**
+ * Light vibration for UI feedback
+ */
+export const vibrateLight = async () => {
+  try {
+    Vibration.vibrate(VIBRATION_PATTERNS.light);
+  } catch (error) {
+    // Light vibration error
+  }
+};
+
+/**
+ * Medium vibration for important actions
+ */
+export const vibrateMedium = async () => {
+  try {
+    Vibration.vibrate(VIBRATION_PATTERNS.medium);
+  } catch (error) {
+    // Medium vibration error
   }
 }; 

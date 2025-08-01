@@ -1,41 +1,25 @@
 /**
  * ===========================
- * 1024 DROP GAME RULES
+ * CORE GAME MECHANICS & RULES
  * ===========================
- * 
- * Complete rule set for the 1024 Drop Game
- * This file contains all game mechanics, scoring rules, and validation logic
  */
 
+// Import the actual game dimensions
+import { ROWS, COLS } from './constants';
+
+// Game board configuration
 export const GAME_CONFIG = {
-  // Board dimensions
   BOARD: {
-    ROWS: 7,
-    COLS: 5,
-    TOTAL_CELLS: 35,
-  },
-  
-  // Timing settings
-  TIMING: {
-    SLOW_FALL_DURATION: 7000,    // 7 seconds for normal fall (now unused)
-    FAST_DROP_DURATION: 150,     // 0.15 seconds for fast drop (increased speed)
-    MERGE_ANIMATION_DURATION: 120, // Animation delay between merges (faster)
-    DRAG_ANIMATION_DURATION: 150,  // Time to animate drag movements (faster)
-  },
-  
-  // Tile generation
-  TILE_GENERATION: {
-    POSSIBLE_VALUES: [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024],
-    SMALL_VALUES_COUNT: 5, // Only use first 5 values (2,4,8,16,32) for higher probability
-    SPAWN_POSITION: 'center', // Always spawn in center column initially
-  },
-  
-  // Scoring multipliers
-  SCORING: {
-    BASE_SCORE_MULTIPLIER: 1,
-    COMBO_BONUS_MULTIPLIER: 1.5, // Bonus for chain reactions
-    LARGE_MERGE_BONUS: 2.0,      // Bonus for merging 4+ tiles
-  },
+    ROWS: ROWS, // Use the actual ROWS from constants
+    COLS: COLS  // Use the actual COLS from constants
+  }
+};
+
+// Tile generation rules - Classic 2048 style but with planets!
+export const TILE_GENERATION = {
+  POSSIBLE_VALUES: [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608, 16777216, 33554432, 67108864, 134217728, 268435456, 536870912, 1073741824], // Mercury to Ultimate Black Hole (complete celestial progression)
+  SMALL_VALUES_COUNT: 5, // Only use first 5 values (2,4,8,16,32) for higher probability
+  SPAWN_POSITION: 'center', // Always spawn in center column initially
 };
 
 /**
@@ -117,7 +101,7 @@ export const GAME_RULES = {
   chainReactions: {
     enabled: true,
     maxIterations: 100, // Prevent infinite loops
-    scoringBonus: GAME_CONFIG.SCORING.COMBO_BONUS_MULTIPLIER,
+    scoringBonus: 1.5, // Default combo bonus multiplier
   },
   
   /**
@@ -189,7 +173,7 @@ export const GameValidator = {
       
       // Check for valid tile values
       for (let cell of row) {
-        if (cell < 0 || (cell > 0 && !GAME_CONFIG.TILE_GENERATION.POSSIBLE_VALUES.includes(cell) && 
+        if (cell < 0 || (cell > 0 && !TILE_GENERATION.POSSIBLE_VALUES.includes(cell) && 
             !this.isPowerOfTwo(cell))) {
           return false;
         }
@@ -228,7 +212,7 @@ export const ScoringSystem = {
     
     // Apply large merge bonus for 4+ tiles
     if (tilesCount >= 4) {
-      baseScore *= GAME_CONFIG.SCORING.LARGE_MERGE_BONUS;
+      baseScore *= 2.0; // Default large merge bonus
     }
     
     return Math.floor(baseScore);
@@ -266,15 +250,15 @@ export const GamePhysics = {
    */
   calculateFallSpeed(gameState) {
     return gameState.fastDrop ? 
-           GAME_CONFIG.TIMING.FAST_DROP_DURATION : 
-           GAME_CONFIG.TIMING.SLOW_FALL_DURATION;
+           0.15 : // Fast drop duration
+           7; // Slow fall duration
   },
   
   /**
    * Calculate merge animation timing
    */
   calculateMergeDelay(mergeCount) {
-    return GAME_CONFIG.TIMING.MERGE_ANIMATION_DURATION * mergeCount;
+    return 0.12 * mergeCount; // Default merge animation duration
   },
   
   /**
@@ -305,8 +289,8 @@ export const GameHelpers = {
    * Generate random tile value
    */
   generateRandomTile() {
-    const values = GAME_CONFIG.TILE_GENERATION.POSSIBLE_VALUES;
-    const maxIndex = GAME_CONFIG.TILE_GENERATION.SMALL_VALUES_COUNT;
+    const values = TILE_GENERATION.POSSIBLE_VALUES;
+    const maxIndex = TILE_GENERATION.SMALL_VALUES_COUNT;
     return values[Math.floor(Math.random() * Math.min(maxIndex, values.length))];
   },
   
@@ -353,7 +337,7 @@ export const GameHelpers = {
    */
   calculateDifficulty(board) {
     const emptyCells = this.countEmptyCells(board);
-    const totalCells = GAME_CONFIG.BOARD.TOTAL_CELLS;
+    const totalCells = GAME_CONFIG.BOARD.ROWS * GAME_CONFIG.BOARD.COLS;
     const fillPercentage = 1 - (emptyCells / totalCells);
     
     if (fillPercentage < 0.3) return 'easy';

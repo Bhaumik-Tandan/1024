@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,8 +8,11 @@ import {
   StatusBar,
   Dimensions,
   Platform,
+  Animated,
 } from 'react-native';
 import useGameStore from '../store/gameStore';
+import SpaceBackground from '../components/SpaceBackground';
+import { THEME, FONT_SIZES } from '../components/constants';
 
 // Web-compatible dimensions
 const getDimensions = () => {
@@ -37,6 +40,46 @@ const HomeScreen = ({ navigation }) => {
     clearSavedGame 
   } = useGameStore();
 
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const titleGlowAnim = useRef(new Animated.Value(0.5)).current;
+
+  useEffect(() => {
+    // Entrance animation
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Title glow animation
+    const glowAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(titleGlowAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(titleGlowAnim, {
+          toValue: 0.5,
+          duration: 2000,
+          useNativeDriver: false,
+        }),
+      ])
+    );
+    glowAnimation.start();
+
+    return () => glowAnimation.stop();
+  }, [fadeAnim, slideAnim, titleGlowAnim]);
+
   const handlePlayPress = () => {
     navigation.navigate('Drop Number Board');
   };
@@ -47,10 +90,6 @@ const HomeScreen = ({ navigation }) => {
 
   const handleSettingsPress = () => {
     navigation.navigate('Settings');
-  };
-
-  const handleAstronomyPress = () => {
-    navigation.navigate('Astronomy');
   };
 
   const handleNewGamePress = () => {
@@ -86,102 +125,96 @@ const HomeScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, styles.containerDark]}>
-      <StatusBar 
-        barStyle="light-content" 
-        backgroundColor="#1a1a1a" 
-      />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={THEME.DARK.BACKGROUND_PRIMARY} />
       
-      {/* Background Gradient */}
-      <View style={[styles.backgroundGradient, styles.backgroundGradientDark]} />
+      {/* Beautiful Space Background */}
+      <SpaceBackground />
       
-      {/* Header Section */}
-      <View style={styles.headerSection}>
-        <Text style={[styles.gameTitle, styles.textLight]}>
-          1024
-        </Text>
-        <Text style={[styles.gameSubtitle, styles.subtitleLight]}>
-          Drop & Merge
-        </Text>
-      </View>
-      
-      {/* Score Section */}
-      <View style={styles.scoreSection}>
-        <View style={[styles.scoreCard, styles.cardDark]}>
-          <Text style={[styles.scoreLabel, styles.labelLight]}>
-            HIGH SCORE
-          </Text>
-          <Text style={[styles.scoreValue, styles.textLight]}>
-            {formatScore(highScore)}
-          </Text>
+      {/* Main Content with Cosmic Design */}
+      <Animated.View 
+        style={[
+          styles.content, 
+          { 
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}
+      >
+        {/* Cosmic Title */}
+        <View style={styles.titleContainer}>
+          <Animated.Text 
+            style={[
+              styles.gameTitle,
+              {
+                textShadowRadius: titleGlowAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [10, 25],
+                }),
+              }
+            ]}
+          >
+            🌌 UNIVERSE
+          </Animated.Text>
+          <Text style={styles.gameSubtitle}>PLANET FORGE</Text>
+          <Text style={styles.tagline}>Merge cosmic elements to birth new worlds</Text>
         </View>
-      </View>
-      
-      {/* Highest Block Section */}
-      <View style={styles.blockSection}>
-        <View style={[styles.blockCard, styles.cardDark]}>
-          <View style={[styles.blockDisplay, { backgroundColor: getBlockColor(highestBlock) }]}>
-            <Text style={styles.blockValue}>{formatBlock(highestBlock)}</Text>
+        
+        {/* Stats Section */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>HIGH SCORE</Text>
+            <Text style={styles.statValue}>{formatScore(highScore)}</Text>
           </View>
-          <Text style={[styles.blockLabel, styles.labelLight]}>
-            HIGHEST BLOCK
-          </Text>
+          
+          <View style={styles.statCard}>
+            <Text style={styles.statLabel}>HIGHEST BLOCK</Text>
+            <Text style={styles.statValue}>{formatBlock(highestBlock)}</Text>
+          </View>
         </View>
-      </View>
-      
-      {/* Action Buttons */}
-      <View style={styles.actionSection}>
-        {hasSavedGame && (
+        
+        {/* Action Buttons */}
+        <View style={styles.buttonContainer}>
+          {hasSavedGame ? (
+            <>
+              <TouchableOpacity 
+                style={[styles.button, styles.primaryButton]} 
+                onPress={handleResumePress}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.primaryButtonText}>🌌 RESUME JOURNEY</Text>
+                <Text style={styles.buttonSubtext}>Continue exploring the cosmos</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.button, styles.secondaryButton]} 
+                onPress={handleNewGamePress}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.secondaryButtonText}>🌟 NEW UNIVERSE</Text>
+                <Text style={styles.buttonSubtext}>Create a fresh cosmic world</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity 
+              style={[styles.button, styles.primaryButton]} 
+              onPress={handlePlayPress}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.primaryButtonText}>🚀 BEGIN CREATION</Text>
+              <Text style={styles.buttonSubtext}>Start forging planets and stars</Text>
+            </TouchableOpacity>
+          )}
+          
           <TouchableOpacity 
-            style={[styles.resumeButton, styles.buttonShadow]} 
-            onPress={handleResumePress}
+            style={[styles.button, styles.settingsButton]} 
+            onPress={handleSettingsPress}
             activeOpacity={0.8}
           >
-            <Text style={styles.resumeText}>RESUME GAME</Text>
+            <Text style={styles.settingsButtonText}>⚙️ COSMIC SETTINGS</Text>
           </TouchableOpacity>
-        )}
-        
-        <TouchableOpacity 
-          style={[styles.playButton, styles.buttonShadow]} 
-          onPress={handlePlayPress}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.playText}>NEW GAME</Text>
-        </TouchableOpacity>
-        
-        {hasSavedGame && (
-          <TouchableOpacity 
-            style={[styles.newGameButton, styles.buttonShadow]} 
-            onPress={handleNewGamePress}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.newGameText}>START FRESH</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-      
-      {/* Navigation Buttons */}
-      <View style={styles.settingsSection}>
-        <TouchableOpacity 
-          style={[styles.astronomyButton, styles.buttonShadow]} 
-          onPress={handleAstronomyPress}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.astronomyText}>
-            🌌 EXPLORE SPACE
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.settingsButton, styles.settingsButtonDark]} 
-          onPress={handleSettingsPress}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.settingsText, styles.textLight]}>
-            SETTINGS
-          </Text>
-        </TouchableOpacity>
-      </View>
+        </View>
+      </Animated.View>
     </SafeAreaView>
   );
 };
@@ -189,257 +222,198 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    position: 'relative',
-  },
-  containerDark: {
-    backgroundColor: '#1a1a1a',
-  },
-  containerLight: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: THEME.DARK.BACKGROUND_PRIMARY,
   },
   
-  // Background
-  backgroundGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  backgroundGradientLight: {
-    backgroundColor: '#f8f9fa',
-  },
-  backgroundGradientDark: {
-    backgroundColor: '#1a1a1a',
-  },
-  
-  // Header Section
-  headerSection: {
+  content: {
+    flex: 1,
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: height * 0.08,
-    paddingBottom: height * 0.04,
+    paddingHorizontal: 20,
+    paddingVertical: 40,
+    zIndex: 1,
+  },
+  
+  titleContainer: {
+    alignItems: 'center',
+    marginTop: 60,
   },
   
   gameTitle: {
-    fontSize: 72,
+    fontSize: Math.min(48, width * 0.12),
     fontWeight: '900',
-    letterSpacing: 2,
-    marginBottom: 8,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: 4,
+    textShadowColor: THEME.DARK.COSMIC_ACCENT,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
+    marginBottom: 5,
   },
+  
   gameSubtitle: {
-    fontSize: 18,
+    fontSize: Math.min(24, width * 0.06),
+    fontWeight: '700',
+    color: THEME.DARK.COSMIC_ACCENT,
+    textAlign: 'center',
+    letterSpacing: 2,
+    textShadowColor: 'rgba(0,191,255,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 10,
+    marginBottom: 15,
+  },
+  
+  tagline: {
+    fontSize: FONT_SIZES.MEDIUM,
+    color: THEME.DARK.TEXT_SECONDARY,
+    textAlign: 'center',
+    fontWeight: '500',
+    letterSpacing: 1,
+  },
+  
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    maxWidth: 350,
+    marginVertical: 20,
+  },
+  
+  statCard: {
+    backgroundColor: 'rgba(25, 30, 40, 0.9)',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 144, 226, 0.3)',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  
+  statLabel: {
+    fontSize: FONT_SIZES.SMALL,
+    color: THEME.DARK.TEXT_SECONDARY,
     fontWeight: '600',
     letterSpacing: 1,
-  },
-  textLight: {
-    color: '#ffffff',
-  },
-  textDark: {
-    color: '#212529',
-  },
-  subtitleLight: {
-    color: '#cccccc',
-  },
-  subtitleDark: {
-    color: '#6c757d',
+    marginBottom: 8,
   },
   
-  // Score Section
-  scoreSection: {
+  statValue: {
+    fontSize: FONT_SIZES.LARGE,
+    color: THEME.DARK.COSMIC_ACCENT,
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0,191,255,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 5,
+  },
+  
+  buttonContainer: {
+    width: '100%',
+    maxWidth: 350,
     alignItems: 'center',
-    paddingBottom: height * 0.03,
   },
   
-  scoreCard: {
-    backgroundColor: '#bbada0',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 12,
+  button: {
+    width: '100%',
+    borderRadius: 25,
+    paddingVertical: 18,
+    paddingHorizontal: 25,
+    marginVertical: 8,
     alignItems: 'center',
-    minWidth: 160,
-  },
-  cardDark: {
-    backgroundColor: '#3c3a32',
-  },
-  cardLight: {
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    shadowColor: 'rgba(0,0,0,0.1)',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 15,
+    elevation: 10,
   },
   
-  scoreLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  labelLight: {
-    color: '#cccccc',
-  },
-  labelDark: {
-    color: '#eee4da',
-  },
-  
-  scoreValue: {
-    fontSize: 28,
-    fontWeight: '900',
-  },
-  
-  // Block Section
-  blockSection: {
-    alignItems: 'center',
-    paddingBottom: height * 0.05,
-  },
-  
-  blockCard: {
-    backgroundColor: '#bbada0',
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    borderRadius: 16,
-    alignItems: 'center',
-    minWidth: 140,
-  },
-  
-  blockDisplay: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  
-  blockValue: {
-    color: '#f9f6f2',
-    fontSize: 24,
-    fontWeight: '900',
-  },
-  
-  blockLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textAlign: 'center',
-  },
-  
-  // Action Section
-  actionSection: {
-    alignItems: 'center',
-    paddingHorizontal: 40,
-    paddingBottom: height * 0.04,
-  },
-  
-  resumeButton: {
-    backgroundColor: '#ff6b35',
-    width: width * 0.8,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  
-  resumeText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-  
-  playButton: {
-    backgroundColor: '#4caf50',
-    width: width * 0.8,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  
-  playText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-  
-  newGameButton: {
-    backgroundColor: 'transparent',
-    width: width * 0.8,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+  primaryButton: {
+    backgroundColor: 'linear-gradient(45deg, #FF6B35, #FF8E53)',
     borderWidth: 2,
-    borderColor: '#8f7a66',
+    borderColor: '#FF8E53',
+    shadowColor: '#FF6B35',
   },
   
-  newGameText: {
-    color: '#8f7a66',
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 1,
+  secondaryButton: {
+    backgroundColor: 'rgba(46, 204, 113, 0.9)',
+    borderWidth: 2,
+    borderColor: '#2ECC71',
+    shadowColor: '#2ECC71',
   },
   
-  buttonShadow: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  
-  // Settings Section
-  settingsSection: {
-    alignItems: 'center',
-    paddingBottom: height * 0.05,
-  },
-  
-  astronomyButton: {
-    backgroundColor: '#6a5acd',
-    width: width * 0.8,
-    height: 52,
-    borderRadius: 26,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  
-  astronomyText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 1,
+  tertiaryButton: {
+    backgroundColor: 'rgba(155, 89, 182, 0.9)',
+    borderWidth: 2,
+    borderColor: '#9B59B6',
+    shadowColor: '#9B59B6',
   },
   
   settingsButton: {
+    backgroundColor: 'rgba(52, 73, 94, 0.8)',
+    borderWidth: 1,
+    borderColor: '#34495E',
+    shadowColor: '#34495E',
     paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 20,
   },
   
-  settingsButtonLight: {
-    backgroundColor: 'rgba(143, 122, 102, 0.1)',
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   
-  settingsButtonDark: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  iconText: {
+    fontSize: 24,
+    marginRight: 10,
   },
   
-  settingsText: {
-    fontSize: 16,
-    fontWeight: '600',
+  primaryButtonText: {
+    fontSize: FONT_SIZES.LARGE,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
     letterSpacing: 1,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  
+  secondaryButtonText: {
+    fontSize: FONT_SIZES.LARGE,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  
+  tertiaryButtonText: {
+    fontSize: FONT_SIZES.LARGE,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  
+  settingsButtonText: {
+    fontSize: FONT_SIZES.MEDIUM,
+    fontWeight: '600',
+    color: THEME.DARK.TEXT_SECONDARY,
+    letterSpacing: 1,
+  },
+  
+  buttonSubtext: {
+    fontSize: FONT_SIZES.SMALL,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 4,
+    fontWeight: '500',
+    letterSpacing: 0.5,
   },
 });
 

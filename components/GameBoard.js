@@ -8,6 +8,7 @@ import {
   Animated,
   Platform,
 } from 'react-native';
+import soundManager from '../utils/soundManager';
 
 // Web-compatible dimensions
 const getDimensions = () => {
@@ -86,8 +87,13 @@ const GameBoard = () => {
           // Create new board with tile added
           const newBoard = currentBoard.map(row => [...row]);
           const randomCol = emptyBottomCells[Math.floor(Math.random() * emptyBottomCells.length)];
-          const newValue = Math.random() < 0.9 ? 2 : 4;
+          const newValue = Math.random() < 0.9 ? 64 : 128; // Mercury or Mars
           newBoard[bottomRow][randomCol] = newValue;
+          
+          // Play Mars sound if Mars was generated
+          if (newValue === 128) {
+            soundManager.playMarsSound();
+          }
           
           // Add sliding animation asynchronously to avoid state update conflicts
           setTimeout(() => {
@@ -133,65 +139,68 @@ const GameBoard = () => {
     setGameStarted(true); // Mark game as started after initialization
   };
 
-  // Function for adding tiles during initialization (no animation)
-  const addInitialTile = (boardState) => {
-    // Find empty cells in the entire visible area for initialization
-    const emptyCells = [];
+  // Helper function to add initial tiles to the board
+  const addInitialTile = (board) => {
+    const emptyPositions = [];
     
-    for (let row = 0; row < VISIBLE_ROWS; row++) {
-      for (let col = 0; col < GRID_SIZE; col++) {
-        if (boardState[row][col] === 0) {
-          emptyCells.push({ row, col });
+    // Find all empty positions
+    for (let row = 0; row < board.length; row++) {
+      for (let col = 0; col < board[row].length; col++) {
+        if (board[row][col] === 0) {
+          emptyPositions.push([row, col]);
         }
       }
     }
     
-    if (emptyCells.length > 0) {
-      const randomIndex = Math.floor(Math.random() * emptyCells.length);
-      const { row, col } = emptyCells[randomIndex];
-      const newValue = Math.random() < 0.9 ? 2 : 4;
-      boardState[row][col] = newValue;
+    if (emptyPositions.length === 0) return board;
+    
+    // Pick random empty position
+    const randomIndex = Math.floor(Math.random() * emptyPositions.length);
+    const [row, col] = emptyPositions[randomIndex];
+    
+    // Generate Mercury (2) or Mars (4)
+    const newValue = Math.random() < 0.7 ? 2 : 4; // 70% Mercury, 30% Mars
+    
+    // Play Mars sound if Mars is generated
+    if (newValue === 4) {
+      soundManager.playMarsSound();
     }
+    
+    const newBoard = board.map(r => [...r]);
+    newBoard[row][col] = newValue;
+    return newBoard;
   };
 
-  const addRandomTile = (boardState) => {
-    // Prevent adding tiles if there are already sliding tiles in progress
-    if (slidingTiles.length > 0) {
-      return;
-    }
+  // Helper function to add random tiles during gameplay
+  const addRandomTile = (board) => {
+    const emptyPositions = [];
     
-    // Find empty cells in the bottom row (BOARD_SIZE - 1)
-    const bottomRow = BOARD_SIZE - 1;
-    const emptyBottomCells = [];
-    
-    for (let col = 0; col < GRID_SIZE; col++) {
-      if (boardState[bottomRow][col] === 0) {
-        emptyBottomCells.push(col);
+    // Find all empty positions  
+    for (let row = 0; row < board.length; row++) {
+      for (let col = 0; col < board[row].length; col++) {
+        if (board[row][col] === 0) {
+          emptyPositions.push([row, col]);
+        }
       }
     }
     
-    if (emptyBottomCells.length > 0) {
-      const randomCol = emptyBottomCells[Math.floor(Math.random() * emptyBottomCells.length)];
-      const newValue = Math.random() < 0.9 ? 2 : 4;
-      
-      // Add tile at the bottom
-      boardState[bottomRow][randomCol] = newValue;
-      
-      // Add to sliding tiles for animation
-      const tileId = `sliding-${Date.now()}-${randomCol}`;
-      const newSlidingTile = {
-        id: tileId,
-        row: bottomRow,
-        col: randomCol,
-        value: newValue,
-        targetRow: findTargetRow(boardState, randomCol),
-      };
-      
-      setSlidingTiles(prev => [...prev, newSlidingTile]);
-      
-      // Start sliding animation
-      startSlideAnimation(newSlidingTile);
+    if (emptyPositions.length === 0) return board;
+    
+    // Pick random empty position
+    const randomIndex = Math.floor(Math.random() * emptyPositions.length);
+    const [row, col] = emptyPositions[randomIndex];
+    
+    // Generate Mercury (2) or Mars (4)
+    const newValue = Math.random() < 0.7 ? 2 : 4; // 70% Mercury, 30% Mars
+    
+    // Play Mars sound if Mars is generated
+    if (newValue === 4) {
+      soundManager.playMarsSound();
     }
+    
+    const newBoard = board.map(r => [...r]);
+    newBoard[row][col] = newValue;
+    return newBoard;
   };
 
   const findTargetRow = (boardState, col) => {

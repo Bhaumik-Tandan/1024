@@ -7,16 +7,46 @@
  * Uses centralized rules from GameRules.js for consistency
  */
 
-import { ROWS, COLS } from './constants';
-import { GAME_CONFIG, GAME_RULES, GameValidator, ScoringSystem, GameHelpers } from './GameRules';
-import { vibrateOnIntermediateMerge, vibrateOnMerge } from '../utils/vibration';
+import { 
+  GameValidator, 
+  GAME_RULES,
+  GAME_CONFIG,
+  GameHelpers,
+  ScoringSystem
+} from './GameRules';
+import { vibrateOnMerge } from '../utils/vibration';
+import { getTileStyle, MILESTONE_TILES, ROWS, COLS } from './constants';
+
+// Safety wrapper for vibration
+const safeVibrateOnMerge = () => {
+  try {
+    if (vibrateOnMerge) {
+      vibrateOnMerge();
+    }
+  } catch (error) {
+    // Vibration error
+  }
+};
 
 /**
  * Generate a random tile value based on game rules
  * Prefers smaller values for better gameplay balance
  */
 export const getRandomBlockValue = () => {
-  return GameHelpers.generateRandomTile();
+  try {
+    if (GameHelpers && GameHelpers.generateRandomTile) {
+      return GameHelpers.generateRandomTile();
+    } else {
+      // Fallback matching master branch - use first 5 values (2,4,8,16,32)
+      const values = [2, 4, 8, 16, 32];
+      return values[Math.floor(Math.random() * values.length)];
+    }
+  } catch (error) {
+    // getRandomBlockValue error
+    // Safe fallback matching master branch - use first 5 values (2,4,8,16,32)
+    const values = [2, 4, 8, 16, 32];
+    return values[Math.floor(Math.random() * values.length)];
+  }
 };
 
 /**
@@ -140,7 +170,20 @@ export const mergeConnectedTiles = (board, targetRow, targetCol, preferredRow, p
   // Calculate new value using exponential rule: originalValue * 2^(numberOfTiles - 1)
   const numberOfTiles = connectedTiles.length;
   const targetValue = board[targetRow][targetCol];
-  const newValue = targetValue * Math.pow(2, numberOfTiles - 1);
+  
+  // Special case: Black hole merging logic
+  // Import getPlanetType to check if it's a black hole
+  const { getPlanetType } = require('./constants');
+  const planetType = getPlanetType(targetValue);
+  
+  let newValue;
+  if (planetType.special === 'black_hole' || planetType.special === 'ultimate_black_hole') {
+    // Black hole + black hole = black hole (same value, doesn't grow)
+    newValue = targetValue;
+  } else {
+    // Normal exponential merging for non-black holes
+    newValue = targetValue * Math.pow(2, numberOfTiles - 1);
+  }
   
   // Find the best position for the merge result
   let bestRow = -1;
@@ -562,7 +605,18 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
         { row: bottomRow, col: column, value: value } // Simulated dropped tile position
       ];
       
-      const newValue = value * 2; // Simple 2-tile merge
+      // Create the merge result with black hole special logic
+      const { getPlanetType } = require('./constants');
+      const planetType = getPlanetType(value);
+      
+      let newValue;
+      if (planetType.special === 'black_hole' || planetType.special === 'ultimate_black_hole') {
+        // Black hole + black hole = black hole (same value, doesn't grow)
+        newValue = value;
+      } else {
+        // Normal 2-tile merge for non-black holes
+        newValue = value * 2;
+      }
       
       // Show merge animation
       showMergeResultAnimation(bottomRow, column, newValue, mergingTilePositions, false);
@@ -571,8 +625,19 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     
-    // Create the merge result
-    const newValue = value * 2; // Simple 2-tile merge
+    // Create the merge result with black hole special logic
+    const { getPlanetType } = require('./constants');
+    const planetType = getPlanetType(value);
+    
+    let newValue;
+    if (planetType.special === 'black_hole' || planetType.special === 'ultimate_black_hole') {
+      // Black hole + black hole = black hole (same value, doesn't grow)
+      newValue = value;
+    } else {
+      // Normal 2-tile merge for non-black holes
+      newValue = value * 2;
+    }
+    
     newBoard[bottomRow][column] = newValue;
     
     totalScore += newValue;
@@ -699,7 +764,19 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   
   // Calculate new value using exponential rule: originalValue * 2^(numberOfTiles - 1)
   const numberOfTiles = connectedTiles.length;
-  const newValue = targetValue * Math.pow(2, numberOfTiles - 1);
+  
+  // Special case: Black hole merging logic
+  const { getPlanetType } = require('./constants');
+  const planetType = getPlanetType(targetValue);
+  
+  let newValue;
+  if (planetType.special === 'black_hole' || planetType.special === 'ultimate_black_hole') {
+    // Black hole + black hole = black hole (same value, doesn't grow)
+    newValue = targetValue;
+  } else {
+    // Normal exponential merging for non-black holes
+    newValue = targetValue * Math.pow(2, numberOfTiles - 1);
+  }
   const scoreGained = newValue;
   
   // Find the best position for the merge result
@@ -793,9 +870,9 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   // Play appropriate merge sound
   if (isChainReaction) {
     // For chain reaction merges, play intermediate merge sound
-    vibrateOnIntermediateMerge().catch(err => {
-      // Intermediate merge sound/vibration error
-    });
+    // vibrateOnIntermediateMerge().catch(err => {
+    //   // Intermediate merge sound/vibration error
+    // });
   }
   // Note: For initial merges (isChainReaction = false), sound will be handled by the main game engine
   
@@ -807,9 +884,9 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   // Play appropriate merge sound
   if (isChainReaction) {
     // For chain reaction merges, play intermediate merge sound
-    vibrateOnIntermediateMerge().catch(err => {
-      // Intermediate merge sound/vibration error
-    });
+    // vibrateOnIntermediateMerge().catch(err => {
+    //   // Intermediate merge sound/vibration error
+    // });
   }
   // Note: For initial merges (isChainReaction = false), sound will be handled by the main game engine
   
@@ -969,7 +1046,9 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
             
             if (chainMergeResult.merged) {
               const bonusScore = iterations > 1 ? 
-                ScoringSystem.calculateMergeScore(chainMergeResult.score, 2, true) : 
+                (ScoringSystem && ScoringSystem.calculateMergeScore ?
+                  ScoringSystem.calculateMergeScore(chainMergeResult.score, 2, true) :
+                  chainMergeResult.score * 1.5) : // Fallback bonus calculation
                 chainMergeResult.score;
               totalScore += bonusScore;
               chainReactionActive = true;
@@ -1010,7 +1089,9 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
             
             if (mergeResult.merged) {
               const bonusScore = iterations > 1 ? 
-                ScoringSystem.calculateMergeScore(mergeResult.score, 2, true) : 
+                (ScoringSystem && ScoringSystem.calculateMergeScore ?
+                  ScoringSystem.calculateMergeScore(mergeResult.score, 2, true) :
+                  mergeResult.score * 1.5) : // Fallback bonus calculation
                 mergeResult.score;
               totalScore += bonusScore;
               chainReactionActive = true;
@@ -1032,10 +1113,13 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
   
   // STEP 6: Apply final bonuses
   if (chainReactionCount > 1) {
-    const chainBonus = ScoringSystem.calculateBonus({
-      type: 'chainReaction',
-      value: chainReactionCount
-    });
+    const chainBonus = ScoringSystem && ScoringSystem.calculateBonus ?
+      ScoringSystem.calculateBonus({
+        type: 'chainReaction',
+        value: chainReactionCount
+      }) :
+      chainReactionCount * 50; // Fallback chain bonus calculation
+    
     totalScore += chainBonus;
   }
   
@@ -1043,9 +1127,7 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
   if (hadInitialMerge || chainReactionCount > 0) {
     // Play final merge sound if there was any merge activity
     // This covers both single merges and the final sound after chain reactions
-    vibrateOnMerge().catch(err => {
-      // Final merge sound/vibration error
-    });
+    safeVibrateOnMerge();
   }
   
   // STEP 8: Validate final board state

@@ -109,7 +109,7 @@ export const useAnimationManager = () => {
   };
 
   // ENHANCED ELEMENTS-STYLE COLLISION ANIMATION SYSTEM
-  const showMergeResultAnimation = (row, col, value, mergingTilesPositions = [], isChainReaction = false) => {
+  const showMergeResultAnimation = (row, col, value, mergingTilesPositions = [], isChainReaction = false, onComplete = null) => {
     // Clear any existing animations first to prevent conflicts
     clearMergeAnimations();
     
@@ -176,11 +176,12 @@ export const useAnimationManager = () => {
     setMergeAnimations([...mergingAnimations, resultAnimation]);
     setCollisionEffects([collisionEffect]);
     
-    // Animation timing - ULTRA FAST for instant responsiveness  
-    const duration = isChainReaction ? 120 : 180;
-    const moveDuration = duration * 0.3;
-    const collisionDuration = duration * 0.15;
-    const birthDuration = duration * 0.55;
+    // Animation timing - Balanced for visibility and responsiveness
+    // Increased chain reaction duration so users can see intermediate states
+    const duration = isChainReaction ? 350 : 180; // Increased from 120ms to 350ms for chain reactions
+    const moveDuration = duration * 0.3;  // 105ms for chain, 54ms for normal
+    const collisionDuration = duration * 0.15; // 52ms for chain, 27ms for normal  
+    const birthDuration = duration * 0.55; // 192ms for chain, 99ms for normal
     
     // PHASE 1: GRAVITATIONAL ATTRACTION - Planets move toward collision center
     const attractionPhase = mergingAnimations.map(anim => {
@@ -340,6 +341,11 @@ export const useAnimationManager = () => {
         setMergeAnimations(prev => prev.filter(anim => !anim.id.startsWith(baseId)));
         setCollisionEffects([]);
         setEnergyBursts([]);
+        
+        // Call completion callback if provided
+        if (onComplete) {
+          onComplete();
+        }
       }, 50);
     });
   };

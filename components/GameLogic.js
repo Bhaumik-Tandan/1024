@@ -790,36 +790,41 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
     value: tile.value
   }));
   
-  // Play appropriate merge sound
-  if (isChainReaction) {
-    // For chain reaction merges, play intermediate merge sound
-    vibrateOnIntermediateMerge().catch(err => {
-      // Intermediate merge sound/vibration error
-    });
-  }
-  // Note: For initial merges (isChainReaction = false), sound will be handled by the main game engine
-  
   // Clear all connected tiles from board immediately (animation will show them)
   connectedTiles.forEach(tile => {
     board[tile.row][tile.col] = 0;
   });
-
-  // Play appropriate merge sound
-  if (isChainReaction) {
-    // For chain reaction merges, play intermediate merge sound
-    vibrateOnIntermediateMerge().catch(err => {
-      // Intermediate merge sound/vibration error
-    });
-  }
-  // Note: For initial merges (isChainReaction = false), sound will be handled by the main game engine
   
   // Show merge animation with result appearing at RESULT position
   if (showMergeResultAnimation) {
-    showMergeResultAnimation(finalResultRow, finalResultCol, newValue, mergingTilePositions, isChainReaction);
-    const animationDelay = isChainReaction ? 200 : 500; // Faster animation delay with more frames
-    await new Promise(resolve => {
-      setTimeout(resolve, animationDelay);
+    // Start animation and sound simultaneously for better synchronization
+    const animationPromise = new Promise(resolve => {
+      showMergeResultAnimation(finalResultRow, finalResultCol, newValue, mergingTilePositions, isChainReaction, resolve);
     });
+    
+    // Play sound at the right moment - timed to match animation collision phase
+    // For chain reactions: movement phase is 105ms, collision starts around 105ms
+    // For normal merges: movement phase is 54ms, collision starts around 54ms
+    const soundDelay = isChainReaction ? 105 : 54; // Time sound to collision phase start
+    setTimeout(() => {
+      if (isChainReaction) {
+        // For chain reaction merges, play intermediate merge sound
+        vibrateOnIntermediateMerge().catch(err => {
+          // Intermediate merge sound/vibration error
+        });
+      }
+      // Note: For initial merges (isChainReaction = false), sound will be handled by the main game engine
+    }, soundDelay);
+    
+    // Wait for animation to complete
+    await animationPromise;
+  } else {
+    // If no animation, play sound immediately for chain reactions
+    if (isChainReaction) {
+      vibrateOnIntermediateMerge().catch(err => {
+        // Intermediate merge sound/vibration error
+      });
+    }
   }
   
   // Place merged tile at RESULT position

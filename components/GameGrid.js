@@ -12,8 +12,11 @@ import {
   getTileStyle,
   isMilestoneTile,
   getTileDecoration,
-  TILE_GRADIENTS
+  TILE_GRADIENTS,
+  getPlanetType,
+  THEME
 } from './constants';
+import PlanetTile from './PlanetTile';
 
 const GameGrid = ({ 
   board, 
@@ -31,283 +34,159 @@ const GameGrid = ({
   const isDisabled = gameOver || !falling || (falling?.fastDrop && !falling?.static) || !isTouchEnabled;
   
   return (
-    <View style={[styles.board, styles.boardDark]} {...panHandlers}>
-
-      {/* Cell-based touch areas - tap any cell to place tile there */}
-      {board.map((row, rowIdx) =>
-        row.map((cell, colIdx) => (
-          <TouchableOpacity
-            key={`cell-${rowIdx}-${colIdx}`}
-            style={[
-              styles.cellTouchArea,
-              {
-                left: getCellLeft(colIdx),
-                top: getCellTop(rowIdx),
-                width: CELL_SIZE,
-                height: CELL_SIZE,
-              },
-            ]}
-            onPress={() => {
-              onRowTap(rowIdx, colIdx);
-            }}
-            disabled={isDisabled}
-            activeOpacity={0.7}
-            delayPressIn={50}
-            delayPressOut={50}
-          />
-        ))
-      )}
-
-      {/* Render all cells (visual only, no touch) */}
-      {board.map((row, rowIdx) =>
-        row.map((cell, colIdx) => {
-          // Check if this cell is currently being animated (hide it during merge)
-          const isAnimating = mergeAnimations.some(anim => 
-            anim.row === rowIdx && anim.col === colIdx
-          );
-          
-          const tileStyle = getTileStyle(cell);
-          const decoration = getTileDecoration(cell);
-          const isMilestone = isMilestoneTile(cell);
-          
-          return (
-            <View
-              key={`${rowIdx}-${colIdx}`}
-              style={[
-                styles.cell,
-                {
-                  position: 'absolute',
-                  left: getCellLeft(colIdx),
-                  top: getCellTop(rowIdx),
-                  opacity: isAnimating ? 0 : 1, // Hide tiles during animation
-                },
-                tileStyle,
-                cell !== 0 && styles.cellFilled,
-                isMilestone && styles.milestoneTile,
-              ]}
-            >
-              {/* Stars background for special tiles */}
-              {decoration?.stars && (
-                <View style={styles.starsContainer}>
-                  <Text style={styles.starIcon}>⭐</Text>
-                  <Text style={[styles.starIcon, styles.starTop]}>⭐</Text>
-                  <Text style={[styles.starIcon, styles.starBottom]}>⭐</Text>
-                </View>
-              )}
+    <View style={[styles.board, styles.boardDeepSpace]} {...panHandlers}>
+      {/* Game grid container with proper bounds */}
+      <View style={styles.gridContainer}>
+        {/* Render grid as rows and columns using flexbox */}
+        {board.map((row, rowIdx) => (
+          <View 
+            key={`row-${rowIdx}`} 
+            style={[styles.gridRow, rowIdx === ROWS - 1 && styles.lastRow]}
+          >
+            {row.map((cell, colIdx) => {
+              // Check if this cell is currently being animated to prevent interaction
+              const isAnimating = mergeAnimations.some(anim => 
+                anim.row === rowIdx && anim.col === colIdx
+              );
               
-              {cell !== 0 && !isAnimating && (
-                <View style={styles.tileContent}>
-                  {/* Crown icon for 1M milestone tiles only */}
-                  {decoration?.type === 'crown' && (
-                    <Text style={styles.crownIcon}>👑</Text>
-                  )}
-                  
-                  {/* Glow effect for 1K+ tiles */}
-                  {decoration?.type === 'glow' && (
-                    <View style={[styles.glowRing, { borderColor: tileStyle.borderColor || '#4FC3F7' }]} />
-                  )}
-                  
-                  <Text style={[
-                    styles.cellText,
-                    isMilestone && styles.milestoneText,
-                    decoration?.type === 'crown' && styles.crownedText,
-                    decoration?.type === 'glow' && styles.glowText
-                  ]}>
-                    {cell >= 1000 ? `${(cell / 1000).toFixed(cell % 1000 === 0 ? 0 : 1)}K` : cell}
-                  </Text>
+              const cellStyle = {
+                opacity: isDisabled || isAnimating ? 0.6 : 1,
+              };
+              
+              const cellDisabled = isDisabled || isAnimating;
+              
+              return (
+                <View 
+                  key={`cell-${rowIdx}-${colIdx}`} 
+                  style={styles.cellContainer}
+                >
+                  <TouchableOpacity
+                    style={[styles.cellTouchable, cellStyle]}
+                    onPress={() => {
+                      onRowTap(rowIdx, colIdx);
+                    }}
+                    disabled={cellDisabled}
+                    activeOpacity={0.7}
+                    delayPressIn={50}
+                    delayPressOut={50}
+                  >
+                    <View style={styles.cell}>
+                      <PlanetTile 
+                        value={cell}
+                        size={CELL_SIZE}
+                        isOrbiting={cell > 0}
+                        orbitSpeed={1}
+                      />
+                    </View>
+                  </TouchableOpacity>
                 </View>
-              )}
-            </View>
-          );
-        })
-      )}
+              );
+            })}
+                     </View>
+         ))}
+      </View>
 
-      {/* Falling block animation - only show when not in preview mode */}
+      {/* Falling block animation using PlanetTile - only show when not in preview mode */}
       {falling && !falling.inPreview && (
         <Animated.View
-          style={[
-            styles.fallingBlock,
-            {
-              position: 'absolute',
-              left: getCellLeft(falling.col), // Use the actual column of the falling tile
-              top: falling.static ? getCellTop(ROWS - 1) : getCellTop(0), // Use proper cell positioning
-              width: CELL_SIZE,
-              height: CELL_SIZE,
-              transform: falling.static ? [] : [{ translateY: falling.anim }],
-            },
-            getTileStyle(falling.value),
-          ]}
+          style={{
+            position: 'absolute',
+            left: falling.col * (CELL_SIZE + 16) + 20, // Adjust for flexbox spacing
+            top: falling.static ? (ROWS - 1) * (CELL_SIZE + 16) + 20 : 20,
+            transform: falling.static ? [] : [{ translateY: falling.anim }],
+            zIndex: 1000,
+          }}
         >
-          {/* Special effects for falling milestone tiles */}
-          {getTileDecoration(falling.value)?.stars && (
-            <View style={styles.starsContainer}>
-              <Text style={styles.starIcon}>⭐</Text>
-              <Text style={[styles.starIcon, styles.starTop]}>⭐</Text>
-              <Text style={[styles.starIcon, styles.starBottom]}>⭐</Text>
-            </View>
-          )}
-          
-          <View style={styles.tileContent}>
-            {getTileDecoration(falling.value)?.type === 'crown' && (
-              <Text style={styles.crownIcon}>👑</Text>
-            )}
-            
-            {getTileDecoration(falling.value)?.type === 'glow' && (
-              <View style={[styles.glowRing, { borderColor: getTileStyle(falling.value).borderColor || '#4FC3F7' }]} />
-            )}
-            
-            <Text style={[
-              styles.cellText,
-              isMilestoneTile(falling.value) && styles.milestoneText,
-              getTileDecoration(falling.value)?.type === 'crown' && styles.crownedText,
-              getTileDecoration(falling.value)?.type === 'glow' && styles.glowText
-            ]}>
-              {falling.value >= 1000 ? `${(falling.value / 1000).toFixed(falling.value % 1000 === 0 ? 0 : 1)}K` : falling.value}
-            </Text>
-          </View>
+          <PlanetTile 
+            value={falling.value}
+            size={CELL_SIZE}
+            isOrbiting={true}
+            orbitSpeed={2} // Faster rotation for falling tiles
+          />
         </Animated.View>
       )}
 
-      {/* Merging tiles animations */}
+      {/* Merging tiles animations using PlanetTile */}
       {mergingTiles.map((tile) => (
         <Animated.View
           key={tile.id}
-          style={[
-            styles.mergingTile,
-            {
-              position: 'absolute',
-              left: getCellLeft(tile.col),
-              top: getCellTop(tile.row),
-              width: CELL_SIZE,
-              height: CELL_SIZE,
-              opacity: tile.anim,
-              transform: [{ scale: tile.scale }],
-            },
-            getTileStyle(tile.value),
-          ]}
+          style={{
+            position: 'absolute',
+            left: tile.col * (CELL_SIZE + 16) + 20, // Adjust for flexbox spacing
+            top: tile.row * (CELL_SIZE + 16) + 20,
+            opacity: tile.anim,
+            transform: [{ scale: tile.scale }],
+            zIndex: 1000,
+          }}
         >
-          {getTileDecoration(tile.value)?.stars && (
-            <View style={styles.starsContainer}>
-              <Text style={styles.starIcon}>⭐</Text>
-              <Text style={[styles.starIcon, styles.starTop]}>⭐</Text>
-              <Text style={[styles.starIcon, styles.starBottom]}>⭐</Text>
-            </View>
-          )}
-          
-          <View style={styles.tileContent}>
-            {getTileDecoration(tile.value)?.type === 'crown' && (
-              <Text style={styles.crownIcon}>👑</Text>
-            )}
-            
-            <Text style={[
-              styles.cellText,
-              isMilestoneTile(tile.value) && styles.milestoneText,
-              getTileDecoration(tile.value)?.type === 'crown' && styles.crownedText
-            ]}>
-              {tile.value >= 1000 ? `${(tile.value / 1000).toFixed(tile.value % 1000 === 0 ? 0 : 1)}K` : tile.value}
-            </Text>
-          </View>
+          <PlanetTile 
+            value={tile.value}
+            size={CELL_SIZE}
+            isOrbiting={true}
+            orbitSpeed={3} // Even faster rotation for merging animation
+          />
         </Animated.View>
       ))}
 
-      {/* Merge result animation */}
+      {/* Merge result animation using PlanetTile */}
       {mergeResult && (
         <Animated.View
-          style={[
-            styles.mergeResult,
-            {
-              position: 'absolute',
-              left: getCellLeft(mergeResult.col),
-              top: getCellTop(mergeResult.row),
-              width: CELL_SIZE,
-              height: CELL_SIZE,
-              opacity: mergeResult.anim,
-              transform: [{ scale: mergeResult.scale }],
-            },
-            getTileStyle(mergeResult.value),
-          ]}
+          style={{
+            position: 'absolute',
+            left: mergeResult.col * (CELL_SIZE + 16) + 20, // Adjust for flexbox spacing
+            top: mergeResult.row * (CELL_SIZE + 16) + 20,
+            opacity: mergeResult.anim,
+            transform: [{ scale: mergeResult.scale }],
+            zIndex: 1000,
+          }}
         >
-          {getTileDecoration(mergeResult.value)?.stars && (
-            <View style={styles.starsContainer}>
-              <Text style={styles.starIcon}>⭐</Text>
-              <Text style={[styles.starIcon, styles.starTop]}>⭐</Text>
-              <Text style={[styles.starIcon, styles.starBottom]}>⭐</Text>
-            </View>
-          )}
-          
-          <View style={styles.tileContent}>
-            {getTileDecoration(mergeResult.value)?.type === 'crown' && (
-              <Text style={styles.crownIcon}>👑</Text>
-            )}
-            
-            <Text style={[
-              styles.cellText,
-              isMilestoneTile(mergeResult.value) && styles.milestoneText,
-              getTileDecoration(mergeResult.value)?.type === 'crown' && styles.crownedText
-            ]}>
-              {mergeResult.value >= 1000 ? `${(mergeResult.value / 1000).toFixed(mergeResult.value % 1000 === 0 ? 0 : 1)}K` : mergeResult.value}
-            </Text>
-          </View>
+          <PlanetTile 
+            value={mergeResult.value}
+            size={CELL_SIZE}
+            isOrbiting={true}
+            orbitSpeed={1.5} // Moderate rotation for merge result
+          />
         </Animated.View>
       )}
 
-      {/* Enhanced merge animations with glow effect */}
+      {/* Enhanced merge animations using PlanetTile with cosmic glow */}
       {mergeAnimations.map((anim) => (
         <Animated.View
           key={anim.id}
-          style={[
-            styles.mergeAnimationTile,
-            {
-              position: 'absolute',
-              left: getCellLeft(anim.col),
-              top: getCellTop(anim.row),
-              width: CELL_SIZE,
-              height: CELL_SIZE,
-              opacity: anim.opacity,
-              transform: [{ scale: anim.scale }],
-            },
-          ]}
+          style={{
+            position: 'absolute',
+            left: anim.col * (CELL_SIZE + 16) + 20, // Adjust for flexbox spacing
+            top: anim.row * (CELL_SIZE + 16) + 20,
+            opacity: anim.opacity,
+            transform: [{ scale: anim.scale }],
+            zIndex: 1000,
+          }}
         >
-          {/* Enhanced glow effect with gradient colors */}
+          {/* Enhanced cosmic glow effect */}
           <Animated.View
-            style={[
-              styles.glowEffect,
-              {
-                opacity: anim.glow,
-                backgroundColor: TILE_GRADIENTS[anim.value] ? TILE_GRADIENTS[anim.value][1] : (COLORS[anim.value] || COLORS[0]),
-              },
-            ]}
+            style={{
+              position: 'absolute',
+              width: CELL_SIZE + 20,
+              height: CELL_SIZE + 20,
+              left: -10,
+              top: -10,
+              borderRadius: (CELL_SIZE + 20) / 2,
+              opacity: anim.glow,
+              backgroundColor: getPlanetType(anim.value).accent || '#00BFFF',
+              shadowColor: getPlanetType(anim.value).accent || '#00BFFF',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.8,
+              shadowRadius: 15,
+              elevation: 20,
+            }}
           />
           
-          {/* Main tile */}
-          <View
-            style={[
-              styles.mainTile,
-              getTileStyle(anim.value),
-            ]}
-          >
-            {getTileDecoration(anim.value)?.stars && (
-              <View style={styles.starsContainer}>
-                <Text style={styles.starIcon}>⭐</Text>
-                <Text style={[styles.starIcon, styles.starTop]}>⭐</Text>
-                <Text style={[styles.starIcon, styles.starBottom]}>⭐</Text>
-              </View>
-            )}
-            
-            <View style={styles.tileContent}>
-              {getTileDecoration(anim.value)?.type === 'crown' && (
-                <Text style={styles.crownIcon}>👑</Text>
-              )}
-              
-              <Text style={[
-                styles.cellText,
-                isMilestoneTile(anim.value) && styles.milestoneText,
-                getTileDecoration(anim.value)?.type === 'crown' && styles.crownedText
-              ]}>
-                {anim.value >= 1000 ? `${(anim.value / 1000).toFixed(anim.value % 1000 === 0 ? 0 : 1)}K` : anim.value}
-              </Text>
-            </View>
-          </View>
+          <PlanetTile 
+            value={anim.value}
+            size={CELL_SIZE}
+            isOrbiting={true}
+            orbitSpeed={4} // Very fast rotation for dramatic merge effect
+          />
         </Animated.View>
       ))}
 
@@ -503,15 +382,14 @@ const GameGrid = ({
 
 const styles = StyleSheet.create({
   board: {
-    width: COLS * CELL_SIZE + (COLS - 1) * CELL_MARGIN,
-    height: ROWS * CELL_SIZE + (ROWS - 1) * CELL_MARGIN,
-    borderRadius: 8,
     position: 'relative',
+    backgroundColor: 'transparent', // Remove solid background - let space show through
+    borderRadius: 20, // Softer, more organic feel
+    padding: 8, // Increased padding for floating feel
+    margin: 8, // More margin for space-like separation
     alignSelf: 'center',
     marginTop: 25,
     marginBottom: 10,
-    // Ensure proper centering on tablets
-    maxWidth: 600,
   },
   boardDark: {
     backgroundColor: '#2a2a2a',
@@ -528,15 +406,48 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
+  boardDeepSpace: {
+    backgroundColor: 'rgba(26, 26, 46, 0.3)', // Very subtle space background
+  },
+  gridContainer: {
+    position: 'relative',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    alignSelf: 'center',
+    // Remove any rigid structure
+  },
+  gridRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    marginBottom: 8, // Increased spacing for floating feel
+  },
+  lastRow: {
+    marginBottom: 0,
+  },
+  cellContainer: {
+    width: CELL_SIZE,
+    height: CELL_SIZE,
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 2, // Small margin for floating effect
+  },
+  cellTouchable: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+    borderRadius: 12, // More rounded for organic feel
+  },
   cell: {
     width: CELL_SIZE,
     height: CELL_SIZE,
-    borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: 'transparent',
+    borderRadius: 12,
+    // Remove all backgrounds and borders for true space feel
+    backgroundColor: 'transparent',
   },
   cellFilled: {
     borderColor: 'transparent',

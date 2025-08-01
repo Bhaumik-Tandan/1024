@@ -12,6 +12,8 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import useGameStore from '../store/gameStore';
+import SpaceBackground from '../components/SpaceBackground';
+import { THEME } from '../components/constants';
 
 const SettingsScreen = ({ navigation }) => {
   const {
@@ -44,56 +46,46 @@ const SettingsScreen = ({ navigation }) => {
     );
   };
 
-  const VolumeSlider = ({ value, onValueChange, title, enabled, icon }) => (
-    <View style={[styles.sliderContainer, styles.sliderContainerDark]}>
-      <View style={styles.sliderHeader}>
-        <Ionicons name={icon} size={20} color="#ffffff" />
-        <Text style={[styles.sliderTitle, styles.textLight]}>{title}</Text>
-      </View>
-      <View style={styles.sliderTrack}>
-        {[0, 0.25, 0.5, 0.75, 1].map((step) => (
-          <TouchableOpacity
-            key={step}
-            style={[
-              styles.sliderStep,
-              value >= step && enabled && styles.sliderStepActive,
-            ]}
-            onPress={() => enabled && onValueChange(step)}
-            activeOpacity={0.7}
-          />
-        ))}
-      </View>
-      <Text style={[styles.volumeText, styles.textLight]}>{Math.round(value * 100)}%</Text>
+  // Simplified cosmic panel
+  const CosmicPanel = ({ children, style = {} }) => (
+    <View style={[styles.cosmicPanel, style]}>
+      {children}
     </View>
   );
 
-  const SettingRow = ({ icon, label, value, onToggle, color = "#4caf50" }) => (
-    <View style={[styles.settingRow, styles.settingRowDark]}>
-      <View style={styles.settingLeft}>
-        <View style={[styles.iconContainer, { backgroundColor: color }]}>
-          <Ionicons name={icon} size={20} color="#ffffff" />
+  const SettingRow = ({ icon, label, value, onToggle, showDivider = true }) => (
+    <View style={styles.settingRow}>
+      <View style={styles.settingContent}>
+        <View style={styles.settingLeft}>
+          <View style={styles.iconContainer}>
+            <Ionicons name={icon} size={22} color={THEME.DARK.COSMIC_ACCENT} />
+          </View>
+          <Text style={styles.settingLabel}>{label}</Text>
         </View>
-        <Text style={[styles.settingLabel, styles.textLight]}>{label}</Text>
+        <Switch
+          value={value}
+          onValueChange={onToggle}
+          trackColor={{ false: THEME.DARK.BACKGROUND_PRIMARY, true: THEME.DARK.COSMIC_ACCENT }}
+          thumbColor={value ? THEME.DARK.STARFIELD : THEME.DARK.TEXT_SECONDARY}
+          ios_backgroundColor={THEME.DARK.BACKGROUND_PRIMARY}
+        />
       </View>
-      <Switch
-        value={value}
-        onValueChange={onToggle}
-        trackColor={{ false: '#444', true: color }}
-        thumbColor={value ? '#ffffff' : '#f4f3f4'}
-        ios_backgroundColor="#444"
-      />
+      {showDivider && <View style={styles.divider} />}
     </View>
   );
 
-  const StatRow = ({ icon, label, value, color = "#4caf50" }) => (
-    <View style={[styles.statRow, styles.statRowDark]}>
-      <View style={styles.statLeft}>
-        <View style={[styles.iconContainer, { backgroundColor: color }]}>
-          <Ionicons name={icon} size={20} color="#ffffff" />
+  const StatRow = ({ icon, label, value, showDivider = true }) => (
+    <View style={styles.statRow}>
+      <View style={styles.statContent}>
+        <View style={styles.statLeft}>
+          <View style={styles.iconContainer}>
+            <Ionicons name={icon} size={22} color={THEME.DARK.STELLAR_GLOW} />
+          </View>
+          <Text style={styles.statLabel}>{label}</Text>
         </View>
-        <Text style={[styles.statLabel, styles.textLight]}>{label}</Text>
+        <Text style={styles.statValue}>{value}</Text>
       </View>
-      <Text style={[styles.statValue, styles.textLight]}>{value}</Text>
+      {showDivider && <View style={styles.divider} />}
     </View>
   );
 
@@ -108,310 +100,294 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, styles.containerDark]}>
-      <StatusBar style="light-content" backgroundColor="#2c2c2c" />
+    <View style={styles.container}>
+      <SpaceBackground />
       
-      {/* Header */}
-      <View style={[styles.header, styles.headerDark]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, styles.backButtonDark]}>
-          <Ionicons name="arrow-back" size={24} color="#ffffff" />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, styles.textLight]}>Settings</Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Sound Settings */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="volume-high" size={24} color="#4caf50" />
-            <Text style={[styles.sectionTitle, styles.textLight]}>Sound</Text>
-          </View>
-          
-          <SettingRow
-            icon="musical-notes"
-            label="Sound Effects"
-            value={soundEnabled}
-            onToggle={toggleSound}
-            color="#4caf50"
-          />
-
-        </View>
-
-        {/* Game Settings */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="game-controller" size={24} color="#ff9800" />
-            <Text style={[styles.sectionTitle, styles.textLight]}>Game</Text>
-          </View>
-          
-          <SettingRow
-            icon="phone-portrait"
-            label="Vibration"
-            value={vibrationEnabled}
-            onToggle={toggleVibration}
-            color="#ff9800"
-          />
-        </View>
-
-        {/* Statistics */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="stats-chart" size={24} color="#ffd700" />
-            <Text style={[styles.sectionTitle, styles.textLight]}>Statistics</Text>
-          </View>
-          
-          <StatRow
-            icon="trophy"
-            label="High Score"
-            value={formatScore(highScore)}
-            color="#ffd700"
-          />
-
-          <StatRow
-            icon="cube"
-            label="Highest Block"
-            value={formatBlock(highestBlock)}
-            color="#ff5722"
-          />
-        </View>
-
-        {/* Reset Button */}
-        <View style={styles.section}>
-          <TouchableOpacity style={[styles.resetButton, styles.resetButtonDark]} onPress={handleResetSettings}>
-            <Ionicons name="refresh" size={20} color="#ffffff" />
-            <Text style={[styles.resetButtonText, styles.textLight]}>Reset All Settings</Text>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="light-content" backgroundColor="transparent" translucent />
+        
+        {/* Clean header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={THEME.DARK.STARFIELD} />
           </TouchableOpacity>
+          
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle}>Settings</Text>
+            <Text style={styles.headerSubtitle}>Cosmic Configuration</Text>
+          </View>
+          
+          <View style={styles.headerRight} />
         </View>
-      </ScrollView>
-    </SafeAreaView>
+
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Audio & Controls Section */}
+          <CosmicPanel style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="settings" size={20} color={THEME.DARK.COSMIC_ACCENT} />
+              <Text style={styles.sectionTitle}>Controls</Text>
+            </View>
+            
+            <SettingRow
+              icon="musical-notes"
+              label="Sound Effects"
+              value={soundEnabled}
+              onToggle={toggleSound}
+            />
+            
+            <SettingRow
+              icon="phone-portrait"
+              label="Haptic Feedback"
+              value={vibrationEnabled}
+              onToggle={toggleVibration}
+              showDivider={false}
+            />
+          </CosmicPanel>
+
+          {/* Statistics Section */}
+          <CosmicPanel style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="stats-chart" size={20} color={THEME.DARK.STELLAR_GLOW} />
+              <Text style={styles.sectionTitle}>Mission Records</Text>
+            </View>
+            
+            <StatRow
+              icon="trophy"
+              label="Highest Score"
+              value={formatScore(highScore)}
+            />
+
+            <StatRow
+              icon="planet"
+              label="Largest Celestial Body"
+              value={formatBlock(highestBlock)}
+              showDivider={false}
+            />
+          </CosmicPanel>
+
+          {/* Reset Section */}
+          <TouchableOpacity onPress={handleResetSettings} style={styles.resetSection}>
+            <CosmicPanel style={styles.resetButton}>
+              <View style={styles.resetContent}>
+                <View style={styles.resetLeft}>
+                  <View style={[styles.iconContainer, styles.resetIconContainer]}>
+                    <Ionicons name="refresh" size={22} color={THEME.DARK.ERROR_COLOR} />
+                  </View>
+                  <View>
+                    <Text style={styles.resetText}>Reset Settings</Text>
+                    <Text style={styles.resetSubtext}>Restore to defaults</Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={THEME.DARK.TEXT_SECONDARY} />
+              </View>
+            </CosmicPanel>
+          </TouchableOpacity>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>🌌 Exploring the Infinite Universe</Text>
+            <Text style={styles.footerVersion}>Version 2.0 - Deep Space Edition</Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: THEME.DARK.BACKGROUND_PRIMARY,
   },
-  containerDark: {
-    backgroundColor: '#2c2c2c',
-  },
-  containerLight: {
-    backgroundColor: '#f8f9fa',
+  safeArea: {
+    flex: 1,
   },
   
+  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 16,
+    paddingTop: 50,
     borderBottomWidth: 1,
+    borderBottomColor: THEME.DARK.COSMIC_ACCENT + '20',
   },
-  headerDark: {
-    borderBottomColor: '#444',
-  },
-  headerLight: {
-    borderBottomColor: '#e0e0e0',
-  },
-  
   backButton: {
     padding: 8,
     borderRadius: 20,
+    backgroundColor: THEME.DARK.BACKGROUND_SECONDARY + '80',
   },
-  backButtonDark: {
-    backgroundColor: '#444',
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
   },
-  backButtonLight: {
-    backgroundColor: '#f0f0f0',
-  },
-  
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '700',
+    color: THEME.DARK.STARFIELD,
     letterSpacing: 0.5,
   },
-  textLight: {
-    color: '#ffffff',
+  headerSubtitle: {
+    fontSize: 12,
+    color: THEME.DARK.TEXT_SECONDARY,
+    marginTop: 2,
   },
-  textDark: {
-    color: '#212529',
-  },
-  
-  placeholder: {
-    width: 40,
+  headerRight: {
+    width: 40, // Balance the back button
   },
   
+  // Content
   content: {
     flex: 1,
     paddingHorizontal: 20,
+    paddingTop: 20,
   },
   
+  // Sections
   section: {
-    marginTop: 32,
+    marginBottom: 20,
+  },
+  cosmicPanel: {
+    backgroundColor: THEME.DARK.BACKGROUND_SECONDARY + '60',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: THEME.DARK.COSMIC_ACCENT + '30',
+    padding: 20,
+    shadowColor: THEME.DARK.COSMIC_PURPLE,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME.DARK.COSMIC_ACCENT + '20',
   },
-  
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginLeft: 12,
-    letterSpacing: 0.5,
+    fontSize: 16,
+    fontWeight: '600',
+    color: THEME.DARK.STARFIELD,
+    marginLeft: 10,
+    letterSpacing: 0.3,
   },
   
+  // Settings
   settingRow: {
+    marginBottom: 0,
+  },
+  settingContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+    justifyContent: 'space-between',
+    paddingVertical: 12,
   },
-  settingRowDark: {
-    backgroundColor: '#333',
-  },
-  settingRowLight: {
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    shadowColor: 'rgba(0,0,0,0.05)',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  
   settingLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
-  
   iconContainer: {
     width: 36,
     height: 36,
     borderRadius: 18,
+    backgroundColor: THEME.DARK.BACKGROUND_PRIMARY + '80',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
-  
   settingLabel: {
     fontSize: 16,
+    color: THEME.DARK.STARFIELD,
     fontWeight: '500',
   },
   
-  sliderContainer: {
-    marginVertical: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    borderRadius: 12,
-  },
-  sliderContainerDark: {
-    backgroundColor: '#333',
-  },
-  sliderContainerLight: {
-    backgroundColor: '#f8f8f8',
-  },
-  
-  sliderHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  
-  sliderTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginLeft: 12,
-  },
-  
-  sliderTrack: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  
-  sliderStep: {
-    width: 44,
-    height: 8,
-    backgroundColor: '#555',
-    borderRadius: 4,
-  },
-  
-  sliderStepActive: {
-    backgroundColor: '#4caf50',
-  },
-  
-  volumeText: {
-    fontSize: 14,
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  
+  // Stats
   statRow: {
+    marginBottom: 0,
+  },
+  statContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+    justifyContent: 'space-between',
+    paddingVertical: 12,
   },
-  statRowDark: {
-    backgroundColor: '#333',
-  },
-  statRowLight: {
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-    shadowColor: 'rgba(0,0,0,0.05)',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  
   statLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
-  
   statLabel: {
     fontSize: 16,
+    color: THEME.DARK.STARFIELD,
     fontWeight: '500',
   },
-  
   statValue: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: THEME.DARK.STELLAR_GLOW,
   },
   
+  // Divider
+  divider: {
+    height: 1,
+    backgroundColor: THEME.DARK.COSMIC_ACCENT + '15',
+    marginVertical: 4,
+  },
+  
+  // Reset
+  resetSection: {
+    marginBottom: 20,
+  },
   resetButton: {
+    padding: 16,
+  },
+  resetContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    marginTop: 16,
+    justifyContent: 'space-between',
   },
-  resetButtonDark: {
-    backgroundColor: '#444',
+  resetLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
-  resetButtonLight: {
-    backgroundColor: '#f0f0f0',
+  resetIconContainer: {
+    backgroundColor: THEME.DARK.ERROR_COLOR + '20',
   },
-  
-  resetButtonText: {
+  resetText: {
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
+    color: THEME.DARK.STARFIELD,
+  },
+  resetSubtext: {
+    fontSize: 12,
+    color: THEME.DARK.TEXT_SECONDARY,
+    marginTop: 2,
+  },
+  
+  // Footer
+  footer: {
+    alignItems: 'center',
+    paddingVertical: 30,
+    paddingBottom: 40,
+  },
+  footerText: {
+    fontSize: 14,
+    color: THEME.DARK.COSMIC_ACCENT,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  footerVersion: {
+    fontSize: 11,
+    color: THEME.DARK.TEXT_SECONDARY,
+    marginTop: 4,
+    textAlign: 'center',
   },
 });
 

@@ -1,18 +1,14 @@
 /**
  * ===========================
- * 1024 DROP GAME RULES
+ * CORE GAME MECHANICS & RULES
  * ===========================
- * 
- * Complete rule set for the 1024 Drop Game
- * This file contains all game mechanics, scoring rules, and validation logic
  */
 
+// Game board configuration
 export const GAME_CONFIG = {
-  // Board dimensions
   BOARD: {
-    ROWS: 8,
-    COLS: 5,
-    TOTAL_CELLS: 40,
+    ROWS: 5, // 5x4 grid like elments branch
+    COLS: 4
   },
   
   // Timing settings
@@ -127,7 +123,7 @@ export const GAME_RULES = {
    */
   gameOver: {
     condition: 'bottomRowFull',
-    checkRow: GAME_CONFIG.BOARD.ROWS - 1, // Bottom row index (row 7 for 8-row board)
+    checkRow: GAME_CONFIG.BOARD.ROWS - 1, // Bottom row index (row 4 for 5-row board)
     allowPartialFill: false,
   },
   
@@ -167,8 +163,18 @@ export const GameValidator = {
    * Check if game is over
    */
   isGameOver(board) {
-    // Check if top row is full
-    return board[GAME_RULES.gameOver.checkRow].every(cell => cell !== 0);
+    // Safety check
+    if (!board || board.length !== GAME_CONFIG.BOARD.ROWS) {
+      return false;
+    }
+    
+    // Check if bottom row is full
+    const checkRow = GAME_RULES.gameOver.checkRow;
+    if (checkRow >= board.length || !board[checkRow]) {
+      return false;
+    }
+    
+    return board[checkRow].every(cell => cell !== 0);
   },
   
 

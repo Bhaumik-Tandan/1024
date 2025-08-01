@@ -21,6 +21,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import GameHeader from '../components/GameHeader';
 import GameGrid from '../components/GameGrid';
 import PauseModal from '../components/PauseModal';
+import SpaceBackground from '../components/SpaceBackground';
+import PlanetTile from '../components/PlanetTile';
 import { useAnimationManager } from '../components/AnimationManager';
 import { 
   getRandomBlockValue, 
@@ -638,6 +640,7 @@ const DropNumberBoard = ({ navigation, route }) => {
   // UI rendering
   return (
     <View style={[styles.container, styles.containerDark]}>
+      <SpaceBackground />
       <GameHeader 
         score={score}
         record={highScore || 0}
@@ -663,40 +666,16 @@ const DropNumberBoard = ({ navigation, route }) => {
         />
       </View>
       
-      {/* Next Block - centered and styled like tiles */}
+      {/* Next Block - centered and styled like planets */}
       <View style={styles.nextBlockArea}>
         <Text style={styles.nextBlockLabel}>NEXT</Text>
         <View style={styles.nextBlockContainer}>
-          <View style={[
-            styles.nextBlockTile,
-            getTileStyle(nextBlock),
-          ]}>
-            {/* Special effects for next block if it's a milestone */}
-            {getTileDecoration(nextBlock)?.stars && (
-              <View style={styles.starsContainer}>
-                <Text style={styles.starIcon}>⭐</Text>
-                <Text style={[styles.starIcon, styles.starTop]}>⭐</Text>
-                <Text style={[styles.starIcon, styles.starBottom]}>⭐</Text>
-              </View>
-            )}
-            
-            <View style={styles.tileContent}>
-              {getTileDecoration(nextBlock)?.type === 'crown' && (
-                <Text style={styles.crownIcon}>👑</Text>
-              )}
-              
-              <Text style={[
-                styles.nextBlockValue,
-                {
-                  color: getTextColor(nextBlock),
-                },
-                isMilestoneTile(nextBlock) && styles.milestoneText,
-                getTileDecoration(nextBlock)?.type === 'crown' && styles.crownedText
-              ]}>
-                {nextBlock >= 1000 ? `${(nextBlock / 1000).toFixed(nextBlock % 1000 === 0 ? 0 : 1)}K` : nextBlock}
-              </Text>
-            </View>
-          </View>
+          <PlanetTile 
+            value={nextBlock}
+            size={CELL_SIZE}
+            isOrbiting={true}
+            orbitSpeed={0.8} // Slower rotation for preview
+          />
         </View>
       </View>
     

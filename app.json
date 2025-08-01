@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "1024-game",
-    "slug": "1024-game",
+    "name": "Cosmic Collision",
+    "slug": "cosmic-collision",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FF6B6B"
+      "backgroundColor": "#0A0A1A"
     },
     "ios": {
       "supportsTablet": true,
@@ -18,9 +18,9 @@
       "splash": {
         "image": "./assets/splash.png",
         "resizeMode": "contain",
-        "backgroundColor": "#FF6B6B"
+        "backgroundColor": "#0A0A1A"
       },
-      "bundleIdentifier": "game1024.app",
+      "bundleIdentifier": "com.cosmic.collision",
       "infoPlist": {
         "UIBackgroundModes": ["audio"]
       }
@@ -28,16 +28,16 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FF6B6B"
+        "backgroundColor": "#0A0A1A"
       },
       "icon": "./assets/icon.png",
       "splash": {
         "image": "./assets/splash-android.png",
         "resizeMode": "contain",
-        "backgroundColor": "#FF6B6B"
+        "backgroundColor": "#0A0A1A"
       },
       "edgeToEdgeEnabled": true,
-      "package": "game1024.app"
+      "package": "com.cosmic.collision"
     },
     "web": {
       "favicon": "./assets/icon.png"

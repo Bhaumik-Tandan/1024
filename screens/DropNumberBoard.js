@@ -297,8 +297,17 @@ const DropNumberBoard = ({ navigation, route }) => {
       return;
     }
     
-    // Emergency cleanup if animations are stuck
-    if (mergeAnimations.length > 10) {
+    // Emergency cleanup if animations are stuck - more aggressive
+    if (mergeAnimations.length > 5) {
+      clearMergeAnimations();
+    }
+    
+    // Additional emergency cleanup for any stuck animations over 200ms old
+    const now = Date.now();
+    const stuckAnimations = mergeAnimations.filter(anim => 
+      now - (anim.createdAt || 0) > 200
+    );
+    if (stuckAnimations.length > 0) {
       clearMergeAnimations();
     }
     

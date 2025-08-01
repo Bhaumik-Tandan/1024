@@ -17,7 +17,7 @@
       "icon": "./assets/icon.png",
       "splash": {
         "image": "./assets/splash.png",
-        "resizeMode": "contain",
+        "resizeMode": "cover",
         "backgroundColor": "#0A0A1A"
       },
       "bundleIdentifier": "com.space.drop",

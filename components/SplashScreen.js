@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { THEME, FONT_SIZES } from './constants';
 
 const { width, height } = Dimensions.get('window');
 
 // Animated floating planet component
-const FloatingPlanet = ({ size, color, initialX, initialY, duration, delay }) => {
+const FloatingPlanet = ({ size, colors, initialX, initialY, duration, delay }) => {
   const floatAnim = useRef(new Animated.Value(0)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -76,11 +77,10 @@ const FloatingPlanet = ({ size, color, initialX, initialY, duration, delay }) =>
   return (
     <Animated.View
       style={[
-        styles.planet,
+        styles.planetContainer,
         {
           width: size,
           height: size,
-          backgroundColor: color,
           left: initialX - size / 2,
           top: initialY - size / 2,
           transform: [
@@ -90,7 +90,14 @@ const FloatingPlanet = ({ size, color, initialX, initialY, duration, delay }) =>
           ],
         },
       ]}
-    />
+    >
+      <LinearGradient
+        colors={colors}
+        style={[styles.planet, { width: size, height: size }]}
+        start={{ x: 0.3, y: 0.3 }}
+        end={{ x: 0.8, y: 0.8 }}
+      />
+    </Animated.View>
   );
 };
 
@@ -249,16 +256,21 @@ export const SplashScreen = ({ onComplete }) => {
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      {/* Deep space background */}
-      <View style={styles.spaceBackground} />
+      {/* Deep space background using LinearGradient */}
+      <LinearGradient
+        colors={['#16213e', '#1a0a2e', '#0a0a1a']}
+        style={styles.spaceBackground}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
       
       {/* Moving stars */}
       <MovingStars count={30} />
       
-      {/* Floating planets */}
+      {/* Floating planets with gradient colors */}
       <FloatingPlanet 
         size={80} 
-        color="#4169E1" 
+        colors={['#FF6B35', '#CD5C5C', '#8B0000']} // Mars
         initialX={width * 0.15} 
         initialY={height * 0.3} 
         duration={4000} 
@@ -266,7 +278,7 @@ export const SplashScreen = ({ onComplete }) => {
       />
       <FloatingPlanet 
         size={120} 
-        color="#228B22" 
+        colors={['#87CEEB', '#4169E1', '#228B22', '#006400']} // Earth
         initialX={width * 0.5} 
         initialY={height * 0.4} 
         duration={5000} 
@@ -274,7 +286,7 @@ export const SplashScreen = ({ onComplete }) => {
       />
       <FloatingPlanet 
         size={60} 
-        color="#FF6B35" 
+        colors={['#FFD700', '#FFA500', '#FF8C00']} // Venus
         initialX={width * 0.85} 
         initialY={height * 0.25} 
         duration={3500} 
@@ -282,7 +294,7 @@ export const SplashScreen = ({ onComplete }) => {
       />
       <FloatingPlanet 
         size={90} 
-        color="#FFD700" 
+        colors={['#F5F5DC', '#C0C0C0', '#808080']} // Moon
         initialX={width * 0.2} 
         initialY={height * 0.7} 
         duration={4500} 
@@ -338,7 +350,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     height: '100%',
-    backgroundColor: 'linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #16213e 100%)',
   },
 
   starsContainer: {
@@ -353,8 +364,11 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
 
-  planet: {
+  planetContainer: {
     position: 'absolute',
+  },
+
+  planet: {
     borderRadius: 1000,
     shadowColor: '#FFFFFF',
     shadowOffset: { width: 0, height: 0 },

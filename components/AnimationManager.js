@@ -217,7 +217,7 @@ export const useAnimationManager = () => {
     
     // PHASE 2: COLLISION MOMENT - Dramatic impact with effects
     const collisionPhase = [
-      // Planets rapidly disappear
+      // Planets rapidly shrink (but don't fade out completely to avoid brightness drops)
       ...mergingAnimations.map(anim => 
         Animated.parallel([
           Animated.timing(anim.scale, {
@@ -225,8 +225,9 @@ export const useAnimationManager = () => {
             duration: collisionDuration,
             useNativeDriver: false,
           }),
+          // Reduced opacity fade instead of complete disappearance
           Animated.timing(anim.opacity, {
-            toValue: 0,
+            toValue: 0.3, // Keep some visibility to prevent brightness drops
             duration: collisionDuration,
             useNativeDriver: false,
           }),

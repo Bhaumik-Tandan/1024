@@ -17,7 +17,7 @@ import {
 
 const PlanetTile = ({ value, isOrbiting = true, orbitSpeed = 1, size, isColliding = false, gravitationalField = 0 }) => {
   const rotationAnim = useRef(new Animated.Value(0)).current;
-  const pulseOpacityAnim = useRef(new Animated.Value(0.3)).current;
+  const pulseOpacityAnim = useRef(new Animated.Value(0.8)).current; // Start higher to avoid flickering
   const pulseScaleAnim = useRef(new Animated.Value(1)).current;
   
   // Use provided size or default to CELL_SIZE
@@ -35,19 +35,19 @@ const PlanetTile = ({ value, isOrbiting = true, orbitSpeed = 1, size, isCollidin
         })
       );
       
-      // Only add stellar pulse for very large celestial bodies (simplified)
+      // Only add subtle stellar pulse for very large celestial bodies (less aggressive)
       const planet = getPlanetType(value);
       if (planet.glow && value >= 32768) {
         const opacityPulse = Animated.loop(
           Animated.sequence([
             Animated.timing(pulseOpacityAnim, {
-              toValue: 0.6,
-              duration: 3000,
+              toValue: 0.9, // Smaller range to prevent flickering
+              duration: 4000, // Slower pulse
               useNativeDriver: true,
             }),
             Animated.timing(pulseOpacityAnim, {
-              toValue: 0.3,
-              duration: 3000,
+              toValue: 0.7, // Higher minimum to prevent brightness drops
+              duration: 4000, // Slower pulse
               useNativeDriver: true,
             }),
           ])

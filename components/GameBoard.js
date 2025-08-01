@@ -8,6 +8,7 @@ import {
   Animated,
   Platform,
 } from 'react-native';
+import { ROWS, COLS } from './constants';
 
 // Web-compatible dimensions
 const getDimensions = () => {
@@ -24,9 +25,9 @@ const getDimensions = () => {
 };
 
 const { width } = getDimensions();
-const BOARD_SIZE = 9; // Changed from 5 to 9 rows
-const CELL_SIZE = (width - 40) / 5; // Keep 5 columns
-const GRID_SIZE = 5; // Changed from 4 to 5 columns
+const BOARD_SIZE = ROWS; // Rows
+  const CELL_SIZE = (width - 40) / COLS; // Use actual column count
+const GRID_SIZE = COLS; // Columns - now uses COLS (4) instead of hardcoded 5
 const VISIBLE_ROWS = 8; // Only 8 rows are visible/playable, bottom row is transparent
 
 const GameBoard = () => {

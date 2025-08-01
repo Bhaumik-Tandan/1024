@@ -666,15 +666,15 @@ const DropNumberBoard = ({ navigation, route }) => {
         />
       </View>
       
-      {/* Next Block - centered and styled like planets */}
+      {/* Next Block - styled to match screenshot */}
       <View style={styles.nextBlockArea}>
-        <Text style={styles.nextBlockLabel}>NEXT</Text>
+        <Text style={styles.nextBlockLabel}>Next</Text>
         <View style={styles.nextBlockContainer}>
           <PlanetTile 
             value={nextBlock}
-            size={CELL_SIZE}
+            size={CELL_SIZE * 0.9}
             isOrbiting={true}
-            orbitSpeed={0.8} // Slower rotation for preview
+            orbitSpeed={0.5} // Slower rotation for preview
           />
         </View>
       </View>
@@ -733,33 +733,49 @@ const styles = StyleSheet.create({
     borderRadius: 1,
   },
   nextBlockArea: {
+    position: 'absolute',
+    bottom: 40,
+    left: '50%',
+    transform: [{ translateX: -80 }],
     alignItems: 'center',
-    marginTop: 20,
-    paddingVertical: 15,
+    backgroundColor: 'rgba(26, 42, 78, 0.9)',
+    borderRadius: 20,
+    paddingVertical: 12,
     paddingHorizontal: 20,
-    backgroundColor: '#2a2a2a',
-    borderRadius: 12,
-    marginHorizontal: 20,
-    marginBottom: 20,
-    borderWidth: 2,
-    borderColor: '#444444',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-    elevation: 8,
+    width: 160,
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 15,
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 144, 226, 0.4)',
+    zIndex: 100,
   },
   nextBlockLabel: {
-    color: '#cccccc',
+    color: '#B0C4DE',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    marginBottom: 8,
     letterSpacing: 1,
-    marginBottom: 10,
     textAlign: 'center',
+    textShadowColor: 'rgba(74, 144, 226, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
   },
   nextBlockContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(5, 10, 20, 0.8)',
+    borderRadius: 15,
+    padding: 8,
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 144, 226, 0.2)',
   },
   nextBlockTile: {
     width: CELL_SIZE,

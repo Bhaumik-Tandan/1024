@@ -459,44 +459,43 @@ const GameGrid = ({
 const styles = StyleSheet.create({
   board: {
     position: 'relative',
-    backgroundColor: 'transparent', // Remove solid background - let space show through
-    borderRadius: 20, // Softer, more organic feel
-    padding: 8, // Increased padding for floating feel
-    margin: 8, // More margin for space-like separation
+    backgroundColor: 'transparent', // Completely transparent background
+    borderRadius: 0, // No border radius
+    padding: 4, // Minimal padding 
+    margin: 4, // Minimal margin
     alignSelf: 'center',
-    marginTop: 25,
-    marginBottom: 10,
+    marginTop: 15,
+    marginBottom: 5,
   },
   boardDark: {
-    backgroundColor: '#2a2a2a',
-    borderWidth: 2,
-    borderColor: '#444444',
+    backgroundColor: 'transparent', // Remove dark background
+    borderWidth: 0, // Remove all borders
+    borderColor: 'transparent',
   },
   boardLight: {
-    backgroundColor: '#e9ecef',
-    borderWidth: 2,
-    borderColor: '#dee2e6',
-    shadowColor: 'rgba(0,0,0,0.1)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: 'transparent', // Remove light background
+    borderWidth: 0, // Remove all borders
+    borderColor: 'transparent',
+    shadowColor: 'transparent', // Remove shadows
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   boardDeepSpace: {
-    backgroundColor: 'rgba(26, 26, 46, 0.3)', // Very subtle space background
+    backgroundColor: 'transparent', // Completely transparent for space
   },
   gridContainer: {
     position: 'relative',
     flexDirection: 'column',
     overflow: 'hidden',
     alignSelf: 'center',
-    // Remove any rigid structure
   },
   gridRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    marginBottom: 8, // Increased spacing for floating feel
+    marginBottom: 4, // Reduced spacing
   },
   lastRow: {
     marginBottom: 0,
@@ -506,7 +505,7 @@ const styles = StyleSheet.create({
     height: CELL_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 2, // Small margin for floating effect
+    margin: 1, // Minimal margin
   },
   cellTouchable: {
     width: '100%',
@@ -514,19 +513,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,
-    borderRadius: 12, // More rounded for organic feel
+    borderRadius: 0, // Remove border radius
   },
   cell: {
     width: CELL_SIZE,
     height: CELL_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 12,
-    // Remove all backgrounds and borders for true space feel
-    backgroundColor: 'transparent',
+    borderRadius: 0, // Remove border radius
+    backgroundColor: 'transparent', // Completely transparent
+    borderWidth: 0, // Remove all borders
+    borderColor: 'transparent',
   },
   cellFilled: {
     borderColor: 'transparent',
+    borderWidth: 0, // Remove borders
   },
   cellText: {
     color: '#fff',
@@ -538,36 +539,30 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   fallingBlock: {
-    borderRadius: 4,
+    borderRadius: 0, // Remove border radius
     justifyContent: 'center',
     alignItems: 'center',
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
+    borderWidth: 0, // Remove borders
     borderColor: 'transparent',
   },
   mergingTile: {
-    borderRadius: 4,
+    borderRadius: 0, // Remove border radius
     justifyContent: 'center',
     alignItems: 'center',
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
+    borderWidth: 0, // Remove borders
     borderColor: 'transparent',
   },
   mergeResult: {
-    borderRadius: 4,
+    borderRadius: 0, // Remove border radius
     justifyContent: 'center',
     alignItems: 'center',
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
+    borderWidth: 0, // Remove borders
     borderColor: 'transparent',
   },
   milestoneTile: {
     borderColor: 'transparent',
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderRadius: 8,
+    borderWidth: 0, // Remove all borders
+    borderRadius: 0, // Remove border radius
     backgroundColor: 'transparent',
   },
   starsContainer: {
@@ -641,23 +636,22 @@ const styles = StyleSheet.create({
   mainTile: {
     width: '100%',
     height: '100%',
-    borderRadius: 4,
+    borderRadius: 0, // Remove border radius
     justifyContent: 'center',
     alignItems: 'center',
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
+    borderWidth: 0, // Remove borders
     borderColor: 'transparent',
     zIndex: 1,
   },
   cellTouchArea: {
     position: 'absolute',
-    borderRadius: 4,
-    backgroundColor: 'transparent', // Make it invisible
-    zIndex: 10, // Above cells but below animations
+    borderRadius: 0, // Remove border radius
+    backgroundColor: 'transparent',
+    zIndex: 10,
   },
   // Liquid blob animation styles
   liquidBlob: {
-    zIndex: 15, // Above regular tiles, below result
+    zIndex: 15,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -695,9 +689,9 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 12,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   
   // Guide overlay styles

@@ -903,12 +903,12 @@ export const ANIMATION_CONFIG = {
  * Font sizes that scale with screen size - enhanced for tablets
  */
 export const FONT_SIZES = {
-  TINY: getResponsiveValue(10, 12, 14),
-  SMALL: getResponsiveValue(12, 14, 16),
-  MEDIUM: getResponsiveValue(14, 18, 20),
-  LARGE: getResponsiveValue(18, 22, 24),
-  XLARGE: getResponsiveValue(22, 28, 32),
-  XXLARGE: getResponsiveValue(28, 36, 42),
+  TINY: 8,       // Added for very small text
+  SMALL: 12,
+  MEDIUM: 16,
+  LARGE: 20,
+  XLARGE: 24,
+  TITLE: 32,
 };
 
 /**

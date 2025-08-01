@@ -27,6 +27,7 @@ import PauseModal from '../components/PauseModal';
 import SpaceBackground from '../components/SpaceBackground';
 import PlanetTile from '../components/PlanetTile';
 import { useAnimationManager } from '../components/AnimationManager';
+import { ContinuousStarfield } from '../components/MovingStarfield';
 import { 
   getRandomBlockValue, 
   handleBlockLanding,
@@ -674,6 +675,8 @@ const DropNumberBoard = ({ navigation, route }) => {
   return (
     <View style={[styles.container, styles.containerDark]}>
       <SpaceBackground />
+      {/* Moving starfield for space travel immersion */}
+      <ContinuousStarfield starCount={100} speed="fast" spawnRate={1200} />
       <GameHeader 
         score={score}
         record={highScore || 0}

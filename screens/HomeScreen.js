@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import useGameStore from '../store/gameStore';
 import { THEME, FONT_SIZES } from '../components/constants';
+import { ContinuousStarfield } from '../components/MovingStarfield';
 
 // Web-compatible dimensions
 const getDimensions = () => {
@@ -265,12 +266,15 @@ const HomeScreen = ({ navigation }) => {
       
       {/* Deep Space Background */}
       <View style={styles.spaceBackground}>
+        {/* Moving starfield for space travel feel */}
+        <ContinuousStarfield starCount={120} speed="medium" spawnRate={1500} />
+        
         {/* Nebula effect */}
         <View style={styles.nebula} />
         <View style={styles.nebula2} />
         
-        {/* Star field */}
-        <StarField count={80} />
+        {/* Static star field */}
+        <StarField count={40} />
         
         {/* Animated celestial bodies */}
         <CelestialBody 
@@ -338,7 +342,7 @@ const HomeScreen = ({ navigation }) => {
             style={[
               styles.gameTitle,
               {
-                textShadowOpacity: titleGlowOpacity,
+                opacity: titleGlowOpacity,
               }
             ]}
           >

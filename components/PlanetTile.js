@@ -233,13 +233,33 @@ const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = fa
   
   const getBasePlanetStyle = (planet) => {
     switch (planet.type) {
+      case 'pluto':
+        return {
+          colors: ['#8DA3B0', '#6B7D87', '#4A5D6B'], // Darker, muted icy blue-gray
+          style: { 
+            borderWidth: 2, 
+            borderColor: '#5C7A89',
+            shadowColor: '#6B7D87',
+            shadowOpacity: 0.5
+          }
+        };
+      case 'moon':
+        return {
+          colors: ['#C5B89A', '#A69B85', '#8B7F6B'], // Darker, muted lunar beige
+          style: { 
+            borderWidth: 2, 
+            borderColor: '#9A8E78',
+            shadowColor: '#A69B85',
+            shadowOpacity: 0.4
+          }
+        };
       case 'mercury':
         return {
-          colors: ['#A0A0A0', '#8C7853', '#696969'],
+          colors: ['#8B6F3D', '#6B5328', '#4A3B1F'], // Much darker, muted brownish
           style: { 
-            borderWidth: 1, 
-            borderColor: '#808080',
-            shadowColor: '#666',
+            borderWidth: 2, 
+            borderColor: '#7A5F32',
+            shadowColor: '#6B5328',
             shadowOpacity: 0.4
           }
         };
@@ -275,61 +295,61 @@ const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = fa
         };
       case 'neptune':
         return {
-          colors: ['#B0E0E6', '#4169E1', '#000080'],
+          colors: ['#4169E1', '#0000FF', '#191970'],
           style: { 
             borderWidth: 2, 
-            borderColor: '#6495ED',
+            borderColor: '#87CEEB',
             shadowColor: '#4169E1',
-            shadowOpacity: 0.7
+            shadowOpacity: 0.8
           }
         };
       case 'uranus':
         return {
-          colors: ['#E0FFFF', '#00CED1', '#008B8B'],
+          colors: ['#4FD0E3', '#48CAE4', '#0077BE'],
           style: { 
             borderWidth: 2, 
-            borderColor: '#48D1CC',
-            shadowColor: '#00CED1',
-            shadowOpacity: 0.6
+            borderColor: '#90E0EF',
+            shadowColor: '#4FD0E3',
+            shadowOpacity: 0.7
           }
         };
       case 'saturn':
         return {
-          colors: ['#FFFACD', '#DAA520', '#B8860B'],
+          colors: ['#FFEAA7', '#FAD5A5', '#DDB892'],
           style: { 
             borderWidth: 3, 
-            borderColor: '#FFD700',
-            shadowColor: '#DAA520',
+            borderColor: '#F4D03F',
+            shadowColor: '#FFEAA7',
             shadowOpacity: 0.8
           }
         };
       case 'jupiter':
         return {
-          colors: ['#DEB887', '#D2691E', '#8B4513'],
+          colors: ['#FF8C42', '#FF7538', '#E76F51'],
           style: { 
             borderWidth: 3, 
-            borderColor: '#CD853F',
-            shadowColor: '#D2691E',
-            shadowOpacity: 0.7
+            borderColor: '#FFA500',
+            shadowColor: '#FF8C42',
+            shadowOpacity: 0.9
           }
         };
       case 'brown_dwarf':
         return {
-          colors: ['#D2691E', '#8B4513', '#654321'],
+          colors: ['#8B4513', '#A0522D', '#654321'],
           style: { 
-            borderWidth: 2, 
-            borderColor: '#CD853F',
-            shadowColor: '#D2691E',
-            shadowOpacity: 0.9
+            borderWidth: 3, 
+            borderColor: '#D2691E',
+            shadowColor: '#8B4513',
+            shadowOpacity: 0.8
           }
         };
       case 'red_dwarf':
         return {
-          colors: ['#FF6347', '#FF4500', '#DC143C'],
+          colors: ['#FF6B47', '#FF4500', '#DC143C'],
           style: { 
             borderWidth: 3, 
-            borderColor: '#FF6B6B',
-            shadowColor: '#FF4500',
+            borderColor: '#FF7F50',
+            shadowColor: '#FF6B47',
             shadowOpacity: 1.0
           }
         };
@@ -338,8 +358,8 @@ const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = fa
           colors: ['#FFD700', '#FFA500', '#FF8C00'],
           style: { 
             borderWidth: 3, 
-            borderColor: '#FFD700',
-            shadowColor: '#FFA500',
+            borderColor: '#FFFF00',
+            shadowColor: '#FFD700',
             shadowOpacity: 1.0
           }
         };
@@ -407,22 +427,24 @@ const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = fa
       case 'vacuum_decay_black_hole':
       case 'infinite_density_black_hole':
         return {
-          colors: ['#1a1a1a', '#000000', '#2F4F4F'],
+          colors: ['transparent', 'transparent', planet.accent || '#9932CC'],
           style: { 
             borderWidth: 4, 
             borderColor: planet.accent || '#9932CC',
             shadowColor: planet.accent || '#9932CC',
-            shadowOpacity: 1.0
+            shadowOpacity: 1.0,
+            isBlackHole: true // Special flag for black holes
           }
         };
       case 'ultimate_black_hole':
         return {
-          colors: ['#000000', '#000000', '#1a1a1a'],
+          colors: ['transparent', 'transparent', '#301934'],
           style: { 
             borderWidth: 5, 
             borderColor: '#301934',
             shadowColor: '#301934',
-            shadowOpacity: 1.0
+            shadowOpacity: 1.0,
+            isBlackHole: true // Special flag for black holes
           }
         };
       default:
@@ -440,6 +462,67 @@ const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = fa
 
   const gradient = getRealisticPlanetStyle();
 
+  // Special rendering for black holes as semi-circles
+  if (gradient.style.isBlackHole) {
+    return (
+      <View style={{
+        width: size,
+        height: size,
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
+      }}>
+        {/* Event Horizon - Semi-circle */}
+        <View style={{
+          width: size,
+          height: size / 2,
+          borderTopLeftRadius: size / 2,
+          borderTopRightRadius: size / 2,
+          backgroundColor: gradient.colors[2],
+          position: 'absolute',
+          bottom: size / 4,
+          ...gradient.style,
+          shadowOffset: { width: 0, height: -2 },
+          shadowRadius: planet.glow ? 15 : 8,
+          elevation: planet.glow ? 12 : 6,
+        }} />
+        
+        {/* Accretion Disk */}
+        <View style={{
+          position: 'absolute',
+          bottom: size / 4 - 2,
+          width: size * 1.2,
+          height: 4,
+          backgroundColor: gradient.style.borderColor,
+          opacity: 0.8,
+          borderRadius: 2,
+        }} />
+        
+        {/* Energy Jets */}
+        <View style={{
+          position: 'absolute',
+          top: size * 0.1,
+          width: 2,
+          height: size * 0.3,
+          backgroundColor: gradient.style.borderColor,
+          opacity: 0.6,
+        }} />
+        
+        {/* Gravitational Lensing Effect */}
+        <View style={{
+          position: 'absolute',
+          width: size * 1.1,
+          height: size * 1.1,
+          borderRadius: size * 0.55,
+          borderWidth: 1,
+          borderColor: gradient.style.borderColor,
+          opacity: 0.3,
+        }} />
+      </View>
+    );
+  }
+
+  // Normal planet rendering for non-black holes
   return (
     <View style={{
       width: size,

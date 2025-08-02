@@ -96,7 +96,6 @@ const GameGrid = ({
 }) => {
   const isDisabled = gameOver || !falling || (falling?.fastDrop && !falling?.static) || !isTouchEnabled;
   const gridRef = useRef(null);
-  const debugTimeoutRef = useRef(null); // Use ref instead of state for debug
   
   // Enhanced screen tap handler with accurate coordinates
   const handleGridTap = (event) => {
@@ -106,12 +105,6 @@ const GameGrid = ({
       
       // Detect column using measured positions
       const detectedColumn = getColumnFromMeasuredX(locationX);
-      
-      // Clear any existing timeout to prevent multiple updates
-      if (debugTimeoutRef.current) {
-        clearTimeout(debugTimeoutRef.current);
-        debugTimeoutRef.current = null;
-      }
       
       // Call the parent's screen tap handler with accurate column
       if (onScreenTap) {
@@ -124,16 +117,6 @@ const GameGrid = ({
       }
     }
   };
-  
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (debugTimeoutRef.current) {
-        clearTimeout(debugTimeoutRef.current);
-        debugTimeoutRef.current = null;
-      }
-    };
-  }, []);
   
   return (
     <View style={[styles.board, styles.boardDeepSpace]} {...panHandlers}>
@@ -160,7 +143,9 @@ const GameGrid = ({
               );
               
               const cellStyle = {
-                opacity: isDisabled || isAnimating ? 0.6 : 1,
+                ...styles.cellContainer,
+                opacity: isAnimating ? 0.7 : 1, // Dim animated cells
+                ...(isDisabled && styles.cellDisabled),
               };
               
               const cellDisabled = isDisabled || isAnimating;
@@ -743,6 +728,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.8,
     shadowRadius: 15,
     elevation: 15,
+  },
+  cellDisabled: {
+    opacity: 0.6,
   },
 });
 

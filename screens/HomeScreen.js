@@ -506,6 +506,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0a0a1a',
+    // Ensure full height usage on iPad
+    minHeight: '100%',
+    ...(width >= 768 && {
+      height: '100%',
+    }),
   },
   
   spaceBackground: {

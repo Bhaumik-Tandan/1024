@@ -154,13 +154,7 @@ const GameGrid = ({
                 <View 
                   key={`cell-${rowIdx}-${colIdx}`} 
                   style={[
-                    styles.cellContainer,
-                    // Visual debugging - highlight detected column
-                    debugTimeoutRef.current === colIdx && rowIdx === 0 && {
-                      backgroundColor: 'rgba(255, 255, 0, 0.3)',
-                      borderWidth: 2,
-                      borderColor: 'yellow'
-                    }
+                    styles.cellContainer
                   ]}
                 >
                   <TouchableOpacity

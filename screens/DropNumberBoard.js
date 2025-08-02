@@ -766,6 +766,11 @@ const DropNumberBoard = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    // Ensure full height usage on iPad
+    minHeight: '100%',
+    ...(width >= 768 && {
+      height: '100%',
+    }),
   },
   containerDark: {
     backgroundColor: '#1a1a1a',

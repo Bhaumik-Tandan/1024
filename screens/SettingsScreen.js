@@ -8,6 +8,7 @@ import {
   ScrollView,
   Switch,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -198,9 +199,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: THEME.DARK.BACKGROUND_PRIMARY,
+    // Ensure full height usage on iPad
+    minHeight: '100%',
+    ...(Dimensions.get('window').width >= 768 && {
+      height: '100%',
+    }),
   },
   safeArea: {
     flex: 1,
+    // Ensure full height usage on iPad
+    minHeight: '100%',
   },
   
   // Header

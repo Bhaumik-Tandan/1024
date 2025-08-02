@@ -1,9 +1,13 @@
 import React, { useEffect } from 'react';
-import { View, Platform } from 'react-native';
+import { View, Platform, Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Navigator from './navigator';
 import soundManager from './utils/soundManager';
+
+// Get device dimensions to detect iPad
+const { width } = Dimensions.get('window');
+const isTablet = width >= 768; // iPad and larger tablets
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -56,10 +60,28 @@ export default function App() {
   return (
     <ErrorBoundary>
       <SafeAreaProvider>
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#0a0a1a' }}>
-          <StatusBar style="light" backgroundColor="#0a0a1a" hidden={true} />
-          <Navigator />
-        </SafeAreaView>
+        <View style={{ flex: 1, backgroundColor: '#0a0a1a' }}>
+          <StatusBar 
+            style="light" 
+            backgroundColor="#0a0a1a" 
+            hidden={false}
+            translucent={isTablet}
+          />
+          <SafeAreaView 
+            style={{ 
+              flex: 1, 
+              backgroundColor: '#0a0a1a',
+              // Force full height on tablets
+              ...(isTablet && { 
+                paddingTop: 0,
+                height: '100%'
+              })
+            }}
+            edges={isTablet ? ['left', 'right', 'bottom'] : ['left', 'right', 'top', 'bottom']}
+          >
+            <Navigator />
+          </SafeAreaView>
+        </View>
       </SafeAreaProvider>
     </ErrorBoundary>
   );

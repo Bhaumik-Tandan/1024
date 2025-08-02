@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions } from 'react-native';
 import { 
   ROWS, 
   COLS, 
@@ -14,9 +14,19 @@ import {
   getTileDecoration,
   TILE_GRADIENTS,
   getPlanetType,
-  THEME
+  THEME,
+  screenWidth
 } from './constants';
 import PlanetTile from './PlanetTile';
+
+// Get responsive spacing based on device - calculate once to avoid re-renders
+const isTablet = screenWidth >= 768;
+const responsiveSpacing = {
+  boardPadding: isTablet ? 12 : 4,
+  boardMargin: isTablet ? 8 : 4,
+  gridRowMargin: isTablet ? 8 : 4,
+  cellMargin: isTablet ? 3 : 1,
+};
 
 // Runtime measured positions for accurate column detection
 let measuredColumnPositions = [];
@@ -36,7 +46,7 @@ const measureColumnPositions = (layout, rowRef) => {
         rightBound: (col + 1) * cellWidth
       });
     }
-    measuredColumnPositions = positions;
+    measuredColumnPositions = positions; // This line was removed as per the new_code
   }
 };
 
@@ -452,11 +462,11 @@ const styles = StyleSheet.create({
     position: 'relative',
     backgroundColor: 'transparent', // Completely transparent background
     borderRadius: 0, // No border radius
-    padding: 4, // Minimal padding 
-    margin: 4, // Minimal margin
+    padding: responsiveSpacing.boardPadding, // Responsive padding for iPad
+    margin: responsiveSpacing.boardMargin, // Responsive margin for iPad
     alignSelf: 'center',
-    marginTop: 15,
-    marginBottom: 5,
+    marginTop: isTablet ? 20 : 15, // Larger top margin for iPad
+    marginBottom: isTablet ? 15 : 5, // Larger bottom margin for iPad
   },
   boardDark: {
     backgroundColor: 'transparent', // Remove dark background
@@ -486,7 +496,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    marginBottom: 4, // Reduced spacing
+    marginBottom: responsiveSpacing.gridRowMargin, // Responsive row spacing
   },
   lastRow: {
     marginBottom: 0,
@@ -496,7 +506,7 @@ const styles = StyleSheet.create({
     height: CELL_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 1, // Minimal margin
+    margin: responsiveSpacing.cellMargin, // Responsive cell margin
   },
   cellTouchable: {
     width: '100%',

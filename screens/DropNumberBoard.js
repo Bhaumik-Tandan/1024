@@ -37,7 +37,8 @@ import {
 import { 
   GameValidator, 
   GAME_CONFIG, 
-  GAME_RULES 
+  GAME_RULES,
+  getBoardConfig 
 } from '../components/GameRules';
 import { 
   ROWS, 
@@ -49,7 +50,8 @@ import {
   getCellTop,
   ANIMATION_CONFIG,
   PLANET_TYPES,
-  width // Import width for iPad detection
+  screenWidth, // Import screenWidth for iPad detection
+  getCurrentGridConfig
 } from '../components/constants';
 import useGameStore from '../store/gameStore';
 import { vibrateOnTouch } from '../utils/vibration';
@@ -59,8 +61,14 @@ import { vibrateOnTouch } from '../utils/vibration';
  * Uses centralized game rules and improved state management
  */
 const DropNumberBoard = ({ navigation, route }) => {
-  // Core game state
-  const [board, setBoard] = useState(() => Array.from({ length: ROWS }, () => Array(COLS).fill(0)));
+  // Get initial grid configuration more safely
+  const initialGridConfig = getCurrentGridConfig();
+  const [gridConfig, setGridConfig] = useState(initialGridConfig);
+  
+  // Core game state - use dynamic grid size
+  const [board, setBoard] = useState(() => 
+    Array.from({ length: initialGridConfig.ROWS }, () => Array(initialGridConfig.COLS).fill(0))
+  );
   const [score, setScore] = useState(0);
   const [nextBlock, setNextBlock] = useState(() => getRandomBlockValue());
   const [previewBlock, setPreviewBlock] = useState(() => getRandomBlockValue());
@@ -94,6 +102,40 @@ const DropNumberBoard = ({ navigation, route }) => {
   // Zustand store
   const { updateScore, updateHighestBlock, saveGame, loadSavedGame, clearSavedGame, highScore } = useGameStore();
   
+  // Handle orientation changes and dynamic grid resizing
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      const newGridConfig = getCurrentGridConfig();
+      
+      // Only update if grid configuration actually changed
+      if (newGridConfig.ROWS !== gridConfig.ROWS || newGridConfig.COLS !== gridConfig.COLS) {
+        setGridConfig(newGridConfig);
+        
+        // Update board size, preserving existing tiles where possible
+        setBoard(prevBoard => {
+          const newBoard = Array.from({ length: newGridConfig.ROWS }, () => 
+            Array(newGridConfig.COLS).fill(0)
+          );
+          
+          // Copy existing tiles to new board (top-left aligned)
+          for (let row = 0; row < Math.min(prevBoard.length, newGridConfig.ROWS); row++) {
+            for (let col = 0; col < Math.min(prevBoard[row].length, newGridConfig.COLS); col++) {
+              newBoard[row][col] = prevBoard[row][col];
+            }
+          }
+          
+          return newBoard;
+        });
+        
+        // Clear any falling animations that might be out of bounds
+        clearFalling();
+        clearMergeAnimations();
+      }
+    });
+
+    return () => subscription?.remove();
+  }, [gridConfig, clearFalling, clearMergeAnimations]);
+
   // Use the animation manager
   const {
     falling,
@@ -631,22 +673,11 @@ const DropNumberBoard = ({ navigation, route }) => {
    * Uses GameHelpers for consistent initialization
    */
   const resetGame = () => {
-    setBoard(Array.from({ length: ROWS }, () => Array(COLS).fill(0)));
+    setBoard(Array.from({ length: gridConfig.ROWS }, () => Array(gridConfig.COLS).fill(0)));
     setScore(0);
     setGameOver(false);
     setNextBlock(getRandomBlockValue());
     setPreviewBlock(getRandomBlockValue());
-    setShowGuide(true);
-    clearFalling();
-    clearMergeAnimations();
-    
-    // Reset touch sensitivity
-    setIsTouchEnabled(true);
-    if (touchTimeoutRef.current) {
-      clearTimeout(touchTimeoutRef.current);
-    }
-    
-    // Reset game statistics
     setGameStats({
       tilesPlaced: 0,
       mergesPerformed: 0,
@@ -655,12 +686,20 @@ const DropNumberBoard = ({ navigation, route }) => {
       startTime: Date.now(),
     });
     
-    // Reset tracking variables for store sync
-    setLastScore(0);
-    setLastHighestBlock(0);
+    // Clear all animations
+    clearFalling();
+    clearMergeAnimations();
     
-    // Clear saved game when starting fresh
+    // Floor system reset
+    setCurrentMinSpawn(2);
+    setFloorLevel(1);
+    setMaxTileAchieved(0);
+    
+    // Clear saved game
     clearSavedGame();
+    
+    // Enable touch
+    setIsTouchEnabled(true);
   };
 
   /**
@@ -683,9 +722,9 @@ const DropNumberBoard = ({ navigation, route }) => {
       <SpaceBackground />
       {/* Moving starfield for space travel immersion */}
       <ContinuousStarfield 
-        starCount={width >= 768 ? 150 : 100} 
+        starCount={screenWidth >= 768 ? 150 : 100} 
         speed="fast" 
-        spawnRate={width >= 768 ? 1000 : 1200} 
+        spawnRate={screenWidth >= 768 ? 1000 : 1200} 
       />
       <GameHeader 
         score={score}
@@ -720,7 +759,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         <View style={styles.nextBlockContainer}>
           <PlanetTile 
             value={nextBlock}
-            size={CELL_SIZE * 0.9}
+            size={screenWidth >= 768 ? CELL_SIZE * 1.1 : CELL_SIZE * 0.9} // Larger preview on iPad
             isOrbiting={true}
             orbitSpeed={0.5} // Slower rotation for preview
           />
@@ -768,7 +807,7 @@ const styles = StyleSheet.create({
     flex: 1,
     // Ensure full height usage on iPad
     minHeight: '100%',
-    ...(width >= 768 && {
+    ...(screenWidth >= 768 && {
       height: '100%',
     }),
   },
@@ -787,29 +826,29 @@ const styles = StyleSheet.create({
   },
   nextBlockArea: {
     position: 'absolute',
-    bottom: 40,
+    bottom: screenWidth >= 768 ? 80 : 40, // More bottom spacing for iPad since grid is smaller
     left: '50%',
-    transform: [{ translateX: -80 }],
+    transform: [{ translateX: screenWidth >= 768 ? -120 : -80 }], // Larger transform for iPad
     alignItems: 'center',
     backgroundColor: 'rgba(26, 42, 78, 0.9)',
-    borderRadius: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    width: 160,
+    borderRadius: screenWidth >= 768 ? 25 : 20, // Larger border radius for iPad
+    paddingVertical: screenWidth >= 768 ? 20 : 12, // Even more padding for iPad
+    paddingHorizontal: screenWidth >= 768 ? 30 : 20, // Larger horizontal padding for iPad
+    width: screenWidth >= 768 ? 240 : 160, // Much wider for iPad
     shadowColor: '#4A90E2',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.6,
-    shadowRadius: 15,
+    shadowRadius: screenWidth >= 768 ? 20 : 15, // Larger shadow for iPad
     elevation: 12,
-    borderWidth: 1,
+    borderWidth: screenWidth >= 768 ? 2 : 1, // Thicker border for iPad
     borderColor: 'rgba(74, 144, 226, 0.4)',
     zIndex: 100,
   },
   nextBlockLabel: {
     color: '#B0C4DE',
-    fontSize: 14,
+    fontSize: screenWidth >= 768 ? 18 : 14, // Larger font for iPad
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: screenWidth >= 768 ? 12 : 8, // Larger margin for iPad
     letterSpacing: 1,
     textAlign: 'center',
     textShadowColor: 'rgba(74, 144, 226, 0.5)',
@@ -820,14 +859,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(5, 10, 20, 0.8)',
-    borderRadius: 15,
-    padding: 8,
+    borderRadius: screenWidth >= 768 ? 20 : 15, // Larger border radius for iPad
+    padding: screenWidth >= 768 ? 15 : 8, // Larger padding for iPad
     shadowColor: '#4A90E2',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
-    shadowRadius: 6,
+    shadowRadius: screenWidth >= 768 ? 8 : 6, // Larger shadow for iPad
     elevation: 6,
-    borderWidth: 1,
+    borderWidth: screenWidth >= 768 ? 2 : 1, // Thicker border for iPad
     borderColor: 'rgba(74, 144, 226, 0.2)',
   },
   nextBlockTile: {

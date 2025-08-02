@@ -4,11 +4,46 @@
  * ===========================
  */
 
-// Game board configuration
+import { Dimensions, Platform } from 'react-native';
+
+// Adaptive board configuration based on device and orientation
+export const getBoardConfig = () => {
+  const { width, height } = Dimensions.get('window');
+  const isTablet = width >= 768; // iPad and larger tablets
+  const isLandscape = width > height;
+
+  if (isTablet) {
+    if (isLandscape) {
+      // iPad landscape: More columns, same rows to leave space for UI
+      return {
+        ROWS: 5,
+        COLS: 7
+      };
+    } else {
+      // iPad portrait: More columns, same rows to leave space for next preview
+      return {
+        ROWS: 5,
+        COLS: 5
+      };
+    }
+  } else {
+    // Phone: Keep original compact size
+    return {
+      ROWS: 5,
+      COLS: 4
+    };
+  }
+};
+
+// Get initial board configuration
+const initialBoardConfig = getBoardConfig();
+
+// Game board configuration - can be updated dynamically
 export const GAME_CONFIG = {
   BOARD: {
-    ROWS: 5, // 5x4 grid like elments branch
-    COLS: 4
+    ROWS: initialBoardConfig.ROWS,
+    COLS: initialBoardConfig.COLS,
+    TOTAL_CELLS: initialBoardConfig.ROWS * initialBoardConfig.COLS
   },
   
   // Timing settings

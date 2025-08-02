@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,13 @@ import {
   Switch,
   Alert,
   Dimensions,
+  Animated,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import useGameStore from '../store/gameStore';
 import SpaceBackground from '../components/SpaceBackground';
-import { THEME } from '../components/constants';
+import { THEME, getPlanetType } from '../components/constants';
 
 const SettingsScreen = ({ navigation }) => {
   const {
@@ -29,29 +30,126 @@ const SettingsScreen = ({ navigation }) => {
     resetAllSettings,
   } = useGameStore();
 
+  // Animation refs
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const starRotationAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Entry animation
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 100,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Continuous star rotation
+    const starRotation = Animated.loop(
+      Animated.timing(starRotationAnim, {
+        toValue: 1,
+        duration: 20000,
+        useNativeDriver: true,
+      }),
+    );
+    starRotation.start();
+
+    // Subtle pulsing animation for cosmic panels
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.02,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    pulse.start();
+
+    return () => {
+      starRotation.stop();
+      pulse.stop();
+    };
+  }, []);
+
   const handleResetSettings = () => {
     Alert.alert(
-      'Reset Settings',
-      'Are you sure you want to reset all settings to default?',
+      'Initiate System Reset',
+      'Are you sure you want to restore all cosmic configurations to default parameters?',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Abort', style: 'cancel' },
         {
-          text: 'Reset',
+          text: 'Execute Reset',
           style: 'destructive',
           onPress: () => {
             resetAllSettings();
-            Alert.alert('Settings Reset', 'All settings have been reset to default.');
+            Alert.alert('Reset Complete', 'All cosmic systems have been restored to default configuration.');
           },
         },
       ]
     );
   };
 
-  // Simplified cosmic panel
+  // Handle sound toggle with haptic dependency
+  const handleSoundToggle = (value) => {
+    toggleSound();
+    // If sound is being turned off, suggest turning off haptic too
+    if (!value && vibrationEnabled) {
+      Alert.alert(
+        'Sensory Coordination',
+        'Would you like to disable haptic feedback as well for a fully silent cosmic experience?',
+        [
+          { text: 'Keep Haptic', style: 'cancel' },
+          { 
+            text: 'Disable All', 
+            onPress: () => toggleVibration(),
+            style: 'default' 
+          },
+        ]
+      );
+    }
+    // If sound is being turned on and haptic is off, suggest turning on haptic too
+    else if (value && !vibrationEnabled) {
+      Alert.alert(
+        'Sensory Enhancement',
+        'Would you like to enable haptic feedback for a complete cosmic sensory experience?',
+        [
+          { text: 'Audio Only', style: 'cancel' },
+          { 
+            text: 'Enable All', 
+            onPress: () => toggleVibration(),
+            style: 'default' 
+          },
+        ]
+      );
+    }
+  };
+
+  // Enhanced cosmic panel with subtle animation
   const CosmicPanel = ({ children, style = {} }) => (
-    <View style={[styles.cosmicPanel, style]}>
+    <Animated.View style={[
+      styles.cosmicPanel, 
+      style,
+      { 
+        transform: [{ scale: pulseAnim }],
+        opacity: fadeAnim 
+      }
+    ]}>
       {children}
-    </View>
+    </Animated.View>
   );
 
   const SettingRow = ({ icon, label, value, onToggle, showDivider = true }) => (
@@ -91,14 +189,20 @@ const SettingsScreen = ({ navigation }) => {
   );
 
   const formatScore = (score) => {
-    if (score === null || score === 0) return '0';
+    if (score === null || score === 0) return 'No Records';
     return score.toLocaleString();
   };
 
-  const formatBlock = (block) => {
-    if (block === null || block === 0) return '0';
-    return block.toLocaleString();
+  const formatCelestialBody = (block) => {
+    if (block === null || block === 0) return 'Unknown Entity';
+    const celestialBody = getPlanetType(block);
+    return celestialBody.name || 'Mysterious Object';
   };
+
+  const starRotation = starRotationAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   return (
     <View style={styles.container}>
@@ -107,66 +211,74 @@ const SettingsScreen = ({ navigation }) => {
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style="light-content" backgroundColor="transparent" translucent />
         
-        {/* Clean header */}
-        <View style={styles.header}>
+        {/* Enhanced header with animated stars */}
+        <Animated.View style={[styles.header, { transform: [{ scale: scaleAnim }] }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={THEME.DARK.STARFIELD} />
           </TouchableOpacity>
           
           <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Settings</Text>
-            <Text style={styles.headerSubtitle}>Cosmic Configuration</Text>
+            <View style={styles.headerTitleContainer}>
+              <Animated.View style={[styles.starIcon, { transform: [{ rotate: starRotation }] }]}>
+                <Ionicons name="star" size={16} color={THEME.DARK.STELLAR_GLOW} />
+              </Animated.View>
+              <Text style={styles.headerTitle}>Cosmic Command Center</Text>
+              <Animated.View style={[styles.starIcon, { transform: [{ rotate: starRotation }] }]}>
+                <Ionicons name="star" size={16} color={THEME.DARK.STELLAR_GLOW} />
+              </Animated.View>
+            </View>
+            <Text style={styles.headerSubtitle}>Universal Configuration Portal</Text>
           </View>
           
           <View style={styles.headerRight} />
-        </View>
+        </Animated.View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Audio & Controls Section */}
+          {/* Sensory Systems Section */}
           <CosmicPanel style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="settings" size={20} color={THEME.DARK.COSMIC_ACCENT} />
-              <Text style={styles.sectionTitle}>Controls</Text>
+              <Text style={styles.sectionTitle}>Sensory Systems</Text>
             </View>
             
             <SettingRow
               icon="musical-notes"
-              label="Sound Effects"
+              label="Cosmic Audio Transmission"
               value={soundEnabled}
-              onToggle={toggleSound}
+              onToggle={handleSoundToggle}
             />
             
             <SettingRow
               icon="phone-portrait"
-              label="Haptic Feedback"
+              label="Tactile Response Matrix"
               value={vibrationEnabled}
               onToggle={toggleVibration}
               showDivider={false}
             />
           </CosmicPanel>
 
-          {/* Statistics Section */}
+          {/* Universal Archives Section */}
           <CosmicPanel style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="stats-chart" size={20} color={THEME.DARK.STELLAR_GLOW} />
-              <Text style={styles.sectionTitle}>Mission Records</Text>
+              <Text style={styles.sectionTitle}>Universal Archives</Text>
             </View>
             
             <StatRow
               icon="trophy"
-              label="Highest Score"
+              label="Galactic High Score"
               value={formatScore(highScore)}
             />
 
             <StatRow
               icon="planet"
-              label="Largest Celestial Body"
-              value={formatBlock(highestBlock)}
+              label="Largest Discovery"
+              value={formatCelestialBody(highestBlock)}
               showDivider={false}
             />
           </CosmicPanel>
 
-          {/* Reset Section */}
+          {/* System Reset Section */}
           <TouchableOpacity onPress={handleResetSettings} style={styles.resetSection}>
             <CosmicPanel style={styles.resetButton}>
               <View style={styles.resetContent}>
@@ -175,8 +287,8 @@ const SettingsScreen = ({ navigation }) => {
                     <Ionicons name="refresh" size={22} color={THEME.DARK.ERROR_COLOR} />
                   </View>
                   <View>
-                    <Text style={styles.resetText}>Reset Settings</Text>
-                    <Text style={styles.resetSubtext}>Restore to defaults</Text>
+                    <Text style={styles.resetText}>Initiate System Reset</Text>
+                    <Text style={styles.resetSubtext}>Restore cosmic defaults</Text>
                   </View>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={THEME.DARK.TEXT_SECONDARY} />
@@ -184,11 +296,12 @@ const SettingsScreen = ({ navigation }) => {
             </CosmicPanel>
           </TouchableOpacity>
 
-          {/* Footer */}
-          <View style={styles.footer}>
+          {/* Enhanced Footer */}
+          <Animated.View style={[styles.footer, { opacity: fadeAnim }]}>
             <Text style={styles.footerText}>🌌 Exploring the Infinite Universe</Text>
             <Text style={styles.footerVersion}>Version 2.0 - Deep Space Edition</Text>
-          </View>
+            <Text style={styles.footerCredits}>Powered by Cosmic Forces</Text>
+          </Animated.View>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -211,7 +324,7 @@ const styles = StyleSheet.create({
     minHeight: '100%',
   },
   
-  // Header
+  // Enhanced Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -220,6 +333,14 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     borderBottomWidth: 1,
     borderBottomColor: THEME.DARK.COSMIC_ACCENT + '20',
+  },
+  headerTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  starIcon: {
+    marginHorizontal: 8,
   },
   backButton: {
     padding: 8,
@@ -339,6 +460,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: THEME.DARK.STELLAR_GLOW,
+    textAlign: 'right',
+    flex: 1,
   },
   
   // Divider
@@ -379,7 +502,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   
-  // Footer
+  // Enhanced Footer
   footer: {
     alignItems: 'center',
     paddingVertical: 30,
@@ -396,6 +519,13 @@ const styles = StyleSheet.create({
     color: THEME.DARK.TEXT_SECONDARY,
     marginTop: 4,
     textAlign: 'center',
+  },
+  footerCredits: {
+    fontSize: 10,
+    color: THEME.DARK.TEXT_SECONDARY + '80',
+    marginTop: 4,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });
 

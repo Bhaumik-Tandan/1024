@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import useGameStore from '../store/gameStore';
 import ContinuousStarfield from '../components/MovingStarfield';
+import SolarSystemView from '../components/SolarSystemView';
 
 const getDimensions = () => {
   if (Platform.OS === 'web') {
@@ -26,171 +27,7 @@ const getDimensions = () => {
 
 const { width, height } = getDimensions();
 
-// Enhanced Celestial Body component with sophisticated animations
-const CelestialBody = ({ 
-  size, 
-  color, 
-  initialX, 
-  initialY, 
-  duration, 
-  delay, 
-  type = 'drift' // 'drift', 'orbital', 'pulse'
-}) => {
-  const moveAnim = useRef(new Animated.Value(0)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0.4)).current;
 
-  useEffect(() => {
-    let animations = [];
-
-    if (type === 'drift') {
-      // Subtle drift animation - very slow and gentle
-      const driftAnimation = Animated.loop(
-        Animated.sequence([
-          Animated.timing(moveAnim, {
-            toValue: 1,
-            duration: duration * 2,
-            useNativeDriver: true,
-          }),
-          Animated.timing(moveAnim, {
-            toValue: 0,
-            duration: duration * 2,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      animations.push(driftAnimation);
-
-    } else if (type === 'orbital') {
-      // Circular orbital motion
-      const orbitalAnimation = Animated.loop(
-        Animated.timing(rotateAnim, {
-          toValue: 1,
-          duration: duration * 3,
-          useNativeDriver: true,
-        })
-      );
-      animations.push(orbitalAnimation);
-
-    } else if (type === 'pulse') {
-      // Gentle pulsing animation
-      const pulseAnimation = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.1,
-            duration: duration * 1.5,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: duration * 1.5,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      animations.push(pulseAnimation);
-    }
-
-    // Subtle glow animation - much more refined
-    const glowAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, {
-          toValue: 0.7,
-          duration: 4000 + delay,
-          useNativeDriver: true,
-        }),
-        Animated.timing(glowAnim, {
-          toValue: 0.4,
-          duration: 4000 + delay,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    animations.push(glowAnimation);
-
-    // Start animations with delay
-    setTimeout(() => {
-      animations.forEach(anim => anim.start());
-    }, delay);
-
-    return () => {
-      animations.forEach(anim => anim.stop());
-    };
-  }, [type, duration, delay]);
-
-  // Calculate transforms based on animation type
-  let transform = [];
-  
-  if (type === 'drift') {
-    const translateX = moveAnim.interpolate({
-      inputRange: [0, 0.5, 1],
-      outputRange: [0, 8, 0],
-    });
-    const translateY = moveAnim.interpolate({
-      inputRange: [0, 0.25, 0.75, 1],
-      outputRange: [0, -5, 3, 0],
-    });
-    transform = [{ translateX }, { translateY }];
-    
-  } else if (type === 'orbital') {
-    const radius = 15;
-    const translateX = rotateAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, radius * 2 * Math.PI],
-    });
-    const translateY = rotateAnim.interpolate({
-      inputRange: [0, 0.25, 0.5, 0.75, 1],
-      outputRange: [0, -radius, 0, radius, 0],
-    });
-    transform = [{ translateX }, { translateY }];
-    
-  } else if (type === 'pulse') {
-    transform = [{ scale: pulseAnim }];
-  }
-
-  return (
-    <Animated.View
-      style={[
-        styles.celestialBody,
-        {
-          width: size,
-          height: size,
-          left: initialX,
-          top: initialY,
-          transform,
-          opacity: glowAnim,
-        },
-      ]}
-    >
-      <View
-        style={[
-          styles.celestialCore,
-          {
-            width: size,
-            height: size,
-            backgroundColor: color,
-            shadowColor: color,
-            shadowRadius: size * 0.6,
-            shadowOpacity: 0.6,
-          }
-        ]}
-      />
-      <View
-        style={[
-          styles.celestialAura,
-          {
-            width: size * 1.4,
-            height: size * 1.4,
-            borderColor: color,
-            left: -size * 0.2,
-            top: -size * 0.2,
-          }
-        ]}
-      />
-    </Animated.View>
-  );
-};
 
 // Enhanced Star Field component
 const StarField = ({ count = 50 }) => {
@@ -352,61 +189,8 @@ const HomeScreen = ({ navigation }) => {
         {/* Static star field */}
         <StarField count={35} />
         
-        {/* Sophisticated celestial bodies with different animation types */}
-        <CelestialBody 
-          size={50} 
-          color="#FF6B35" 
-          initialX={width * 0.08} 
-          initialY={height * 0.18} 
-          duration={8000} 
-          delay={0}
-          type="drift"
-        />
-        <CelestialBody 
-          size={40} 
-          color="#4A90E2" 
-          initialX={width * 0.82} 
-          initialY={height * 0.28} 
-          duration={6000} 
-          delay={1000}
-          type="orbital"
-        />
-        <CelestialBody 
-          size={30} 
-          color="#9B59B6" 
-          initialX={width * 0.12} 
-          initialY={height * 0.72} 
-          duration={7000} 
-          delay={2000}
-          type="pulse"
-        />
-        <CelestialBody 
-          size={45} 
-          color="#F39C12" 
-          initialX={width * 0.88} 
-          initialY={height * 0.82} 
-          duration={9000} 
-          delay={1500}
-          type="drift"
-        />
-        <CelestialBody 
-          size={22} 
-          color="#E74C3C" 
-          initialX={width * 0.04} 
-          initialY={height * 0.48} 
-          duration={10000} 
-          delay={500}
-          type="orbital"
-        />
-        <CelestialBody 
-          size={35} 
-          color="#1ABC9C" 
-          initialX={width * 0.92} 
-          initialY={height * 0.58} 
-          duration={8500} 
-          delay={2500}
-          type="pulse"
-        />
+        {/* Realistic Solar System View */}
+        <SolarSystemView opacity={0.5} scale={0.8} />
       </View>
       
       <Animated.View 
@@ -565,22 +349,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   
-  celestialBody: {
-    position: 'absolute',
-  },
 
-  celestialCore: {
-    borderRadius: 1000,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 10,
-  },
-
-  celestialAura: {
-    position: 'absolute',
-    borderRadius: 1000,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
   
   content: {
     flex: 1,

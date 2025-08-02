@@ -1,10 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import { THEME, FONT_SIZES } from './constants';
+import { THEME, FONT_SIZES, screenWidth } from './constants';
 
-const { width } = Dimensions.get('window');
-const isTablet = width >= 768;
-const isLargeTablet = width >= 1024;
+const isTablet = screenWidth >= 768;
+const isLargeTablet = screenWidth >= 1024;
 
 const GameHeader = ({ score, record, onPause }) => {
   return (

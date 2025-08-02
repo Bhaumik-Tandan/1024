@@ -10,9 +10,47 @@
 import { Dimensions, Platform } from 'react-native';
 import { GAME_CONFIG } from './GameRules';
 
-// Game configuration - import from GameRules to avoid circular imports
-export const ROWS = GAME_CONFIG.BOARD.ROWS;
-export const COLS = GAME_CONFIG.BOARD.COLS;
+// Get current device dimensions and calculate grid config once
+const { width, height } = Dimensions.get('window');
+const isTablet = width >= 768;
+const isLandscape = width > height;
+
+// Calculate static grid configuration to avoid render-time updates
+const getStaticGridConfig = () => {
+  if (isTablet) {
+    if (isLandscape) {
+      return { ROWS: 5, COLS: 7 }; // Reduced rows for landscape iPad
+    } else {
+      return { ROWS: 5, COLS: 5 }; // Reduced rows for portrait iPad
+    }
+  } else {
+    return { ROWS: 5, COLS: 4 }; // Keep original for phones
+  }
+};
+
+// Static grid configuration
+const STATIC_GRID_CONFIG = getStaticGridConfig();
+
+// Export static values to avoid render-time calculations
+export const ROWS = STATIC_GRID_CONFIG.ROWS;
+export const COLS = STATIC_GRID_CONFIG.COLS;
+
+// Export function for dynamic updates (used only in orientation change handlers)
+export const getCurrentGridConfig = () => {
+  const { width, height } = Dimensions.get('window');
+  const isTablet = width >= 768;
+  const isLandscape = width > height;
+  
+  if (isTablet) {
+    if (isLandscape) {
+      return { ROWS: 5, COLS: 7 }; // Reduced rows for landscape iPad
+    } else {
+      return { ROWS: 5, COLS: 5 }; // Reduced rows for portrait iPad
+    }
+  } else {
+    return { ROWS: 5, COLS: 4 }; // Keep original for phones
+  }
+};
 
 // UI Layout Constants - with web fallbacks
 const getDimensions = () => {
@@ -31,7 +69,7 @@ const getDimensions = () => {
   }
 };
 
-export const { width, height } = getDimensions();
+export const { width: screenWidth, height: screenHeight } = getDimensions();
 
 // Web-responsive sizing
 const getResponsiveSizing = () => {
@@ -46,33 +84,52 @@ const getResponsiveSizing = () => {
     };
   } else {
     // Enhanced mobile/tablet sizing with iPad-specific optimizations
-    const isTablet = width >= 768; // iPad and larger tablets
-    const isLargeTablet = width >= 1024; // iPad Pro and larger
+    const isTablet = screenWidth >= 768; // iPad and larger tablets
+    const isLargeTablet = screenWidth >= 1024; // iPad Pro and larger
+    const isLandscape = screenWidth > screenHeight;
     
     let maxGameWidth;
     let cellMargin;
     
-    if (isLargeTablet) {
-      // Large tablets (iPad Pro) - increase sizes for better visibility
-      maxGameWidth = Math.min(700, width * 0.75); // Increased from 600
-      cellMargin = 10; // Increased from 8
-    } else if (isTablet) {
-      // Regular tablets (standard iPad) - increase sizes for better touch
-      maxGameWidth = Math.min(600, width * 0.8); // Increased from 500
-      cellMargin = 8; // Increased from 6
+    if (isTablet) {
+      if (isLandscape) {
+        // iPad landscape: Use most of the screen width for larger grid
+        maxGameWidth = Math.min(1200, screenWidth * 0.95); // Much larger game area
+        cellMargin = 8; // Adequate spacing for larger grid
+      } else {
+        // iPad portrait: Much larger game area for better utilization
+        maxGameWidth = Math.min(800, screenWidth * 0.95); // Significantly increased
+        cellMargin = 10; // More spacing for larger cells
+      }
     } else {
       // Phones - use most of screen width
-      maxGameWidth = width - 40;
-      cellMargin = Math.max(2, Math.floor(width * 0.008));
+      maxGameWidth = screenWidth - 40;
+      cellMargin = Math.max(2, Math.floor(screenWidth * 0.008));
     }
     
-    const cellSize = Math.floor((maxGameWidth - (COLS - 1) * cellMargin) / COLS);
+    // Calculate cell size based on grid dimensions
+    const availableWidth = maxGameWidth - (COLS - 1) * cellMargin;
+    let cellSize = Math.floor(availableWidth / COLS);
     
-    // Cap cell size for very large screens - increased for iPad
-    const maxCellSize = isLargeTablet ? 110 : isTablet ? 95 : 120; // Increased iPad sizes
+    // Set much larger min/max cell sizes for iPad
+    if (isTablet) {
+      if (isLandscape) {
+        // Landscape iPad: Larger cells even for bigger grid
+        cellSize = Math.min(cellSize, 130); // Increased max for more vertical space
+        cellSize = Math.max(cellSize, 90);  // Increased min
+      } else {
+        // Portrait iPad: Much larger cells for excellent visibility
+        cellSize = Math.min(cellSize, 160); // Increased max for more vertical space
+        cellSize = Math.max(cellSize, 120); // Increased min
+      }
+    } else {
+      // Phone: Ensure good touch targets
+      cellSize = Math.min(cellSize, 120);
+      cellSize = Math.max(cellSize, 60);
+    }
     
     return { 
-      cellSize: Math.min(cellSize, maxCellSize), 
+      cellSize: cellSize, 
       cellMargin: cellMargin 
     };
   }
@@ -774,13 +831,13 @@ export const BREAKPOINTS = {
  * Get responsive value based on screen size - enhanced for tablets
  */
 export const getResponsiveValue = (phone, tablet, desktop) => {
-  if (width <= BREAKPOINTS.LARGE_PHONE) return phone;
-  if (width <= BREAKPOINTS.LARGE_TABLET) return tablet;
+  if (screenWidth <= BREAKPOINTS.LARGE_PHONE) return phone;
+  if (screenWidth <= BREAKPOINTS.LARGE_TABLET) return tablet;
   return desktop;
 };
 
 /**
- * UI Layout Dimensions - enhanced for tablets
+ * UI Layout Dimensions - enhanced for tablets and adaptive grids
  */
 export const UI_CONFIG = {
   // Spacing
@@ -788,9 +845,9 @@ export const UI_CONFIG = {
   HEADER_HEIGHT: getResponsiveValue(80, 100, 120),
   FOOTER_HEIGHT: getResponsiveValue(40, 50, 60),
   
-  // Board dimensions - responsive for tablets
-  BOARD_WIDTH: width >= BREAKPOINTS.SMALL_TABLET ? 
-    Math.min(600, width * 0.8) : width - 20,
+  // Board dimensions - much larger for iPad to utilize screen space
+  BOARD_WIDTH: screenWidth >= 768 ? 
+    Math.min(1200, screenWidth * 0.95) : screenWidth - 20, // Significantly increased for iPad
   GRID_WIDTH: COLS * CELL_SIZE + (COLS - 1) * CELL_MARGIN,
   GRID_HEIGHT: ROWS * CELL_SIZE + (ROWS - 1) * CELL_MARGIN,
   

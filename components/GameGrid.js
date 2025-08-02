@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { 
   ROWS, 
@@ -96,7 +96,7 @@ const GameGrid = ({
 }) => {
   const isDisabled = gameOver || !falling || (falling?.fastDrop && !falling?.static) || !isTouchEnabled;
   const gridRef = useRef(null);
-  const [debugColumn, setDebugColumn] = useState(-1); // For visual debugging
+  const debugTimeoutRef = useRef(null); // Use ref instead of state for debug
   
   // Enhanced screen tap handler with accurate coordinates
   const handleGridTap = (event) => {
@@ -107,9 +107,11 @@ const GameGrid = ({
       // Detect column using measured positions
       const detectedColumn = getColumnFromMeasuredX(locationX);
       
-      // Visual debugging - highlight detected column briefly
-      setDebugColumn(detectedColumn);
-      setTimeout(() => setDebugColumn(-1), 500);
+      // Clear any existing timeout to prevent multiple updates
+      if (debugTimeoutRef.current) {
+        clearTimeout(debugTimeoutRef.current);
+        debugTimeoutRef.current = null;
+      }
       
       // Call the parent's screen tap handler with accurate column
       if (onScreenTap) {
@@ -122,6 +124,16 @@ const GameGrid = ({
       }
     }
   };
+  
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debugTimeoutRef.current) {
+        clearTimeout(debugTimeoutRef.current);
+        debugTimeoutRef.current = null;
+      }
+    };
+  }, []);
   
   return (
     <View style={[styles.board, styles.boardDeepSpace]} {...panHandlers}>
@@ -159,7 +171,7 @@ const GameGrid = ({
                   style={[
                     styles.cellContainer,
                     // Visual debugging - highlight detected column
-                    debugColumn === colIdx && rowIdx === 0 && {
+                    debugTimeoutRef.current === colIdx && rowIdx === 0 && {
                       backgroundColor: 'rgba(255, 255, 0, 0.3)',
                       borderWidth: 2,
                       borderColor: 'yellow'

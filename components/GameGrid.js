@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    marginBottom: responsiveSpacing.gridRowMargin, // Responsive row spacing
+    marginBottom: 0, // Remove row spacing to eliminate grid appearance
   },
   lastRow: {
     marginBottom: 0,
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
     height: CELL_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: responsiveSpacing.cellMargin, // Responsive cell margin
+    margin: 0, // Remove margin to eliminate grid appearance
   },
   cellTouchable: {
     width: '100%',

@@ -67,20 +67,12 @@ const PlanetTile = ({ value, isOrbiting = true, orbitSpeed = 1, size, isCollidin
   }, [isOrbiting, orbitSpeed, value, rotationAnim, pulseOpacityAnim]);
 
   if (value === 0) {
-    // Empty space cell - deep space background
+    // Empty space cell - completely transparent to remove grid appearance
     return (
       <View style={{
         width: CELL_SIZE,
         height: CELL_SIZE,
-        backgroundColor: THEME.DARK.BACKGROUND_PRIMARY,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: THEME.DARK.BORDER_COLOR + '20',
-        shadowColor: THEME.DARK.STARFIELD,
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 1,
+        backgroundColor: 'transparent',
       }} />
     );
   }

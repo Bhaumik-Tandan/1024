@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Animated } from 'react-native';
 import { ROWS, COLS, CELL_SIZE } from './constants';
+import { GAME_CONFIG } from './GameRules';
 
 export const useAnimationManager = () => {
   const [falling, setFalling] = useState(null);
@@ -18,7 +19,7 @@ export const useAnimationManager = () => {
     
     Animated.timing(anim, {
       toValue: toRow * (CELL_SIZE + 8),
-      duration: isFastDrop ? 200 : 7000,
+      duration: isFastDrop ? GAME_CONFIG.TIMING.FAST_DROP_DURATION : GAME_CONFIG.TIMING.SLOW_FALL_DURATION,
       useNativeDriver: false,
     }).start(({ finished }) => {
       if (finished) {

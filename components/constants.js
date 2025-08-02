@@ -53,13 +53,13 @@ const getResponsiveSizing = () => {
     let cellMargin;
     
     if (isLargeTablet) {
-      // Large tablets (iPad Pro) - limit game width for better UX
-      maxGameWidth = Math.min(600, width * 0.7);
-      cellMargin = 8;
+      // Large tablets (iPad Pro) - increase sizes for better visibility
+      maxGameWidth = Math.min(700, width * 0.75); // Increased from 600
+      cellMargin = 10; // Increased from 8
     } else if (isTablet) {
-      // Regular tablets (standard iPad) - moderate sizing
-      maxGameWidth = Math.min(500, width * 0.75);
-      cellMargin = 6;
+      // Regular tablets (standard iPad) - increase sizes for better touch
+      maxGameWidth = Math.min(600, width * 0.8); // Increased from 500
+      cellMargin = 8; // Increased from 6
     } else {
       // Phones - use most of screen width
       maxGameWidth = width - 40;
@@ -68,8 +68,8 @@ const getResponsiveSizing = () => {
     
     const cellSize = Math.floor((maxGameWidth - (COLS - 1) * cellMargin) / COLS);
     
-    // Cap cell size for very large screens
-    const maxCellSize = isLargeTablet ? 90 : isTablet ? 80 : 120;
+    // Cap cell size for very large screens - increased for iPad
+    const maxCellSize = isLargeTablet ? 110 : isTablet ? 95 : 120; // Increased iPad sizes
     
     return { 
       cellSize: Math.min(cellSize, maxCellSize), 

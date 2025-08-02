@@ -60,11 +60,11 @@ const createGameStore = () => {
           try {
             localStorage.setItem('game-state', JSON.stringify(savedGameData));
           } catch (e) {
-            console.warn('Failed to save to localStorage:', e);
+            // Silent fail for localStorage issues
           }
         }
       } catch (error) {
-        console.warn('Failed to save game:', error);
+        // Silent fail for save issues
       }
     },
     
@@ -76,13 +76,11 @@ const createGameStore = () => {
             const saved = localStorage.getItem('game-state');
             return saved ? JSON.parse(saved) : null;
           } catch (e) {
-            console.warn('Failed to load from localStorage:', e);
             return null;
           }
         }
         return storeData.savedGame || null;
       } catch (error) {
-        console.warn('Failed to load saved game:', error);
         return null;
       }
     },
@@ -97,11 +95,11 @@ const createGameStore = () => {
           try {
             localStorage.removeItem('game-state');
           } catch (e) {
-            console.warn('Failed to clear localStorage:', e);
+            // Silent fail
           }
         }
       } catch (error) {
-        console.warn('Failed to clear saved game:', error);
+        // Silent fail
       }
     },
     

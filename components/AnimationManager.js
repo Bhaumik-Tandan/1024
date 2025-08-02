@@ -64,7 +64,15 @@ export const useAnimationManager = () => {
   };
 
   const clearFalling = () => {
-    setFalling(null);
+    try {
+      if (falling && falling.anim && falling.anim.stopAnimation) {
+        falling.anim.stopAnimation();
+      }
+      setFalling(null);
+    } catch (error) {
+      console.warn('Error clearing falling animation:', error);
+      setFalling(null);
+    }
   };
 
   const createMergeAnimation = (row, col, value, count, direction) => {
@@ -350,10 +358,28 @@ export const useAnimationManager = () => {
   };
 
   const clearMergeAnimations = () => {
-    setMergeAnimations([]);
-    setCollisionEffects([]);
-    setEnergyBursts([]);
-    setAnimationCounter(0);
+    try {
+      // Stop any ongoing animations before clearing
+      mergeAnimations.forEach(anim => {
+        if (anim.scale && anim.scale.stopAnimation) {
+          anim.scale.stopAnimation();
+        }
+        if (anim.opacity && anim.opacity.stopAnimation) {
+          anim.opacity.stopAnimation();
+        }
+      });
+      
+      setMergeAnimations([]);
+      setCollisionEffects([]);
+      setEnergyBursts([]);
+      setAnimationCounter(0);
+    } catch (error) {
+      console.warn('Error clearing merge animations:', error);
+      // Force clear even if there's an error
+      setMergeAnimations([]);
+      setCollisionEffects([]);
+      setEnergyBursts([]);
+    }
   };
 
   return {

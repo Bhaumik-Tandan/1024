@@ -48,10 +48,8 @@ import {
   getCellLeft, 
   getCellTop,
   ANIMATION_CONFIG,
-  getTextColor,
-  getTileStyle,
-  isMilestoneTile,
-  getTileDecoration
+  PLANET_TYPES,
+  width // Import width for iPad detection
 } from '../components/constants';
 import useGameStore from '../store/gameStore';
 import { vibrateOnTouch } from '../utils/vibration';
@@ -684,7 +682,11 @@ const DropNumberBoard = ({ navigation, route }) => {
     <View style={[styles.container, styles.containerDark]}>
       <SpaceBackground />
       {/* Moving starfield for space travel immersion */}
-      <ContinuousStarfield starCount={100} speed="fast" spawnRate={1200} />
+      <ContinuousStarfield 
+        starCount={width >= 768 ? 150 : 100} 
+        speed="fast" 
+        spawnRate={width >= 768 ? 1000 : 1200} 
+      />
       <GameHeader 
         score={score}
         record={highScore || 0}

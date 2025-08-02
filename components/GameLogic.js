@@ -10,6 +10,7 @@
 import { ROWS, COLS } from './constants';
 import { GAME_CONFIG, GAME_RULES, GameValidator, ScoringSystem, GameHelpers } from './GameRules';
 import { vibrateOnIntermediateMerge, vibrateOnMerge } from '../utils/vibration';
+import { Dimensions } from 'react-native'; // Added for performance optimization
 
 /**
  * Generate a random tile value based on game rules
@@ -310,7 +311,11 @@ export const processChainReactions = async (board, originColumn, showMergeResult
   let totalScore = 0;
   let chainReactionCount = 0;
   let iterations = 0;
-  const maxIterations = 100; // Prevent infinite loops
+  
+  // Performance optimization for tablets - reduced max iterations for smoother gameplay
+  const isTablet = (typeof window !== 'undefined' && window.innerWidth >= 768) || 
+                   (typeof Dimensions !== 'undefined' && Dimensions.get('window').width >= 768);
+  const maxIterations = isTablet ? 50 : 100; // Reduced for tablets to maintain 60fps
   
   let chainReactionActive = true;
   
@@ -321,6 +326,12 @@ export const processChainReactions = async (board, originColumn, showMergeResult
     // Apply upward gravity after each merge
     for (let c = 0; c < COLS; c++) {
       applyUpwardGravity(board, c);
+    }
+    
+    // Performance optimization - batch multiple operations when possible
+    if (iterations > 10 && isTablet) {
+      // Add a small delay to prevent UI blocking on tablets
+      await new Promise(resolve => setTimeout(resolve, 1));
     }
     
     // Check entire board for possible merges, prioritizing origin column

@@ -1,6 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { THEME, FONT_SIZES } from './constants';
+
+const { width } = Dimensions.get('window');
+const isTablet = width >= 768;
+const isLargeTablet = width >= 1024;
 
 const GameHeader = ({ score, record, onPause }) => {
   return (
@@ -37,14 +41,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 8, // Further reduced padding
-    marginTop: 0, // Remove top margin
-    marginBottom: 5, // Small bottom margin for separation
+    paddingHorizontal: isTablet ? 32 : 20, // Increased for iPad
+    paddingVertical: isTablet ? 12 : 8, // Increased for iPad
+    marginTop: 0,
+    marginBottom: isTablet ? 8 : 5, // Slightly more space on iPad
     // Premium glass effect
     backgroundColor: THEME.DARK.BACKGROUND_SECONDARY + 'CC',
-    borderRadius: 16,
-    marginHorizontal: 10,
+    borderRadius: isTablet ? 20 : 16, // Larger radius on iPad
+    marginHorizontal: isTablet ? 16 : 10, // More margin on iPad
     // Enhanced shadows
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
@@ -75,37 +79,35 @@ const styles = StyleSheet.create({
   },
   
   scoreLabel: {
-    color: THEME.DARK.TEXT_SECONDARY,
-    fontSize: FONT_SIZES.SMALL,
+    fontSize: isTablet ? FONT_SIZES.MEDIUM * 1.2 : FONT_SIZES.MEDIUM, // Larger on iPad
     fontWeight: '600',
+    color: THEME.DARK.TEXT_SECONDARY,
     letterSpacing: 1,
-    marginBottom: 2,
+    textAlign: 'center',
   },
   
   scoreValue: {
-    color: THEME.DARK.NEON_GLOW,
-    fontSize: FONT_SIZES.LARGE,
+    fontSize: isTablet ? FONT_SIZES.XLARGE * 1.2 : FONT_SIZES.XLARGE, // Larger on iPad
     fontWeight: 'bold',
-    textShadowColor: THEME.DARK.NEON_GLOW + '60',
+    color: THEME.DARK.TEXT_PRIMARY,
+    textAlign: 'center',
+    textShadowColor: THEME.DARK.ACCENT + '60',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   
   pauseButton: {
-    backgroundColor: THEME.DARK.BACKGROUND_BOARD,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // Premium button styling
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
+    backgroundColor: THEME.DARK.ACCENT + '20',
+    borderRadius: isTablet ? 16 : 12, // Larger on iPad
+    padding: isTablet ? 14 : 10, // Bigger touch target on iPad
+    borderWidth: 1,
+    borderColor: THEME.DARK.ACCENT + '40',
+    // Enhanced glow
+    shadowColor: THEME.DARK.ACCENT,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
-    borderWidth: 2,
-    borderColor: THEME.DARK.BORDER_COLOR,
   },
   
   pauseIcon: {
@@ -141,18 +143,19 @@ const styles = StyleSheet.create({
   },
   
   recordLabel: {
-    color: THEME.DARK.TEXT_PRIMARY + 'DD',
-    fontSize: FONT_SIZES.SMALL,
+    fontSize: isTablet ? FONT_SIZES.MEDIUM * 1.2 : FONT_SIZES.MEDIUM, // Larger on iPad
     fontWeight: '600',
+    color: THEME.DARK.TEXT_SECONDARY,
     letterSpacing: 1,
-    marginBottom: 2,
+    textAlign: 'center',
   },
   
   recordValue: {
-    color: THEME.DARK.TEXT_PRIMARY,
-    fontSize: FONT_SIZES.LARGE,
+    fontSize: isTablet ? FONT_SIZES.XLARGE * 1.2 : FONT_SIZES.XLARGE, // Larger on iPad
     fontWeight: 'bold',
-    textShadowColor: 'rgba(0,0,0,0.5)',
+    color: '#FFD700', // Golden color for record
+    textAlign: 'center',
+    textShadowColor: '#FFD700' + '60',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },

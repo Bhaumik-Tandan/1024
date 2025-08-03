@@ -312,10 +312,8 @@ export const processChainReactions = async (board, originColumn, showMergeResult
   let chainReactionCount = 0;
   let iterations = 0;
   
-  // Performance optimization for tablets - reduced max iterations for smoother gameplay
-  const isTablet = (typeof window !== 'undefined' && window.innerWidth >= 768) || 
-                   (typeof Dimensions !== 'undefined' && Dimensions.get('window').width >= 768);
-  const maxIterations = isTablet ? 50 : 100; // Reduced for tablets to maintain 60fps
+  // Performance optimization - reduced max iterations for smoother gameplay on all devices
+  const maxIterations = 15; // Significantly reduced to prevent lag during chain reactions
   
   let chainReactionActive = true;
   
@@ -328,9 +326,9 @@ export const processChainReactions = async (board, originColumn, showMergeResult
       applyUpwardGravity(board, c);
     }
     
-    // Performance optimization - batch multiple operations when possible
-    if (iterations > 10 && isTablet) {
-      // Add a small delay to prevent UI blocking on tablets
+    // Performance optimization - minimal delay only for very long chains
+    if (iterations > 8) {
+      // Add a tiny delay to prevent UI blocking during very long chains
       await new Promise(resolve => setTimeout(resolve, 1));
     }
     

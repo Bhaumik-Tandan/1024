@@ -546,8 +546,8 @@ export const EnhancedSpaceBackground = ({
   showMovingStars = true, 
   intensity = 'high' // 'low', 'medium', 'high'
 }) => {
-  const particleCount = intensity === 'high' ? 45 : intensity === 'medium' ? 30 : 20;
-  const starCount = intensity === 'high' ? 120 : intensity === 'medium' ? 80 : 60;
+  const particleCount = intensity === 'high' ? 15 : intensity === 'medium' ? 10 : 5;
+  const starCount = intensity === 'high' ? 30 : intensity === 'medium' ? 20 : 15;
 
   return (
     <View

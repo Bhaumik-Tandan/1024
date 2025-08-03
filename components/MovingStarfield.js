@@ -6,8 +6,6 @@ const { width, height } = Dimensions.get('window');
 // Individual moving star component
 const MovingStar = ({ initialX, initialY, size, speed, opacity, color }) => {
   const translateY = useRef(new Animated.Value(0)).current;
-  const translateX = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
   const opacityAnim = useRef(new Animated.Value(opacity)).current;
 
   useEffect(() => {
@@ -20,64 +18,28 @@ const MovingStar = ({ initialX, initialY, size, speed, opacity, color }) => {
       })
     );
 
-    // Add slight horizontal drift for realism
-    const driftAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(translateX, {
-          toValue: Math.random() * 20 - 10,
-          duration: speed / 3,
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateX, {
-          toValue: 0,
-          duration: speed / 3,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    // Twinkling effect
+    // Simplified twinkling only (removed drift and scale for performance)
     const twinkleAnimation = Animated.loop(
       Animated.sequence([
         Animated.timing(opacityAnim, {
-          toValue: opacity * 0.3,
-          duration: 1000 + Math.random() * 2000,
+          toValue: opacity * 0.5,
+          duration: 3000 + Math.random() * 4000,
           useNativeDriver: true,
         }),
         Animated.timing(opacityAnim, {
           toValue: opacity,
-          duration: 1000 + Math.random() * 2000,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    // Scale pulsing for depth effect
-    const scaleAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1.2,
-          duration: speed / 2,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: speed / 2,
+          duration: 3000 + Math.random() * 4000,
           useNativeDriver: true,
         }),
       ])
     );
 
     moveAnimation.start();
-    driftAnimation.start();
     twinkleAnimation.start();
-    scaleAnimation.start();
 
     return () => {
       moveAnimation.stop();
-      driftAnimation.stop();
       twinkleAnimation.stop();
-      scaleAnimation.stop();
     };
   }, []);
 
@@ -93,8 +55,6 @@ const MovingStar = ({ initialX, initialY, size, speed, opacity, color }) => {
         borderRadius: size / 2,
         transform: [
           { translateY },
-          { translateX },
-          { scale: scaleAnim },
         ],
         opacity: opacityAnim,
       }}
@@ -193,10 +153,12 @@ export const ContinuousStarfield = ({
 
       activeStars.current.push(newStar);
 
-      // Remove old stars that have moved off screen
-      activeStars.current = activeStars.current.filter(
-        star => Date.now() - star.createdAt < star.speed + 2000
-      );
+      // Remove old stars that have moved off screen (less frequent cleanup)
+      if (activeStars.current.length > starCount * 1.5) {
+        activeStars.current = activeStars.current.filter(
+          star => Date.now() - star.createdAt < star.speed + 2000
+        );
+      }
     };
 
     // Initial batch of stars

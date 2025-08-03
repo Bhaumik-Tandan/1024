@@ -27,32 +27,13 @@ const SpaceBackground = () => {
       {/* Ultra-deep space gradient */}
       <UltraDeepSpaceGradient />
       
-      {/* Realistic star field layers */}
+      {/* Simplified background for performance */}
       <DistantStarField />
-      <MidDistanceStars />
       
-      {/* Distant star clusters */}
-      <DistantStarClusters />
+      {/* Main animated starfield - REDUCED */}
+      <StarField starCount={25} />
       
-      {/* Main animated starfield */}
-      <StarField starCount={55} />
-      
-      {/* Realistic asteroid field with textures */}
-      <RealisticAsteroidField />
-      
-      {/* Enhanced comets with realistic tails */}
-      <EnhancedCometField />
-      
-      {/* Space debris and micrometeoroids */}
-      <SpaceDebrisField />
-      
-      {/* Distant planetary bodies */}
-      <DistantCelestialBodies />
-      
-      {/* Cosmic dust and particles */}
-      <CosmicDustEffect />
-      
-      {/* Subtle nebula wisps */}
+      {/* Subtle nebula wisps only */}
       <SubtleNebulaWisps />
       
     </View>

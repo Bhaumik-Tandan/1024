@@ -178,8 +178,8 @@ const HomeScreen = ({ navigation }) => {
       
       {/* Enhanced Deep Space Background */}
       <View style={styles.spaceBackground}>
-        {/* Moving starfield for space travel feel */}
-        <ContinuousStarfield starCount={80} speed="slow" spawnRate={2000} />
+        {/* Moving starfield for space travel feel - OPTIMIZED */}
+        <ContinuousStarfield starCount={25} speed="slow" spawnRate={4000} />
         
         {/* Refined nebula effects */}
         <View style={styles.nebula} />

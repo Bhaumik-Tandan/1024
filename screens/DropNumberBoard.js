@@ -454,7 +454,7 @@ const DropNumberBoard = ({ navigation, route }) => {
     }).start();
     
     // Handle landing after animation completes
-    const fastDropTimer = setTimeout(async () => {
+    setTimeout(async () => {
       if (canMergeInFull) {
         // Special handling for full column merge
         await handleFullColumnTileLanded(landingRow, landingCol, tileValueToDrop);
@@ -464,8 +464,6 @@ const DropNumberBoard = ({ navigation, route }) => {
       }
       clearFalling();
     }, GAME_CONFIG.TIMING.COSMIC_DROP_DURATION);
-    
-    return () => clearTimeout(fastDropTimer);
   };
 
   /**
@@ -720,11 +718,11 @@ const DropNumberBoard = ({ navigation, route }) => {
   return (
     <View style={[styles.container, styles.containerDark]}>
       <SpaceBackground />
-      {/* Moving starfield for space travel immersion */}
+      {/* Moving starfield for space travel immersion - OPTIMIZED */}
       <ContinuousStarfield 
-        starCount={screenWidth >= 768 ? 150 : 100} 
+        starCount={screenWidth >= 768 ? 40 : 25} 
         speed="fast" 
-        spawnRate={screenWidth >= 768 ? 1000 : 1200} 
+        spawnRate={screenWidth >= 768 ? 3000 : 4000} 
       />
       <GameHeader 
         score={score}

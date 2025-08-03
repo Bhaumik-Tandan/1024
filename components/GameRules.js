@@ -49,11 +49,13 @@ export const GAME_CONFIG = {
   // Timing settings
   TIMING: {
     SLOW_FALL_DURATION: 7000,      // 7 seconds for normal fall (now unused)
-    FAST_DROP_DURATION: 800,       // 0.8 seconds for slower astronomical drops
-    COSMIC_DROP_DURATION: 500,     // 0.5 seconds for faster user-triggered drops
+    FAST_DROP_DURATION: 600,       // 0.6 seconds for faster astronomical drops (reduced from 800ms)
+    COSMIC_DROP_DURATION: 400,     // 0.4 seconds for even faster user-triggered drops (reduced from 500ms)
     MERGE_ANIMATION_DURATION: 120,  // Ultra fast merge animations for instant feedback
     DRAG_ANIMATION_DURATION: 100,   // Lightning responsive drag movements
     ORBITAL_ATTRACTION_DURATION: 100, // Ultra fast orbital motion before merging
+    CHAIN_MERGE_DELAY: 50,         // 50ms delay between chain merges (new)
+    LARGE_CHAIN_THRESHOLD: 3,      // Threshold for large chain detection (new)
   },
   
   // Tile generation

@@ -19,11 +19,34 @@ class SoundManager {
     this.isInitialized = false;
     this.isWebPlatform = Platform.OS === 'web';
     
-    // Add sound queuing to prevent overlaps
-    this.isPlayingMerge = false;
-    this.isPlayingIntermediate = false;
-    this.isPlayingDrop = false;
-    this.isPlayingGameOver = false;
+    // Enhanced sound queuing system
+    this.soundQueue = [];
+    this.isProcessingQueue = false;
+    this.lastSoundTimes = {
+      merge: 0,
+      intermediateMerge: 0,
+      drop: 0,
+      gameOver: 0,
+      pauseResume: 0
+    };
+    
+    // Minimum intervals between sounds (in milliseconds)
+    this.soundIntervals = {
+      merge: 180,           // Reduced from 200ms for faster feedback
+      intermediateMerge: 120, // Reduced from 150ms for better chain timing
+      drop: 80,             // Reduced from 100ms for faster drops
+      gameOver: 3000,       // Game over sound is longer
+      pauseResume: 150      // New interval for pause/resume
+    };
+    
+    // Sound priority system (higher number = higher priority)
+    this.soundPriorities = {
+      gameOver: 5,          // Highest priority
+      merge: 3,             // Medium priority
+      intermediateMerge: 2,  // Lower priority
+      drop: 1,              // Lowest priority
+      pauseResume: 1        // Same as drop
+    };
   }
 
   async initialize() {
@@ -58,6 +81,130 @@ class SoundManager {
     } catch (error) {
       console.warn('❌ SoundManager: Failed to initialize audio system:', error);
       this.isInitialized = false;
+    }
+  }
+
+  // Enhanced sound queuing system
+  async queueSound(soundType, priority = 1) {
+    console.log(`🎵 queueSound called - Type: ${soundType}, Priority: ${priority}`);
+    console.log(`🔍 Queue Debug Info:`, {
+      isInitialized: this.isInitialized,
+      isWebPlatform: this.isWebPlatform,
+      soundEnabled: this.checkSoundEnabled(),
+      queueLength: this.soundQueue.length,
+      isProcessingQueue: this.isProcessingQueue
+    });
+    
+    if (!this.isInitialized || this.isWebPlatform) {
+      console.log(`🔇 ${soundType} sound SKIPPED - Not initialized or web platform`);
+      return;
+    }
+    
+    if (!this.checkSoundEnabled()) {
+      console.log(`🔇 ${soundType} sound SKIPPED - Sound disabled in settings`);
+      return;
+    }
+    
+    const now = Date.now();
+    const lastTime = this.lastSoundTimes[soundType] || 0;
+    const minInterval = this.soundIntervals[soundType] || 100;
+    
+    // Check if enough time has passed since last sound of this type
+    if (now - lastTime < minInterval) {
+      console.log(`🔇 ${soundType} sound skipped - too soon (${now - lastTime}ms < ${minInterval}ms)`);
+      return;
+    }
+    
+    // Add to queue with priority
+    const soundRequest = {
+      type: soundType,
+      priority: this.soundPriorities[soundType] || 1,
+      timestamp: now,
+      id: Math.random().toString(36).substr(2, 9)
+    };
+    
+    this.soundQueue.push(soundRequest);
+    
+    // Sort queue by priority (highest first)
+    this.soundQueue.sort((a, b) => b.priority - a.priority);
+    
+    console.log(`✅ ${soundType} sound queued successfully (priority: ${soundRequest.priority})`);
+    console.log(`📊 Queue status after adding:`, {
+      queueLength: this.soundQueue.length,
+      isProcessingQueue: this.isProcessingQueue
+    });
+    
+    // Process queue if not already processing
+    if (!this.isProcessingQueue) {
+      console.log('🔄 Starting queue processing...');
+      this.processSoundQueue();
+    }
+  }
+  
+  async processSoundQueue() {
+    if (this.isProcessingQueue || this.soundQueue.length === 0) {
+      console.log('🔇 Queue processing skipped:', {
+        isProcessingQueue: this.isProcessingQueue,
+        queueLength: this.soundQueue.length
+      });
+      return;
+    }
+    
+    this.isProcessingQueue = true;
+    console.log('🔄 Processing sound queue...');
+    
+    while (this.soundQueue.length > 0) {
+      const soundRequest = this.soundQueue.shift();
+      const now = Date.now();
+      
+      console.log(`🎵 Processing sound: ${soundRequest.type} (priority: ${soundRequest.priority})`);
+      
+      // Check if enough time has passed
+      const lastTime = this.lastSoundTimes[soundRequest.type] || 0;
+      const minInterval = this.soundIntervals[soundRequest.type] || 100;
+      
+      if (now - lastTime < minInterval) {
+        console.log(`⏳ ${soundRequest.type} sound delayed - too soon (${now - lastTime}ms < ${minInterval}ms)`);
+        // Put it back in queue for later
+        this.soundQueue.push(soundRequest);
+        await new Promise(resolve => setTimeout(resolve, minInterval - (now - lastTime)));
+        continue;
+      }
+      
+      // Update last sound time
+      this.lastSoundTimes[soundRequest.type] = now;
+      
+      // Play the sound
+      try {
+        console.log(`▶️ Attempting to play ${soundRequest.type} sound...`);
+        await this.playSoundDirectly(soundRequest.type);
+        console.log(`✅ Queued ${soundRequest.type} sound played successfully`);
+      } catch (error) {
+        console.warn(`❌ Failed to play queued ${soundRequest.type} sound:`, error);
+      }
+      
+      // Small delay between sounds to prevent overlap
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    
+    this.isProcessingQueue = false;
+    console.log('✅ Queue processing complete');
+  }
+  
+  async playSoundDirectly(soundType) {
+    switch (soundType) {
+      case 'merge':
+        return this.playMergeSoundDirectly();
+      case 'intermediateMerge':
+        return this.playIntermediateMergeSoundDirectly();
+      case 'drop':
+        return this.playDropSoundDirectly();
+      case 'gameOver':
+        return this.playGameOverSoundDirectly();
+      case 'pauseResume':
+        return this.playPauseResumeSoundDirectly();
+      default:
+        throw new Error(`Unknown sound type: ${soundType}`);
     }
   }
 
@@ -115,14 +262,14 @@ class SoundManager {
         baseVolume,
         mergeVolume: baseVolume * 0.7,
         intermediateVolume: baseVolume * 0.6,
-        dropVolume: baseVolume * 0.9, // INCREASED from 0.5 to 0.9
+        dropVolume: baseVolume * 0.9,
         gameOverVolume: baseVolume * 0.8
       });
       
       if (this.mergePlayer) this.mergePlayer.volume = baseVolume * 0.7;
       if (this.intermediateMergePlayer) this.intermediateMergePlayer.volume = baseVolume * 0.6;
       if (this.dropPlayer) {
-        this.dropPlayer.volume = baseVolume * 0.9; // INCREASED from 0.5 to 0.9
+        this.dropPlayer.volume = baseVolume * 0.9;
         console.log('🔊 Drop player volume set to:', this.dropPlayer.volume);
       }
       if (this.gameOverPlayer) this.gameOverPlayer.volume = baseVolume * 0.8;
@@ -131,168 +278,74 @@ class SoundManager {
     }
   }
 
-  // Legacy methods to maintain compatibility - these are now no-ops for individual loading
-  async loadMergeSound() {
-    // No longer needed with expo-audio, players are created in initialize
-  }
-
-  async loadIntermediateMergeSound() {
-    // No longer needed with expo-audio, players are created in initialize
-  }
-
-  async loadDropSound() {
-    // No longer needed with expo-audio, players are created in initialize
-  }
-
-  async playMergeSound() {
+  // Direct sound playing methods (without queuing)
+  async playMergeSoundDirectly() {
     if (this.isWebPlatform || !this.mergePlayer) {
-      if (!this.isWebPlatform && !this.mergePlayer) {
-        console.warn('SoundManager: Merge sound player not initialized');
-      }
-      return;
-    }
-    
-    if (!this.isInitialized) {
-      console.warn('SoundManager: Not initialized yet, skipping merge sound');
-      return;
-    }
-    
-    if (!this.checkSoundEnabled()) {
-      return; // Sound disabled in settings
-    }
-    
-    // Prevent overlapping merge sounds
-    if (this.isPlayingMerge) {
       return;
     }
     
     try {
-      this.isPlayingMerge = true;
-      this.mergePlayer.seekTo(0); // Reset to beginning
-      this.mergePlayer.play();
-      
-      // Reset flag after sound duration (reduced to 150ms to match animation timing)
-      setTimeout(() => {
-        this.isPlayingMerge = false;
-      }, 150);
+      this.mergePlayer.seekTo(0);
+      await this.mergePlayer.play();
     } catch (error) {
       console.warn('SoundManager: Failed to play merge sound:', error);
-      this.isPlayingMerge = false;
+      throw error;
     }
   }
 
-  async playIntermediateMergeSound() {
+  async playIntermediateMergeSoundDirectly() {
     if (this.isWebPlatform || !this.intermediateMergePlayer) {
-      if (!this.isWebPlatform && !this.intermediateMergePlayer) {
-        console.warn('SoundManager: Intermediate merge sound player not initialized');
-      }
-      return;
-    }
-    
-    if (!this.isInitialized) {
-      console.warn('SoundManager: Not initialized yet, skipping intermediate merge sound');
-      return;
-    }
-    
-    if (!this.checkSoundEnabled()) {
-      return; // Sound disabled in settings
-    }
-    
-    // Prevent overlapping intermediate merge sounds
-    if (this.isPlayingIntermediate) {
       return;
     }
     
     try {
-      this.isPlayingIntermediate = true;
-      this.intermediateMergePlayer.seekTo(0); // Reset to beginning
-      this.intermediateMergePlayer.play();
-      
-      // Reset flag after sound duration (reduced to 100ms to match chain animation timing)
-      setTimeout(() => {
-        this.isPlayingIntermediate = false;
-      }, 100);
+      this.intermediateMergePlayer.seekTo(0);
+      await this.intermediateMergePlayer.play();
     } catch (error) {
       console.warn('SoundManager: Failed to play intermediate merge sound:', error);
-      this.isPlayingIntermediate = false;
+      throw error;
     }
   }
 
-  async playDropSound() {
-    console.log('🎵 playDropSound called - Debug Info:', {
+  async playDropSoundDirectly() {
+    console.log('🎵 playDropSoundDirectly called - Debug Info:', {
       isWebPlatform: this.isWebPlatform,
       hasDropPlayer: !!this.dropPlayer,
-      isInitialized: this.isInitialized,
-      soundEnabled: this.checkSoundEnabled(),
-      isPlayingDrop: this.isPlayingDrop
+      dropPlayerStatus: this.dropPlayer ? {
+        volume: this.dropPlayer.volume,
+        isPlaying: this.dropPlayer.isPlaying,
+        status: this.dropPlayer.status,
+        duration: this.dropPlayer.duration
+      } : 'No drop player'
     });
     
     if (this.isWebPlatform || !this.dropPlayer) {
-      if (!this.isWebPlatform && !this.dropPlayer) {
-        console.warn('❌ SoundManager: Drop sound player not initialized');
-      }
-      console.log('🔇 Drop sound SKIPPED - web platform or missing player');
-      return;
-    }
-    
-    if (!this.isInitialized) {
-      console.warn('❌ SoundManager: Not initialized yet, skipping drop sound');
-      return;
-    }
-    
-    if (!this.checkSoundEnabled()) {
-      console.log('🔇 Drop sound SKIPPED - sound disabled in settings');
-      return; // Sound disabled in settings
-    }
-    
-    // Prevent overlapping drop sounds
-    if (this.isPlayingDrop) {
-      console.log('🔇 Drop sound SKIPPED - already playing');
+      console.log('🔇 Drop sound SKIPPED - Web platform or missing drop player');
       return;
     }
     
     try {
-      console.log('🎵 Starting drop sound playback...');
-      console.log('🔍 Drop player details:', {
-        volume: this.dropPlayer.volume,
-        duration: this.dropPlayer.duration,
-        isPlaying: this.dropPlayer.isPlaying,
-        status: this.dropPlayer.status
-      });
-      
-      this.isPlayingDrop = true;
-      
-      // Reset to beginning
-      console.log('🔄 Seeking to beginning...');
+      console.log('🔄 Seeking drop sound to beginning...');
       this.dropPlayer.seekTo(0);
       
-      // Start playback
-      console.log('▶️ Starting playback...');
+      console.log('▶️ Starting drop sound playback...');
       const playResult = await this.dropPlayer.play();
-      console.log('📊 Play result:', playResult);
+      console.log('📊 Drop sound play result:', playResult);
       
       // Check if play was successful
       if (playResult === undefined || playResult === null) {
-        console.warn('⚠️ Play result is undefined - audio player may not be working correctly');
-        // Try to force play without await
-        try {
-          this.dropPlayer.play();
-          console.log('🔄 Attempted play without await');
-        } catch (forceError) {
-          console.warn('❌ Force play also failed:', forceError);
-        }
+        console.warn('⚠️ Drop sound play result is undefined - audio player may not be working correctly');
       }
       
       // Check if actually playing after a short delay
       setTimeout(() => {
-        console.log('🔍 Post-playback check:', {
+        console.log('🔍 Post-drop-playback check:', {
           isPlaying: this.dropPlayer.isPlaying,
           status: this.dropPlayer.status,
           volume: this.dropPlayer.volume
         });
         
         // Only trigger fallback if we're certain the drop sound failed
-        // Don't trigger fallback if isPlaying is undefined (API issue)
         if (this.dropPlayer.isPlaying === false && this.mergePlayer) {
           console.log('🔄 Drop sound confirmed failed, trying merge sound as fallback...');
           try {
@@ -310,16 +363,9 @@ class SoundManager {
         }
       }, 50);
       
-      // Reset flag after sound duration (approximately 100ms)
-      setTimeout(() => {
-        console.log('🔄 Resetting drop sound flag');
-        this.isPlayingDrop = false;
-      }, 100);
-      
       console.log('✅ Drop sound playback started successfully');
     } catch (error) {
       console.warn('❌ SoundManager: Failed to play drop sound:', error);
-      this.isPlayingDrop = false;
       
       // Only try fallback on actual errors, not undefined play results
       if (error && this.mergePlayer) {
@@ -330,99 +376,73 @@ class SoundManager {
           console.log('✅ Fallback merge sound played successfully');
         } catch (fallbackError) {
           console.warn('❌ Fallback merge sound also failed:', fallbackError);
-          
-          // If all audio fails, at least provide vibration feedback
-          console.log('📳 Audio failed, providing vibration feedback only');
-          const { vibrationEnabled } = useGameStore.getState();
-          if (vibrationEnabled && Platform.OS !== 'web') {
-            const Vibration = require('react-native').Vibration;
-            if (Vibration) {
-              Vibration.vibrate(50);
-              console.log('✅ Vibration feedback provided');
-            }
-          }
         }
-      } else {
-        console.log('⚠️ No fallback triggered - play result was undefined, not an error');
       }
       
-      // Run debug report when drop sound fails
-      this.debugDropSound();
+      throw error;
     }
+  }
+
+  async playGameOverSoundDirectly() {
+    if (this.isWebPlatform || !this.gameOverPlayer) {
+      return;
+    }
+    
+    try {
+      this.gameOverPlayer.seekTo(0);
+      await this.gameOverPlayer.play();
+    } catch (error) {
+      console.warn('SoundManager: Failed to play game over sound:', error);
+      throw error;
+    }
+  }
+
+  async playPauseResumeSoundDirectly() {
+    if (this.isWebPlatform || !this.dropPlayer) {
+      return;
+    }
+    
+    try {
+      this.dropPlayer.seekTo(0);
+      await this.dropPlayer.play();
+    } catch (error) {
+      console.warn('SoundManager: Failed to play pause/resume sound:', error);
+      throw error;
+    }
+  }
+
+  // Public API methods (now use queuing)
+  async playMergeSound() {
+    await this.queueSound('merge');
+  }
+
+  async playIntermediateMergeSound() {
+    await this.queueSound('intermediateMerge');
+  }
+
+  async playDropSound() {
+    await this.queueSound('drop');
   }
 
   async playGameOverSound() {
-    if (this.isWebPlatform || !this.gameOverPlayer) {
-      if (!this.isWebPlatform && !this.gameOverPlayer) {
-        console.warn('SoundManager: Game over sound player not initialized');
-      }
-      return;
-    }
-    
-    if (!this.isInitialized) {
-      console.warn('SoundManager: Not initialized yet, skipping game over sound');
-      return;
-    }
-    
-    if (!this.checkSoundEnabled()) {
-      return; // Sound disabled in settings
-    }
-    
-    // Prevent overlapping game over sounds
-    if (this.isPlayingGameOver) {
-      return;
-    }
-    
-    try {
-      this.isPlayingGameOver = true;
-      this.gameOverPlayer.seekTo(0); // Reset to beginning
-      this.gameOverPlayer.play();
-      
-      // Reset flag after sound duration (reduced from 3000ms to 2000ms for better UX)
-      setTimeout(() => {
-        this.isPlayingGameOver = false;
-      }, 2000);
-    } catch (error) {
-      console.warn('SoundManager: Failed to play game over sound:', error);
-      this.isPlayingGameOver = false;
-    }
+    await this.queueSound('gameOver');
   }
 
   async playPauseResumeSound() {
-    if (this.isWebPlatform || !this.dropPlayer) {
-      if (!this.isWebPlatform && !this.dropPlayer) {
-        console.warn('SoundManager: Drop sound player not initialized');
-      }
-      return;
-    }
-    
-    if (!this.isInitialized) {
-      console.warn('SoundManager: Not initialized yet, skipping pause/resume sound');
-      return;
-    }
-    
-    if (!this.checkSoundEnabled()) {
-      return; // Sound disabled in settings
-    }
-    
-    // Prevent overlapping pause/resume sounds
-    if (this.isPlayingDrop) {
-      return;
-    }
-    
-    try {
-      this.isPlayingDrop = true;
-      this.dropPlayer.seekTo(0); // Reset to beginning
-      this.dropPlayer.play();
-      
-      // Reset flag after sound duration (approximately 100ms)
-      setTimeout(() => {
-        this.isPlayingDrop = false;
-      }, 100);
-    } catch (error) {
-      console.warn('SoundManager: Failed to play pause/resume sound:', error);
-      this.isPlayingDrop = false;
-    }
+    await this.queueSound('pauseResume');
+  }
+
+  // Legacy methods to maintain compatibility
+  async loadMergeSound() {
+    // No longer needed with expo-audio, players are created in initialize
+  }
+
+  async loadIntermediateMergeSound() {
+    // No longer needed with expo-audio, players are created in initialize
+  }
+
+  async loadDropSound() {
+    // No longer needed with expo-audio, players are created in initialize
   }
 
   async stopAllSounds() {
@@ -442,11 +462,18 @@ class SoundManager {
         this.gameOverPlayer.pause();
       }
       
-      // Reset all playing flags
-      this.isPlayingMerge = false;
-      this.isPlayingIntermediate = false;
-      this.isPlayingDrop = false;
-      this.isPlayingGameOver = false;
+      // Clear sound queue
+      this.soundQueue = [];
+      this.isProcessingQueue = false;
+      
+      // Reset all last sound times
+      this.lastSoundTimes = {
+        merge: 0,
+        intermediateMerge: 0,
+        drop: 0,
+        gameOver: 0,
+        pauseResume: 0
+      };
     } catch (error) {
       // Failed to stop sounds
     }
@@ -490,25 +517,7 @@ class SoundManager {
   playSound(soundType) {
     if (!this.isInitialized || this.isWebPlatform) return;
     
-    switch (soundType) {
-      case 'merge':
-        this.playMergeSound();
-        break;
-      case 'intermediateMerge':
-        this.playIntermediateMergeSound();
-        break;
-      case 'drop':
-        this.playDropSound();
-        break;
-      case 'gameOver':
-        this.playGameOverSound();
-        break;
-      case 'pauseResume':
-        this.playPauseResumeSound();
-        break;
-      default:
-        break;
-    }
+    this.queueSound(soundType);
   }
 
   checkSoundEnabled() {
@@ -521,7 +530,7 @@ class SoundManager {
   }
 
   isAnySoundPlaying() {
-    return this.isPlayingMerge || this.isPlayingIntermediate || this.isPlayingDrop || this.isPlayingGameOver;
+    return this.isProcessingQueue || this.soundQueue.length > 0;
   }
 
   getStatus() {
@@ -535,12 +544,9 @@ class SoundManager {
         gameOver: !!this.gameOverPlayer,
       },
       soundEnabled: this.checkSoundEnabled(),
-      isPlaying: {
-        merge: this.isPlayingMerge,
-        intermediate: this.isPlayingIntermediate,
-        drop: this.isPlayingDrop,
-        gameOver: this.isPlayingGameOver,
-      },
+      queueLength: this.soundQueue.length,
+      isProcessingQueue: this.isProcessingQueue,
+      lastSoundTimes: this.lastSoundTimes,
       volume: useGameStore.getState().soundVolume,
     };
   }
@@ -576,236 +582,28 @@ class SoundManager {
     return true;
   }
 
-  // Comprehensive debug function for drop sound issues
-  async debugDropSound() {
-    console.log('🔍 Drop Sound Debug Report:');
-    console.log('  - isWebPlatform:', this.isWebPlatform);
-    console.log('  - isInitialized:', this.isInitialized);
-    console.log('  - hasDropPlayer:', !!this.dropPlayer);
-    console.log('  - soundEnabled:', this.checkSoundEnabled());
-    console.log('  - isPlayingDrop:', this.isPlayingDrop);
-    console.log('  - store state:', useGameStore.getState());
+  // Test queuing system
+  async testQueuingSystem() {
+    console.log('🧪 Testing sound queuing system...');
     
-    if (this.dropPlayer) {
-      console.log('  - dropPlayer status:', {
-        volume: this.dropPlayer.volume,
-        isPlaying: this.dropPlayer.isPlaying,
-        duration: this.dropPlayer.duration,
-        status: this.dropPlayer.status
-      });
-    }
-  }
-
-  // Test drop sound specifically
-  async testDropSound() {
-    console.log('🧪 Testing drop sound specifically...');
-    
-    if (!this.dropPlayer) {
-      console.log('❌ No drop player available');
-      return false;
+    // Test rapid sound requests
+    for (let i = 0; i < 5; i++) {
+      this.queueSound('drop');
+      await new Promise(resolve => setTimeout(resolve, 10));
     }
     
-    try {
-      console.log('🔍 Drop player before test:', {
-        volume: this.dropPlayer.volume,
-        isPlaying: this.dropPlayer.isPlaying,
-        status: this.dropPlayer.status
-      });
-      
-      // Set volume to maximum for testing
-      const originalVolume = this.dropPlayer.volume;
-      this.dropPlayer.volume = 1.0;
-      console.log('🔊 Set volume to maximum for testing');
-      
-      // Try to play
-      this.dropPlayer.seekTo(0);
-      const playResult = await this.dropPlayer.play();
-      console.log('📊 Test play result:', playResult);
-      
-      // Check after a short delay
-      setTimeout(() => {
-        console.log('🔍 Test playback check:', {
-          isPlaying: this.dropPlayer.isPlaying,
-          status: this.dropPlayer.status,
-          volume: this.dropPlayer.volume
-        });
-        
-        // If drop sound isn't working, test merge sound
-        if (this.dropPlayer.isPlaying === false && this.mergePlayer) {
-          console.log('🧪 Testing merge sound as alternative...');
-          this.mergePlayer.volume = 1.0;
-          this.mergePlayer.seekTo(0);
-          this.mergePlayer.play().then(() => {
-            console.log('✅ Merge sound test successful');
-          }).catch(err => {
-            console.error('❌ Merge sound test failed:', err);
-          });
-        } else if (this.dropPlayer.isPlaying === undefined) {
-          console.log('⚠️ Drop sound isPlaying is undefined - API issue');
-        }
-        
-        // Restore original volume
-        this.dropPlayer.volume = originalVolume;
-        console.log('🔊 Restored original volume:', originalVolume);
-      }, 100);
-      
-      return true;
-    } catch (error) {
-      console.error('❌ Drop sound test failed:', error);
-      
-      // Try merge sound as fallback
-      if (this.mergePlayer) {
-        console.log('🧪 Trying merge sound as fallback test...');
-        try {
-          this.mergePlayer.volume = 1.0;
-          this.mergePlayer.seekTo(0);
-          await this.mergePlayer.play();
-          console.log('✅ Merge sound fallback test successful');
-        } catch (fallbackError) {
-          console.error('❌ Merge sound fallback test also failed:', fallbackError);
-        }
-      }
-      
-      return false;
-    }
-  }
-
-  // Test if drop sound file is actually audible
-  async testDropSoundAudibility() {
-    console.log('🔊 Testing drop sound audibility...');
+    console.log('📊 Queue status after rapid requests:', {
+      queueLength: this.soundQueue.length,
+      isProcessing: this.isProcessingQueue
+    });
     
-    if (!this.dropPlayer) {
-      console.log('❌ No drop player available');
-      return false;
-    }
+    // Wait for queue to process
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    try {
-      // Set volume to maximum
-      const originalVolume = this.dropPlayer.volume;
-      this.dropPlayer.volume = 1.0;
-      console.log('🔊 Volume set to maximum (1.0)');
-      
-      // Try to play drop sound
-      this.dropPlayer.seekTo(0);
-      const playResult = await this.dropPlayer.play();
-      console.log('📊 Drop sound play result:', playResult);
-      
-      // Wait a moment then check if it's playing
-      setTimeout(() => {
-        console.log('🔍 Drop sound playback status:', {
-          isPlaying: this.dropPlayer.isPlaying,
-          volume: this.dropPlayer.volume,
-          duration: this.dropPlayer.duration
-        });
-        
-        // If drop sound isn't playing, try merge sound for comparison
-        if (this.dropPlayer.isPlaying === false && this.mergePlayer) {
-          console.log('🔄 Drop sound not playing, testing merge sound for comparison...');
-          this.mergePlayer.volume = 1.0;
-          this.mergePlayer.seekTo(0);
-          this.mergePlayer.play().then(() => {
-            console.log('✅ Merge sound comparison successful');
-          }).catch(err => {
-            console.error('❌ Merge sound comparison failed:', err);
-          });
-        }
-        
-        // Restore volume
-        this.dropPlayer.volume = originalVolume;
-        console.log('🔊 Restored original volume:', originalVolume);
-      }, 150);
-      
-      return true;
-    } catch (error) {
-      console.error('❌ Drop sound audibility test failed:', error);
-      return false;
-    }
-  }
-
-  // Simple audio system test - try to play any sound
-  async testAudioSystem() {
-    console.log('🧪 Testing entire audio system...');
-    
-    const tests = [
-      { name: 'Drop Sound', player: this.dropPlayer, method: () => this.playDropSound() },
-      { name: 'Merge Sound', player: this.mergePlayer, method: () => this.playMergeSound() },
-      { name: 'Intermediate Sound', player: this.intermediateMergePlayer, method: () => this.playIntermediateMergeSound() },
-      { name: 'Game Over Sound', player: this.gameOverPlayer, method: () => this.playGameOverSound() }
-    ];
-    
-    for (const test of tests) {
-      if (test.player) {
-        console.log(`🧪 Testing ${test.name}...`);
-        try {
-          // Set maximum volume for testing
-          const originalVolume = test.player.volume;
-          test.player.volume = 1.0;
-          
-          // Try to play
-          test.player.seekTo(0);
-          const playResult = await test.player.play();
-          console.log(`✅ ${test.name} test successful:`, playResult);
-          
-          // Restore volume
-          test.player.volume = originalVolume;
-          
-          // Wait a bit before next test
-          await new Promise(resolve => setTimeout(resolve, 200));
-        } catch (error) {
-          console.error(`❌ ${test.name} test failed:`, error);
-        }
-      } else {
-        console.log(`🔇 ${test.name} not available`);
-      }
-    }
-    
-    console.log('🧪 Audio system test completed');
-  }
-
-  // Test if basic audio API is working
-  async testBasicAudioAPI() {
-    console.log('🧪 Testing basic audio API...');
-    
-    if (!this.dropPlayer) {
-      console.log('❌ No audio players available');
-      return false;
-    }
-    
-    try {
-      // Test basic player properties
-      console.log('🔍 Player properties:', {
-        volume: this.dropPlayer.volume,
-        duration: this.dropPlayer.duration,
-        status: this.dropPlayer.status,
-        isPlaying: this.dropPlayer.isPlaying
-      });
-      
-      // Test if we can set volume
-      const originalVolume = this.dropPlayer.volume;
-      this.dropPlayer.volume = 1.0;
-      console.log('✅ Volume can be set');
-      
-      // Test if we can seek
-      this.dropPlayer.seekTo(0);
-      console.log('✅ Seek works');
-      
-      // Test if play method exists
-      if (typeof this.dropPlayer.play === 'function') {
-        console.log('✅ Play method exists');
-      } else {
-        console.log('❌ Play method does not exist');
-        return false;
-      }
-      
-      // Restore volume
-      this.dropPlayer.volume = originalVolume;
-      
-      console.log('✅ Basic audio API test passed');
-      return true;
-    } catch (error) {
-      console.error('❌ Basic audio API test failed:', error);
-      return false;
-    }
+    console.log('📊 Final queue status:', {
+      queueLength: this.soundQueue.length,
+      isProcessing: this.isProcessingQueue
+    });
   }
 
   logStatus() {

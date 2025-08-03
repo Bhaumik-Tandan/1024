@@ -8,21 +8,9 @@ if (Platform.OS !== 'web') {
   Vibration = require('react-native').Vibration;
 }
 
-// Add debouncing to prevent overlapping sounds
-let lastMergeTime = 0;
-let lastIntermediateMergeTime = 0;
-let lastDropTime = 0;
-
 // Vibration and sound for final merge or single merge
 export const vibrateOnMerge = async () => {
   const { vibrationEnabled, soundEnabled } = useGameStore.getState();
-  
-  // Debounce merge sounds (minimum 150ms between sounds to prevent overlap)
-  const now = Date.now();
-  if (now - lastMergeTime < 150) {
-    return;
-  }
-  lastMergeTime = now;
   
   if (vibrationEnabled && Platform.OS !== 'web' && Vibration) {
     // Vibrate for 100ms when tiles merge
@@ -43,16 +31,9 @@ export const vibrateOnMerge = async () => {
 export const vibrateOnIntermediateMerge = async () => {
   const { vibrationEnabled, soundEnabled } = useGameStore.getState();
   
-  // Debounce intermediate merge sounds (minimum 120ms between sounds to prevent overlap)
-  const now = Date.now();
-  if (now - lastIntermediateMergeTime < 120) {
-    return;
-  }
-  lastIntermediateMergeTime = now;
-  
   if (vibrationEnabled && Platform.OS !== 'web' && Vibration) {
-    // Shorter vibration for intermediate merges
-    Vibration.vibrate(60);
+    // Shorter vibration for intermediate merges - optimized for large chains
+    Vibration.vibrate(40); // Reduced from 60ms for faster feedback
   }
   
   // Only play intermediate merge sound if sound is enabled
@@ -75,28 +56,18 @@ export const vibrateOnly = () => {
   }
 };
 
+// Sound only for drops/touches (no vibration)
 export const vibrateOnTouch = async () => {
   const { soundEnabled } = useGameStore.getState();
   
   console.log('🔊 vibrateOnTouch called - Debug Info:', {
     soundEnabled,
-    lastDropTime,
-    currentTime: Date.now(),
-    timeSinceLastDrop: Date.now() - lastDropTime,
-    debounceThreshold: 50
+    timestamp: Date.now(),
+    callStack: new Error().stack?.split('\n').slice(1, 4).join(' -> ')
   });
   
-  // Debounce drop sounds (minimum 50ms between sounds)
-  const now = Date.now();
-  if (now - lastDropTime < 50) {
-    console.log('🔇 Drop sound SKIPPED - too soon since last drop');
-    return;
-  }
-  lastDropTime = now;
-  
-  console.log('✅ Drop sound will play - conditions met');
-  
   // Only play drop/touch sound if sound is enabled
+  // NO VIBRATION for drops to reduce excessive feedback
   if (soundEnabled) {
     try {
       console.log('🎵 Playing drop sound...');
@@ -104,24 +75,9 @@ export const vibrateOnTouch = async () => {
       console.log('✅ Drop sound played successfully');
     } catch (error) {
       console.warn('❌ Failed to play drop sound:', error);
-      
-      // Fallback to vibration only if audio fails
-      console.log('📳 Audio failed, providing vibration feedback only');
-      const { vibrationEnabled } = useGameStore.getState();
-      if (vibrationEnabled && Platform.OS !== 'web' && Vibration) {
-        Vibration.vibrate(50);
-        console.log('✅ Vibration feedback provided as fallback');
-      }
     }
   } else {
     console.log('🔇 Drop sound SKIPPED - sound disabled in settings');
-    
-    // Still provide vibration feedback even if sound is disabled
-    const { vibrationEnabled } = useGameStore.getState();
-    if (vibrationEnabled && Platform.OS !== 'web' && Vibration) {
-      Vibration.vibrate(50);
-      console.log('✅ Vibration feedback provided (sound disabled)');
-    }
   }
 };
 

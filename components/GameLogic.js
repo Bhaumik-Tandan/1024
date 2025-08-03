@@ -332,9 +332,9 @@ export const processChainReactions = async (board, originColumn, showMergeResult
       await new Promise(resolve => setTimeout(resolve, 1));
     }
     
-    // Add small delay between chain reactions to prevent sound overlaps
+    // Add optimized delay between chain reactions to prevent sound overlaps and improve predictability
     if (iterations > 1) {
-      await new Promise(resolve => setTimeout(resolve, 50)); // 50ms delay between chain reactions
+      await new Promise(resolve => setTimeout(resolve, GAME_CONFIG.TIMING.CHAIN_MERGE_DELAY)); // Use configurable delay
     }
     
     // Check entire board for possible merges, prioritizing origin column
@@ -381,6 +381,12 @@ export const processChainReactions = async (board, originColumn, showMergeResult
             totalScore += mergeResult.score;
             chainReactionActive = true;
             chainReactionCount++;
+            
+            // Add extra delay for large chain reactions to prevent conflicts
+            if (chainReactionCount >= GAME_CONFIG.TIMING.LARGE_CHAIN_THRESHOLD) {
+              await new Promise(resolve => setTimeout(resolve, 20)); // Extra 20ms delay for large chains
+            }
+            
             break outerLoop; // Break to restart chain from this position
           }
         }
@@ -548,6 +554,8 @@ export const processTileDrop = async (board, value, column, showMergeResultAnima
  * @returns {Object} - Result containing updated board and score
  */
 export const processFullColumnDrop = async (board, value, column, showMergeResultAnimation = null) => {
+  console.log('🎯 processFullColumnDrop called:', { value, column, bottomValue: board[ROWS - 1][column] });
+  
   // Validate inputs
   if (!board || !Array.isArray(board) || board.length === 0) {
     throw new Error('Invalid board: must be a non-empty 2D array');
@@ -574,7 +582,10 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
     }
   }
   
+  console.log('🔍 Column full check:', { columnFull, column });
+  
   if (!columnFull) {
+    console.log('🔄 Column not full, using regular drop logic');
     // Column is not full, use regular drop logic
     return await processTileDrop(board, value, column, showMergeResultAnimation);
   }
@@ -583,12 +594,16 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
   const bottomRow = ROWS - 1;
   const bottomValue = newBoard[bottomRow][column];
   
+  console.log('🔍 Bottom tile check:', { bottomValue, value, canMerge: bottomValue === value });
+  
   // Case 1: Direct merge with bottom tile
   if (bottomValue === value) {
+    console.log('✅ Direct merge with bottom tile - performing immediate merge');
+    
     // Play drop sound when tile is placed
     console.log('🎯 Drop sound trigger (full column) - Tile placed at:', {
       column,
-      landingRow,
+      bottomRow,
       value
     });
     
@@ -618,6 +633,8 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
     newBoard[bottomRow][column] = newValue;
     
     totalScore += newValue;
+    
+    console.log('✅ Immediate merge completed:', { newValue, totalScore });
     
     // Apply upward gravity to settle everything
     for (let c = 0; c < COLS; c++) {
@@ -853,9 +870,12 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
     if (isChainReaction) {
       // Only play intermediate sound for actual chain reactions (multiple merges)
       // Single 3-tile merges should play regular merge sound
-      vibrateOnIntermediateMerge().catch(err => {
-        // Intermediate merge sound/vibration error (silently handled)
-      });
+      // Add small delay for large chain reactions to prevent sound conflicts
+      setTimeout(() => {
+        vibrateOnIntermediateMerge().catch(err => {
+          // Intermediate merge sound/vibration error (silently handled)
+        });
+      }, isChainReaction && mergingTilePositions.length >= GAME_CONFIG.TIMING.LARGE_CHAIN_THRESHOLD ? 10 : 0);
     } else {
       // For regular merges (including single 3-tile merges), play regular merge sound
       vibrateOnMerge().catch(err => {
@@ -869,9 +889,12 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
     // If no animation, play sound immediately
     if (isChainReaction) {
       // Only play intermediate sound for actual chain reactions
-      vibrateOnIntermediateMerge().catch(err => {
-        // Intermediate merge sound/vibration error (silently handled)
-      });
+      // Add small delay for large chain reactions to prevent sound conflicts
+      setTimeout(() => {
+        vibrateOnIntermediateMerge().catch(err => {
+          // Intermediate merge sound/vibration error (silently handled)
+        });
+      }, isChainReaction && mergingTilePositions.length >= GAME_CONFIG.TIMING.LARGE_CHAIN_THRESHOLD ? 10 : 0);
     } else {
       // For regular merges, play regular merge sound
       vibrateOnMerge().catch(err => {

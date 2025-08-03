@@ -445,10 +445,13 @@ const DropNumberBoard = ({ navigation, route }) => {
     // If no empty cell found, check if we can merge in the full column
     let canMergeInFull = null;
     if (landingRow === -1) {
+      console.log('🔍 Column is full, checking for merge possibility...');
       canMergeInFull = canMergeInFullColumn(board, landingCol, falling.value);
       if (!canMergeInFull) {
+        console.log('❌ Column is full and no merge possible - dropping blocked');
         return; // Column is full and no merge possible
       }
+      console.log('✅ Full column merge detected:', canMergeInFull);
       // Set landing row to the bottom for the merge case
       landingRow = canMergeInFull.mergeRow;
     }
@@ -505,10 +508,13 @@ const DropNumberBoard = ({ navigation, route }) => {
     
     // Handle landing after animation completes
     setTimeout(async () => {
+      console.log('🎯 Tile landing handler called:', { canMergeInFull, landingRow, landingCol, tileValueToDrop });
       if (canMergeInFull) {
+        console.log('🔄 Using full column merge handler');
         // Special handling for full column merge
         await handleFullColumnTileLanded(landingRow, landingCol, tileValueToDrop);
       } else {
+        console.log('🔄 Using normal tile landing handler');
         // Normal tile landing
         handleTileLanded(landingRow, landingCol, tileValueToDrop);
       }
@@ -546,9 +552,12 @@ const DropNumberBoard = ({ navigation, route }) => {
    * @returns {Object|null} - { canMerge: boolean, mergeRow: number } or null
    */
   const canMergeInFullColumn = (board, col, value) => {
+    console.log('🔍 canMergeInFullColumn called:', { col, value, bottomTile: board[ROWS - 1][col] });
+    
     // Check if the bottom tile in the column matches the dropping tile
     const bottomRow = ROWS - 1;
     if (board[bottomRow][col] === value) {
+      console.log('✅ Direct merge possible with bottom tile');
       return { canMerge: true, mergeRow: bottomRow };
     }
     
@@ -563,10 +572,12 @@ const DropNumberBoard = ({ navigation, route }) => {
       if (pos.row >= 0 && pos.row < ROWS && 
           pos.col >= 0 && pos.col < COLS && 
           board[pos.row][pos.col] === value) {
+        console.log('✅ Adjacent merge possible at:', pos);
         return { canMerge: true, mergeRow: bottomRow };
       }
     }
     
+    console.log('❌ No merge possible in full column');
     return null;
   };
 

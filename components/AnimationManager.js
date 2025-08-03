@@ -123,13 +123,13 @@ export const useAnimationManager = () => {
 
   // PERFORMANCE OPTIMIZED COLLISION ANIMATION SYSTEM
   const showMergeResultAnimation = (row, col, value, mergingTilesPositions = [], isChainReaction = false, onComplete = null) => {
-    // PERFORMANCE: Skip complex animations for chain reactions to improve responsiveness
-    if (isChainReaction && mergingTilesPositions.length > 2) {
-      // Use simple legacy animation for fast chain reactions
+    // PERFORMANCE: Skip complex animations for large chain reactions to improve responsiveness
+    if (isChainReaction && mergingTilesPositions.length >= GAME_CONFIG.TIMING.LARGE_CHAIN_THRESHOLD) {
+      // Use ultra-simple animation for large chain reactions
       createMergeAnimation(row, col, value, mergingTilesPositions.length, 'up');
       if (onComplete) {
-        // Add small delay for chain reactions to prevent sound overlaps
-        setTimeout(onComplete, isChainReaction ? 150 : 120); // 150ms for chains, 120ms for normal
+        // Very short delay for large chain reactions to prevent conflicts
+        setTimeout(onComplete, 80); // Reduced from 150ms to 80ms
       }
       return;
     }
@@ -199,11 +199,11 @@ export const useAnimationManager = () => {
       setMergeAnimations([...mergingAnimations, resultAnimation]);
       setCollisionEffects([collisionEffect]);
       
-      // PERFORMANCE: Faster animation timing for better responsiveness
-      const duration = isChainReaction ? 100 : 160; // Even faster for chains
-      const moveDuration = duration * 0.2;  // 20ms for chain, 32ms for normal
-      const collisionDuration = duration * 0.15; // 15ms for chain, 24ms for normal  
-      const birthDuration = duration * 0.65; // 65ms for chain, 104ms for normal
+      // PERFORMANCE: Optimized animation timing for better responsiveness
+      const duration = isChainReaction ? 80 : 140; // Even faster for chains (reduced from 100ms)
+      const moveDuration = duration * 0.2;  // 16ms for chain, 28ms for normal
+      const collisionDuration = duration * 0.15; // 12ms for chain, 21ms for normal  
+      const birthDuration = duration * 0.65; // 52ms for chain, 91ms for normal
       
       // PERFORMANCE: Simplified collision sequence - no complex attraction phase for chains
       const collisionPhase = [
@@ -278,7 +278,7 @@ export const useAnimationManager = () => {
       const cleanupPhase = [
         Animated.timing(collisionEffect.opacity, {
           toValue: 0,
-          duration: isChainReaction ? 40 : 80, // Very fast cleanup for chains
+          duration: isChainReaction ? 30 : 60, // Very fast cleanup for chains (reduced from 40ms)
           useNativeDriver: true, // PERFORMANCE: Use native driver
         }),
       ];
@@ -299,7 +299,7 @@ export const useAnimationManager = () => {
           onComplete();
         }
       });
-    }, isChainReaction ? 5 : 1); // Very small delay for chain reactions
+    }, isChainReaction ? 3 : 1); // Very small delay for chain reactions (reduced from 5ms)
   };
 
   const clearMergeAnimations = () => {

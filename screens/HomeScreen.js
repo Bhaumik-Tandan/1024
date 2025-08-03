@@ -27,8 +27,6 @@ const getDimensions = () => {
 
 const { width, height } = getDimensions();
 
-
-
 // Enhanced Star Field component
 const StarField = ({ count = 50 }) => {
   const stars = Array.from({ length: count }, (_, i) => {
@@ -348,8 +346,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
   },
-  
-
   
   content: {
     flex: 1,

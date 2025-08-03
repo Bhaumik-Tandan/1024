@@ -1,162 +1,143 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import { THEME, FONT_SIZES, screenWidth } from './constants';
+import { MaterialIcons } from '@expo/vector-icons';
 
+const screenWidth = Dimensions.get('window').width;
 const isTablet = screenWidth >= 768;
-const isLargeTablet = screenWidth >= 1024;
 
 const GameHeader = ({ score, record, onPause }) => {
   return (
-    <View style={styles.header}>
-      {/* Score Section */}
+    <View style={styles.container}>
+      {/* Record Display */}
+      <View style={styles.recordContainer}>
+        <Text style={styles.recordLabel}>RECORD</Text>
+        <Text style={styles.recordValue}>{record?.toLocaleString() || '0'}</Text>
+      </View>
+
+      {/* Current Score Display */}
       <View style={styles.scoreContainer}>
         <Text style={styles.scoreLabel}>SCORE</Text>
-        <Text style={styles.scoreValue}>{score.toLocaleString()}</Text>
+        <Text style={styles.scoreValue}>{score?.toLocaleString() || '0'}</Text>
       </View>
 
       {/* Pause Button */}
-      <TouchableOpacity 
-        style={styles.pauseButton} 
-        onPress={onPause}
-        activeOpacity={0.8}
-      >
-        <View style={styles.pauseIcon}>
-          <View style={styles.pauseBar} />
-          <View style={styles.pauseBar} />
-        </View>
+      <TouchableOpacity style={styles.pauseButton} onPress={onPause}>
+        <View style={styles.pauseButtonGlow} />
+        <MaterialIcons 
+          name="pause" 
+          size={isTablet ? 32 : 24} 
+          color="#E6F3FF" 
+        />
       </TouchableOpacity>
-
-      {/* Record Section */}
-      <View style={styles.recordContainer}>
-        <Text style={styles.recordLabel}>RECORD</Text>
-        <Text style={styles.recordValue}>{record.toLocaleString()}</Text>
-      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  header: {
+  container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: isTablet ? 32 : 20, // Increased for iPad
-    paddingVertical: isTablet ? 12 : 8, // Increased for iPad
-    marginTop: 0,
-    marginBottom: isTablet ? 8 : 5, // Slightly more space on iPad
-    // Premium glass effect
-    backgroundColor: THEME.DARK.BACKGROUND_SECONDARY + 'CC',
-    borderRadius: isTablet ? 20 : 16, // Larger radius on iPad
-    marginHorizontal: isTablet ? 16 : 10, // More margin on iPad
-    // Enhanced shadows
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-    // Subtle border
-    borderWidth: 1,
-    borderColor: THEME.DARK.BORDER_COLOR + '60',
+    paddingHorizontal: isTablet ? 30 : 20,
+    paddingTop: isTablet ? 25 : 15,
+    paddingBottom: isTablet ? 20 : 10,
+    backgroundColor: 'transparent',
+    zIndex: 100,
   },
   
-  scoreContainer: {
-    alignItems: 'flex-start',
-    backgroundColor: THEME.DARK.SCORE_BOX_DARK,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    minWidth: 100,
-    // Premium shadow
-    shadowColor: THEME.DARK.NEON_GLOW,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
-    // Border accent
-    borderWidth: 1,
-    borderColor: THEME.DARK.NEON_GLOW + '40',
-  },
-  
-  scoreLabel: {
-    fontSize: isTablet ? FONT_SIZES.MEDIUM * 1.2 : FONT_SIZES.MEDIUM, // Larger on iPad
-    fontWeight: '600',
-    color: THEME.DARK.TEXT_SECONDARY,
-    letterSpacing: 1,
-    textAlign: 'center',
-  },
-  
-  scoreValue: {
-    fontSize: isTablet ? FONT_SIZES.XLARGE * 1.2 : FONT_SIZES.XLARGE, // Larger on iPad
-    fontWeight: 'bold',
-    color: THEME.DARK.TEXT_PRIMARY,
-    textAlign: 'center',
-    textShadowColor: THEME.DARK.ACCENT + '60',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  
-  pauseButton: {
-    backgroundColor: THEME.DARK.ACCENT + '20',
-    borderRadius: isTablet ? 16 : 12, // Larger on iPad
-    padding: isTablet ? 14 : 10, // Bigger touch target on iPad
-    borderWidth: 1,
-    borderColor: THEME.DARK.ACCENT + '40',
-    // Enhanced glow
-    shadowColor: THEME.DARK.ACCENT,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  
-  pauseIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  
-  pauseBar: {
-    width: 4,
-    height: 16,
-    backgroundColor: THEME.DARK.TEXT_PRIMARY,
-    marginHorizontal: 2,
-    borderRadius: 2,
-  },
-  
+  // Record section
   recordContainer: {
-    alignItems: 'flex-end',
-    backgroundColor: THEME.DARK.RECORD_BOX,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    minWidth: 100,
-    // Premium shadow
-    shadowColor: THEME.DARK.RECORD_BOX,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-    // Border accent
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(26, 42, 78, 0.8)',
+    paddingVertical: isTablet ? 12 : 8,
+    paddingHorizontal: isTablet ? 18 : 12,
+    borderRadius: isTablet ? 16 : 12,
     borderWidth: 1,
-    borderColor: THEME.DARK.WORKSHOP_ACCENT + '60',
+    borderColor: 'rgba(155, 89, 182, 0.4)',
+    shadowColor: '#9B59B6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+    minWidth: isTablet ? 120 : 80,
   },
-  
   recordLabel: {
-    fontSize: isTablet ? FONT_SIZES.MEDIUM * 1.2 : FONT_SIZES.MEDIUM, // Larger on iPad
+    color: '#9B59B6',
+    fontSize: isTablet ? 13 : 10,
     fontWeight: '600',
-    color: THEME.DARK.TEXT_SECONDARY,
     letterSpacing: 1,
-    textAlign: 'center',
+    textShadowColor: 'rgba(155, 89, 182, 0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
+    marginBottom: 2,
+  },
+  recordValue: {
+    color: '#FFFFFF',
+    fontSize: isTablet ? 22 : 16,
+    fontWeight: '700',
+    textShadowColor: 'rgba(155, 89, 182, 0.8)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
   },
   
-  recordValue: {
-    fontSize: isTablet ? FONT_SIZES.XLARGE * 1.2 : FONT_SIZES.XLARGE, // Larger on iPad
-    fontWeight: 'bold',
-    color: '#FFD700', // Golden color for record
-    textAlign: 'center',
-    textShadowColor: '#FFD700' + '60',
-    textShadowOffset: { width: 0, height: 2 },
+  // Current score section
+  scoreContainer: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(26, 42, 78, 0.8)',
+    paddingVertical: isTablet ? 12 : 8,
+    paddingHorizontal: isTablet ? 18 : 12,
+    borderRadius: isTablet ? 16 : 12,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 144, 226, 0.4)',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+    minWidth: isTablet ? 140 : 100,
+  },
+  scoreLabel: {
+    color: '#4A90E2',
+    fontSize: isTablet ? 13 : 10,
+    fontWeight: '600',
+    letterSpacing: 1,
+    textShadowColor: 'rgba(74, 144, 226, 0.6)',
+    textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 4,
+    marginBottom: 2,
+  },
+  scoreValue: {
+    color: '#FFFFFF',
+    fontSize: isTablet ? 24 : 18,
+    fontWeight: '700',
+    textShadowColor: 'rgba(74, 144, 226, 0.8)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
+  },
+  
+  // Pause button
+  pauseButton: {
+    backgroundColor: 'rgba(26, 42, 78, 0.8)',
+    borderRadius: isTablet ? 24 : 20,
+    padding: isTablet ? 12 : 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  pauseButtonGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(74, 144, 226, 0.1)',
+    borderRadius: isTablet ? 24 : 20,
   },
 });
 

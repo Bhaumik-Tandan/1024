@@ -14,8 +14,8 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import useGameStore from '../store/gameStore';
-import SpaceBackground from '../components/SpaceBackground';
-import { THEME, getPlanetType } from '../components/constants';
+import { EnhancedSpaceBackground } from '../components/EnhancedSpaceBackground';
+import { getPlanetType } from '../components/constants';
 
 const SettingsScreen = ({ navigation }) => {
   const {
@@ -26,506 +26,413 @@ const SettingsScreen = ({ navigation }) => {
     highestBlock,
     toggleVibration,
     toggleSound,
-    setSoundVolume,
-    resetAllSettings,
+    clearAllData,
   } = useGameStore();
 
-  // Animation refs
-  const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const starRotationAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
-    // Entry animation
     Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 100,
-        friction: 8,
-        useNativeDriver: true,
-      }),
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 800,
         useNativeDriver: true,
       }),
-    ]).start();
-
-    // Continuous star rotation
-    const starRotation = Animated.loop(
-      Animated.timing(starRotationAnim, {
-        toValue: 1,
-        duration: 20000,
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
         useNativeDriver: true,
       }),
-    );
-    starRotation.start();
-
-    // Subtle pulsing animation for cosmic panels
-    const pulse = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.02,
-          duration: 3000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 3000,
-          useNativeDriver: true,
-        }),
-      ]),
-    );
-    pulse.start();
-
-    return () => {
-      starRotation.stop();
-      pulse.stop();
-    };
+    ]).start();
   }, []);
 
-  const handleResetSettings = () => {
+  const handleClearData = () => {
     Alert.alert(
-      'Initiate System Reset',
-      'Are you sure you want to restore all cosmic configurations to default parameters?',
+      'Reset All Data',
+      'This will permanently delete all your progress, scores, and settings. This action cannot be undone.',
       [
-        { text: 'Abort', style: 'cancel' },
         {
-          text: 'Execute Reset',
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Reset Everything',
           style: 'destructive',
           onPress: () => {
-            resetAllSettings();
-            Alert.alert('Reset Complete', 'All cosmic systems have been restored to default configuration.');
+            clearAllData();
+            Alert.alert('Success', 'All data has been reset.');
           },
         },
-      ]
+      ],
+      { cancelable: true }
     );
   };
 
-  // Handle sound toggle with haptic dependency
-  const handleSoundToggle = (value) => {
-    toggleSound();
-    // If sound is being turned off, suggest turning off haptic too
-    if (!value && vibrationEnabled) {
-      Alert.alert(
-        'Sensory Coordination',
-        'Would you like to disable haptic feedback as well for a fully silent cosmic experience?',
-        [
-          { text: 'Keep Haptic', style: 'cancel' },
-          { 
-            text: 'Disable All', 
-            onPress: () => toggleVibration(),
-            style: 'default' 
-          },
-        ]
-      );
-    }
-    // If sound is being turned on and haptic is off, suggest turning on haptic too
-    else if (value && !vibrationEnabled) {
-      Alert.alert(
-        'Sensory Enhancement',
-        'Would you like to enable haptic feedback for a complete cosmic sensory experience?',
-        [
-          { text: 'Audio Only', style: 'cancel' },
-          { 
-            text: 'Enable All', 
-            onPress: () => toggleVibration(),
-            style: 'default' 
-          },
-        ]
-      );
-    }
-  };
-
-  // Enhanced cosmic panel with subtle animation
-  const CosmicPanel = ({ children, style = {} }) => (
-    <Animated.View style={[
-      styles.cosmicPanel, 
-      style,
-      { 
-        transform: [{ scale: pulseAnim }],
-        opacity: fadeAnim 
-      }
-    ]}>
-      {children}
-    </Animated.View>
-  );
-
-  const SettingRow = ({ icon, label, value, onToggle, showDivider = true }) => (
-    <View style={styles.settingRow}>
-      <View style={styles.settingContent}>
-        <View style={styles.settingLeft}>
-          <View style={styles.iconContainer}>
-            <Ionicons name={icon} size={22} color={THEME.DARK.COSMIC_ACCENT} />
-          </View>
-          <Text style={styles.settingLabel}>{label}</Text>
-        </View>
-        <Switch
-          value={value}
-          onValueChange={onToggle}
-          trackColor={{ false: THEME.DARK.BACKGROUND_PRIMARY, true: THEME.DARK.COSMIC_ACCENT }}
-          thumbColor={value ? THEME.DARK.STARFIELD : THEME.DARK.TEXT_SECONDARY}
-          ios_backgroundColor={THEME.DARK.BACKGROUND_PRIMARY}
-        />
-      </View>
-      {showDivider && <View style={styles.divider} />}
-    </View>
-  );
-
-  const StatRow = ({ icon, label, value, showDivider = true }) => (
-    <View style={styles.statRow}>
-      <View style={styles.statContent}>
-        <View style={styles.statLeft}>
-          <View style={styles.iconContainer}>
-            <Ionicons name={icon} size={22} color={THEME.DARK.STELLAR_GLOW} />
-          </View>
-          <Text style={styles.statLabel}>{label}</Text>
-        </View>
-        <Text style={styles.statValue}>{value}</Text>
-      </View>
-      {showDivider && <View style={styles.divider} />}
-    </View>
-  );
-
   const formatScore = (score) => {
-    if (score === null || score === 0) return 'No Records';
+    if (score === null || score === 0) return '0';
     return score.toLocaleString();
   };
 
-  const formatCelestialBody = (block) => {
-    if (block === null || block === 0) return 'Unknown Entity';
-    const celestialBody = getPlanetType(block);
-    return celestialBody.name || 'Mysterious Object';
+  const formatBlock = (block) => {
+    if (block === null || block === 0) return 'None';
+    const planet = getPlanetType(block);
+    return `${planet.name} (${block.toLocaleString()})`;
   };
 
-  const starRotation = starRotationAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-
   return (
-    <View style={styles.container}>
-      <SpaceBackground />
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="light" backgroundColor="#0a0a1a" />
       
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="light-content" backgroundColor="transparent" translucent />
-        
-        {/* Enhanced header with animated stars */}
-        <Animated.View style={[styles.header, { transform: [{ scale: scaleAnim }] }]}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={THEME.DARK.STARFIELD} />
+      {/* Enhanced Deep Space Background */}
+      <EnhancedSpaceBackground showMovingStars={true} intensity="medium" />
+      
+      <Animated.View 
+        style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => navigation.goBack()}
+          >
+            <View style={styles.backButtonGlow} />
+            <Ionicons name="arrow-back" size={24} color="#E6F3FF" />
           </TouchableOpacity>
+          <Text style={styles.title}>MISSION CONTROL</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+
+        <ScrollView 
+          style={styles.scrollView} 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
           
-          <View style={styles.headerCenter}>
-            <View style={styles.headerTitleContainer}>
-              <Animated.View style={[styles.starIcon, { transform: [{ rotate: starRotation }] }]}>
-                <Ionicons name="star" size={16} color={THEME.DARK.STELLAR_GLOW} />
-              </Animated.View>
-              <Text style={styles.headerTitle}>Cosmic Command Center</Text>
-              <Animated.View style={[styles.starIcon, { transform: [{ rotate: starRotation }] }]}>
-                <Ionicons name="star" size={16} color={THEME.DARK.STELLAR_GLOW} />
-              </Animated.View>
+          {/* Statistics Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>COSMIC ACHIEVEMENTS</Text>
+            
+            <View style={styles.statsGrid}>
+              <View style={styles.statCard}>
+                <Text style={styles.statLabel}>HIGHEST SCORE</Text>
+                <Text style={styles.statValue}>{formatScore(highScore)}</Text>
+              </View>
+              
+              <View style={styles.statCard}>
+                <Text style={styles.statLabel}>LARGEST CELESTIAL BODY</Text>
+                <Text style={styles.statValue}>{formatBlock(highestBlock)}</Text>
+              </View>
             </View>
-            <Text style={styles.headerSubtitle}>Universal Configuration Portal</Text>
           </View>
-          
-          <View style={styles.headerRight} />
-        </Animated.View>
 
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Sensory Systems Section */}
-          <CosmicPanel style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="settings" size={20} color={THEME.DARK.COSMIC_ACCENT} />
-              <Text style={styles.sectionTitle}>Sensory Systems</Text>
-            </View>
+          {/* Game Settings Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>SHIP CONFIGURATION</Text>
             
-            <SettingRow
-              icon="musical-notes"
-              label="Cosmic Audio Transmission"
-              value={soundEnabled}
-              onToggle={handleSoundToggle}
-            />
-            
-            <SettingRow
-              icon="phone-portrait"
-              label="Tactile Response Matrix"
-              value={vibrationEnabled}
-              onToggle={toggleVibration}
-              showDivider={false}
-            />
-          </CosmicPanel>
-
-          {/* Universal Archives Section */}
-          <CosmicPanel style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="stats-chart" size={20} color={THEME.DARK.STELLAR_GLOW} />
-              <Text style={styles.sectionTitle}>Universal Archives</Text>
-            </View>
-            
-            <StatRow
-              icon="trophy"
-              label="Galactic High Score"
-              value={formatScore(highScore)}
-            />
-
-            <StatRow
-              icon="planet"
-              label="Largest Discovery"
-              value={formatCelestialBody(highestBlock)}
-              showDivider={false}
-            />
-          </CosmicPanel>
-
-          {/* System Reset Section */}
-          <TouchableOpacity onPress={handleResetSettings} style={styles.resetSection}>
-            <CosmicPanel style={styles.resetButton}>
-              <View style={styles.resetContent}>
-                <View style={styles.resetLeft}>
-                  <View style={[styles.iconContainer, styles.resetIconContainer]}>
-                    <Ionicons name="refresh" size={22} color={THEME.DARK.ERROR_COLOR} />
+            <View style={styles.settingsList}>
+              {/* Sound Toggle */}
+              <View style={styles.settingItem}>
+                <View style={styles.settingLeft}>
+                  <View style={styles.settingIconContainer}>
+                    <Ionicons 
+                      name={soundEnabled ? "volume-high" : "volume-mute"} 
+                      size={22} 
+                      color={soundEnabled ? "#4A90E2" : "#666"} 
+                    />
                   </View>
-                  <View>
-                    <Text style={styles.resetText}>Initiate System Reset</Text>
-                    <Text style={styles.resetSubtext}>Restore cosmic defaults</Text>
+                  <View style={styles.settingTextContainer}>
+                    <Text style={styles.settingTitle}>Audio Systems</Text>
+                    <Text style={styles.settingSubtitle}>
+                      Enable cosmic sound effects
+                    </Text>
                   </View>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={THEME.DARK.TEXT_SECONDARY} />
+                <Switch
+                  value={soundEnabled}
+                  onValueChange={toggleSound}
+                  trackColor={{ false: "#767577", true: "rgba(74, 144, 226, 0.3)" }}
+                  thumbColor={soundEnabled ? "#4A90E2" : "#f4f3f4"}
+                  ios_backgroundColor="#3e3e3e"
+                />
               </View>
-            </CosmicPanel>
-          </TouchableOpacity>
 
-          {/* Enhanced Footer */}
-          <Animated.View style={[styles.footer, { opacity: fadeAnim }]}>
-            <Text style={styles.footerText}>🌌 Exploring the Infinite Universe</Text>
-            <Text style={styles.footerVersion}>Version 2.0 - Deep Space Edition</Text>
-            <Text style={styles.footerCredits}>Powered by Cosmic Forces</Text>
-          </Animated.View>
+              {/* Vibration Toggle */}
+              <View style={styles.settingItem}>
+                <View style={styles.settingLeft}>
+                  <View style={styles.settingIconContainer}>
+                    <Ionicons 
+                      name="phone-portrait" 
+                      size={22} 
+                      color={vibrationEnabled ? "#4A90E2" : "#666"} 
+                    />
+                  </View>
+                  <View style={styles.settingTextContainer}>
+                    <Text style={styles.settingTitle}>Haptic Feedback</Text>
+                    <Text style={styles.settingSubtitle}>
+                      Feel the cosmic vibrations
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={vibrationEnabled}
+                  onValueChange={toggleVibration}
+                  trackColor={{ false: "#767577", true: "rgba(74, 144, 226, 0.3)" }}
+                  thumbColor={vibrationEnabled ? "#4A90E2" : "#f4f3f4"}
+                  ios_backgroundColor="#3e3e3e"
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* Data Management Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>DATA MANAGEMENT</Text>
+            
+            <TouchableOpacity 
+              style={styles.dangerButton} 
+              onPress={handleClearData}
+              activeOpacity={0.8}
+            >
+              <View style={styles.dangerButtonGlow} />
+              <Ionicons name="trash-bin" size={20} color="#FF6B6B" />
+              <Text style={styles.dangerButtonText}>Reset All Progress</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {/* Version Information */}
+          <View style={styles.footer}>
+            <Text style={styles.versionText}>Space Drop v1.0.0</Text>
+            <Text style={styles.copyrightText}>Explore the cosmic puzzle universe</Text>
+          </View>
         </ScrollView>
-      </SafeAreaView>
-    </View>
+      </Animated.View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: THEME.DARK.BACKGROUND_PRIMARY,
-    // Ensure full height usage on iPad
-    minHeight: '100%',
-    ...(Dimensions.get('window').width >= 768 && {
-      height: '100%',
-    }),
-  },
-  safeArea: {
-    flex: 1,
-    // Ensure full height usage on iPad
-    minHeight: '100%',
+    backgroundColor: '#0a0a1a',
   },
   
-  // Enhanced Header
+  content: {
+    flex: 1,
+    zIndex: 10,
+  },
+  
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingTop: 50,
-    borderBottomWidth: 1,
-    borderBottomColor: THEME.DARK.COSMIC_ACCENT + '20',
+    paddingTop: 10,
+    paddingBottom: 20,
   },
-  headerTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  starIcon: {
-    marginHorizontal: 8,
-  },
+  
   backButton: {
-    padding: 8,
+    backgroundColor: 'rgba(26, 42, 78, 0.8)',
     borderRadius: 20,
-    backgroundColor: THEME.DARK.BACKGROUND_SECONDARY + '80',
-  },
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: THEME.DARK.STARFIELD,
-    letterSpacing: 0.5,
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: THEME.DARK.TEXT_SECONDARY,
-    marginTop: 2,
-  },
-  headerRight: {
-    width: 40, // Balance the back button
-  },
-  
-  // Content
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  
-  // Sections
-  section: {
-    marginBottom: 20,
-  },
-  cosmicPanel: {
-    backgroundColor: THEME.DARK.BACKGROUND_SECONDARY + '60',
-    borderRadius: 16,
+    padding: 10,
     borderWidth: 1,
-    borderColor: THEME.DARK.COSMIC_ACCENT + '30',
-    padding: 20,
-    shadowColor: THEME.DARK.COSMIC_PURPLE,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    position: 'relative',
+    overflow: 'hidden',
   },
   
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: THEME.DARK.COSMIC_ACCENT + '20',
+  backButtonGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(74, 144, 226, 0.1)',
+    borderRadius: 20,
   },
+  
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 2,
+    textShadowColor: '#4A90E2',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
+  
+  headerSpacer: {
+    width: 44, // Same width as back button to center title
+  },
+  
+  scrollView: {
+    flex: 1,
+  },
+  
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  
+  section: {
+    marginBottom: 30,
+  },
+  
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: THEME.DARK.STARFIELD,
-    marginLeft: 10,
-    letterSpacing: 0.3,
+    color: '#B0C4DE',
+    marginBottom: 15,
+    letterSpacing: 1,
+    textShadowColor: 'rgba(176, 196, 222, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
   },
   
-  // Settings
-  settingRow: {
-    marginBottom: 0,
+  statsGrid: {
+    gap: 15,
   },
-  settingContent: {
+  
+  statCard: {
+    backgroundColor: 'rgba(26, 42, 78, 0.8)',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 144, 226, 0.3)',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  
+  statLabel: {
+    fontSize: 12,
+    color: '#9B59B6',
+    fontWeight: '600',
+    letterSpacing: 1,
+    marginBottom: 8,
+    textShadowColor: 'rgba(155, 89, 182, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
+  },
+  
+  statValue: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    textShadowColor: 'rgba(74, 144, 226, 0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
+  },
+  
+  settingsList: {
+    backgroundColor: 'rgba(26, 42, 78, 0.6)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    overflow: 'hidden',
+  },
+  
+  settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.05)',
   },
+  
   settingLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
-  iconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: THEME.DARK.BACKGROUND_PRIMARY + '80',
+  
+  settingIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(74, 144, 226, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
-  },
-  settingLabel: {
-    fontSize: 16,
-    color: THEME.DARK.STARFIELD,
-    fontWeight: '500',
+    marginRight: 15,
   },
   
-  // Stats
-  statRow: {
-    marginBottom: 0,
-  },
-  statContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-  },
-  statLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  statLabel: {
-    fontSize: 16,
-    color: THEME.DARK.STARFIELD,
-    fontWeight: '500',
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: THEME.DARK.STELLAR_GLOW,
-    textAlign: 'right',
+  settingTextContainer: {
     flex: 1,
   },
   
-  // Divider
-  divider: {
-    height: 1,
-    backgroundColor: THEME.DARK.COSMIC_ACCENT + '15',
-    marginVertical: 4,
-  },
-  
-  // Reset
-  resetSection: {
-    marginBottom: 20,
-  },
-  resetButton: {
-    padding: 16,
-  },
-  resetContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  resetLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  resetIconContainer: {
-    backgroundColor: THEME.DARK.ERROR_COLOR + '20',
-  },
-  resetText: {
+  settingTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: THEME.DARK.STARFIELD,
-  },
-  resetSubtext: {
-    fontSize: 12,
-    color: THEME.DARK.TEXT_SECONDARY,
-    marginTop: 2,
+    color: '#FFFFFF',
+    marginBottom: 2,
   },
   
-  // Enhanced Footer
+  settingSubtitle: {
+    fontSize: 13,
+    color: '#999',
+  },
+  
+  dangerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 107, 107, 0.3)',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  
+  dangerButtonGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 107, 107, 0.05)',
+    borderRadius: 12,
+  },
+  
+  dangerButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FF6B6B',
+    marginLeft: 8,
+    letterSpacing: 0.5,
+  },
+  
   footer: {
     alignItems: 'center',
     paddingVertical: 30,
-    paddingBottom: 40,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    marginTop: 20,
   },
-  footerText: {
+  
+  versionText: {
     fontSize: 14,
-    color: THEME.DARK.COSMIC_ACCENT,
+    color: '#666',
     fontWeight: '500',
-    textAlign: 'center',
+    marginBottom: 4,
   },
-  footerVersion: {
-    fontSize: 11,
-    color: THEME.DARK.TEXT_SECONDARY,
-    marginTop: 4,
+  
+  copyrightText: {
+    fontSize: 12,
+    color: '#555',
     textAlign: 'center',
-  },
-  footerCredits: {
-    fontSize: 10,
-    color: THEME.DARK.TEXT_SECONDARY + '80',
-    marginTop: 4,
-    textAlign: 'center',
-    fontStyle: 'italic',
   },
 });
 

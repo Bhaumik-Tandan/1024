@@ -10,28 +10,32 @@ if (Platform.OS !== 'web') {
 
 // Vibration and sound for final merge or single merge
 export const vibrateOnMerge = async () => {
-  const { vibrationEnabled } = useGameStore.getState();
+  const { vibrationEnabled, soundEnabled } = useGameStore.getState();
   
   if (vibrationEnabled && Platform.OS !== 'web' && Vibration) {
     // Vibrate for 100ms when tiles merge
     Vibration.vibrate(100);
   }
   
-  // Play final merge sound
-  await soundManager.playMergeSound();
+  // Only play final merge sound if sound is enabled
+  if (soundEnabled) {
+    await soundManager.playMergeSound();
+  }
 };
 
 // Vibration and sound for intermediate merge in chain
 export const vibrateOnIntermediateMerge = async () => {
-  const { vibrationEnabled } = useGameStore.getState();
+  const { vibrationEnabled, soundEnabled } = useGameStore.getState();
   
   if (vibrationEnabled && Platform.OS !== 'web' && Vibration) {
     // Shorter vibration for intermediate merges
     Vibration.vibrate(60);
   }
   
-  // Play intermediate merge sound
-  await soundManager.playIntermediateMergeSound();
+  // Only play intermediate merge sound if sound is enabled
+  if (soundEnabled) {
+    await soundManager.playIntermediateMergeSound();
+  }
 };
 
 // Just vibration without sound (for cases where sound is handled separately)
@@ -45,8 +49,12 @@ export const vibrateOnly = () => {
 };
 
 export const vibrateOnTouch = async () => {
-  // Play drop/touch sound (no vibration for drop)
-  await soundManager.playDropSound();
+  const { soundEnabled } = useGameStore.getState();
+  
+  // Only play drop/touch sound if sound is enabled
+  if (soundEnabled) {
+    await soundManager.playDropSound();
+  }
 };
 
 export const vibrateOnButtonPress = () => {

@@ -15,125 +15,93 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
   const { vibrationEnabled, soundEnabled, toggleVibration, toggleSound } = useGameStore();
 
   const handleButtonPress = (action) => {
-    // Vibrate on button press
+    // Vibrate on button press if enabled
     vibrateOnButtonPress();
-    
-    // Execute the action
-    switch (action) {
-      case 'resume':
-        onResume();
-        break;
-      case 'home':
-        onHome();
-        break;
-      case 'close':
-        onClose();
-        break;
-      case 'restart':
-        onRestart();
-        onClose();
-        break;
-      default:
-        break;
-    }
+    action();
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
-        <View style={[styles.modalContainer, styles.modalContainerDark]}>
-          <View style={styles.header}>
-            <Text style={[styles.title, styles.textLight]}>🌌 Universe Paused</Text>
-                    <Pressable
-          style={({ pressed }) => [
-            styles.closeButton, 
-            styles.closeButtonDark, 
-            pressed && { opacity: 0.7 }
-          ]}
-          onPress={() => handleButtonPress('close')}
-                  >
-                <Ionicons name="close" size={24} color="#ffffff" />
-              </Pressable>
+        <View style={styles.modalContainer}>
+          
+          {/* Enhanced Space-themed Title */}
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>JOURNEY PAUSED</Text>
+            <View style={styles.titleUnderline} />
           </View>
-
-          <View style={styles.content}>
-            <Pressable 
-              style={({ pressed }) => [
-                styles.mainButton,
-                pressed && { opacity: 0.7 }
-              ]}
-              onPress={() => handleButtonPress('resume')}
+          
+          {/* Settings Section */}
+          <View style={styles.settingsSection}>
+            <Text style={styles.settingsTitle}>Ship Systems</Text>
+            
+            {/* Vibration Toggle */}
+            <Pressable
+              style={[styles.settingItem, vibrationEnabled && styles.settingItemActive]}
+              onPress={() => handleButtonPress(toggleVibration)}
             >
-              <Ionicons name="play" size={32} color="#ffffff" />
-              <Text style={styles.mainButtonText}>🚀 Continue Creation</Text>
+              <View style={styles.settingLeft}>
+                <MaterialCommunityIcons 
+                  name="vibrate" 
+                  size={20} 
+                  color={vibrationEnabled ? '#4A90E2' : '#666'} 
+                />
+                <Text style={[styles.settingText, vibrationEnabled && styles.settingTextActive]}>
+                  Haptic Feedback
+                </Text>
+              </View>
+              <View style={[styles.toggle, vibrationEnabled && styles.toggleActive]}>
+                <View style={[styles.toggleIndicator, vibrationEnabled && styles.toggleIndicatorActive]} />
+              </View>
             </Pressable>
-
-            <Pressable 
-              style={({ pressed }) => [
-                styles.secondaryButton, 
-                styles.secondaryButtonDark,
-                pressed && { opacity: 0.7 }
-              ]}
-              onPress={() => handleButtonPress('home')}
+            
+            {/* Sound Toggle */}
+            <Pressable
+              style={[styles.settingItem, soundEnabled && styles.settingItemActive]}
+              onPress={() => handleButtonPress(toggleSound)}
             >
-              <Ionicons name="home" size={24} color="#ffffff" />
-              <Text style={[styles.secondaryButtonText, styles.textLight]}>🏠 Return to Cosmos</Text>
+              <View style={styles.settingLeft}>
+                <Ionicons 
+                  name={soundEnabled ? "volume-medium" : "volume-mute"} 
+                  size={20} 
+                  color={soundEnabled ? '#4A90E2' : '#666'} 
+                />
+                <Text style={[styles.settingText, soundEnabled && styles.settingTextActive]}>
+                  Sound Effects
+                </Text>
+              </View>
+              <View style={[styles.toggle, soundEnabled && styles.toggleActive]}>
+                <View style={[styles.toggleIndicator, soundEnabled && styles.toggleIndicatorActive]} />
+              </View>
             </Pressable>
           </View>
-
-          <View style={styles.bottomRow}>
-            <Pressable 
-              style={({ pressed }) => [
-                styles.iconButton, 
-                styles.vibrationButton, 
-                !vibrationEnabled && styles.disabledButton,
-                pressed && { opacity: 0.7 }
-              ]}
-              onPress={() => {
-                vibrateOnButtonPress();
-                toggleVibration();
-              }}
+          
+          {/* Action Buttons */}
+          <View style={styles.buttonContainer}>
+            <Pressable
+              style={[styles.button, styles.primaryButton]}
+              onPress={() => handleButtonPress(onResume)}
             >
-              <MaterialCommunityIcons 
-                name={vibrationEnabled ? "vibrate" : "vibrate-off"} 
-                size={24} 
-                color="#ffffff" 
-              />
+              <View style={styles.buttonGlow} />
+              <Ionicons name="play" size={20} color="#FFFFFF" style={styles.buttonIcon} />
+              <Text style={styles.primaryButtonText}>Resume Journey</Text>
             </Pressable>
-
-            <Pressable 
-              style={({ pressed }) => [
-                styles.iconButton, 
-                styles.soundButton, 
-                !soundEnabled && styles.disabledButton,
-                pressed && { opacity: 0.7 }
-              ]}
-              onPress={() => {
-                vibrateOnButtonPress();
-                toggleSound();
-              }}
+            
+            <Pressable
+              style={[styles.button, styles.secondaryButton]}
+              onPress={() => handleButtonPress(onRestart)}
             >
-              <Ionicons 
-                name={soundEnabled ? "volume-high" : "volume-mute"} 
-                size={24} 
-                color="#ffffff" 
-              />
+              <View style={styles.secondaryButtonGlow} />
+              <MaterialCommunityIcons name="restart" size={20} color="#FFFFFF" style={styles.buttonIcon} />
+              <Text style={styles.secondaryButtonText}>Restart Mission</Text>
             </Pressable>
-
-            <Pressable 
-              style={({ pressed }) => [
-                styles.iconButton, 
-                styles.refreshButton,
-                pressed && { opacity: 0.7 }
-              ]}
-              onPress={() => handleButtonPress('restart')}
+            
+            <Pressable
+              style={[styles.button, styles.tertiaryButton]}
+              onPress={() => handleButtonPress(onHome)}
             >
-              <Ionicons name="refresh" size={24} color="#ffffff" />
+              <Ionicons name="home" size={20} color="#B0C4DE" style={styles.buttonIcon} />
+              <Text style={styles.tertiaryButtonText}>Return to Base</Text>
             </Pressable>
           </View>
         </View>
@@ -145,158 +113,241 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(10, 10, 30, 0.9)', // Deep space overlay
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
   
   modalContainer: {
+    backgroundColor: 'rgba(16, 20, 36, 0.98)',
     borderRadius: 20,
-    padding: 24,
-    width: '85%',
+    padding: 30,
+    width: '90%',
     maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  modalContainerDark: {
-    backgroundColor: '#1a1a2e', // Deep space background
-    borderWidth: 2,
-    borderColor: '#4a4a7a', // Cosmic purple border
-    shadowColor: '#6a5acd', // Cosmic purple shadow
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 0.6,
-    shadowRadius: 15,
-  },
-  modalContainerLight: {
-    backgroundColor: '#f8f9fa',
     borderWidth: 1,
-    borderColor: '#dee2e6',
+    borderColor: 'rgba(74, 144, 226, 0.3)',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 15,
   },
   
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  titleContainer: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 30,
   },
   
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-  },
-  textLight: {
-    color: '#ffffff',
-  },
-  textDark: {
-    color: '#212529',
-  },
-  
-  closeButton: {
-    padding: 8,
-    borderRadius: 20,
-  },
-  closeButtonDark: {
-    backgroundColor: '#444',
-  },
-  closeButtonLight: {
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: 2,
+    textShadowColor: '#4A90E2',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   
-  content: {
+  titleUnderline: {
+    width: '60%',
+    height: 2,
+    backgroundColor: '#4A90E2',
+    borderRadius: 1,
+    marginTop: 8,
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  
+  settingsSection: {
+    marginBottom: 30,
+  },
+  
+  settingsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#B0C4DE',
+    marginBottom: 15,
+    letterSpacing: 1,
+    textShadowColor: 'rgba(176, 196, 222, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
+  },
+  
+  settingItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 32,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: 'rgba(26, 42, 78, 0.6)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   
-  mainButton: {
+  settingItemActive: {
+    backgroundColor: 'rgba(74, 144, 226, 0.15)',
+    borderColor: 'rgba(74, 144, 226, 0.3)',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  
+  settingLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4caf50',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: '#4caf50',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
   },
   
-  mainButtonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
+  settingText: {
+    fontSize: 16,
+    color: '#999',
     marginLeft: 12,
-    letterSpacing: 0.5,
+    fontWeight: '500',
+  },
+  
+  settingTextActive: {
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(74, 144, 226, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
+  },
+  
+  toggle: {
+    width: 50,
+    height: 26,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 13,
+    padding: 2,
+    justifyContent: 'center',
+  },
+  
+  toggleActive: {
+    backgroundColor: 'rgba(74, 144, 226, 0.6)',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  
+  toggleIndicator: {
+    width: 22,
+    height: 22,
+    backgroundColor: '#666',
+    borderRadius: 11,
+    alignSelf: 'flex-start',
+  },
+  
+  toggleIndicatorActive: {
+    backgroundColor: '#FFFFFF',
+    alignSelf: 'flex-end',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  
+  buttonContainer: {
+    gap: 12,
+  },
+  
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  
+  primaryButton: {
+    backgroundColor: 'rgba(74, 144, 226, 0.2)',
+    borderWidth: 2,
+    borderColor: 'rgba(74, 144, 226, 0.6)',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
   },
   
   secondaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: 'rgba(155, 89, 182, 0.2)',
+    borderWidth: 2,
+    borderColor: 'rgba(155, 89, 182, 0.6)',
+    shadowColor: '#9B59B6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  secondaryButtonDark: {
-    backgroundColor: '#666',
-  },
-  secondaryButtonLight: {
-    backgroundColor: '#ffffff',
+  
+  tertiaryButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: '#dee2e6',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  
+  buttonGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(74, 144, 226, 0.1)',
+    borderRadius: 12,
+  },
+  
+  secondaryButtonGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(155, 89, 182, 0.1)',
+    borderRadius: 12,
+  },
+  
+  buttonIcon: {
+    marginRight: 8,
+  },
+  
+  primaryButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+    textShadowColor: 'rgba(74, 144, 226, 0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
   },
   
   secondaryButtonText: {
     fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+    textShadowColor: 'rgba(155, 89, 182, 0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
+  },
+  
+  tertiaryButtonText: {
+    fontSize: 16,
     fontWeight: '500',
-    marginLeft: 8,
-  },
-  
-  bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  
-  iconButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#444',
-  },
-  
-  vibrationButton: {
-    backgroundColor: '#ff9800',
-  },
-  
-  soundButton: {
-    backgroundColor: '#4caf50',
-  },
-
-  disabledButton: {
-    backgroundColor: '#666',
-    opacity: 0.5,
-  },
-  
-  refreshButton: {
-    backgroundColor: '#e91e63',
+    color: '#B0C4DE',
+    letterSpacing: 1,
   },
 });
 

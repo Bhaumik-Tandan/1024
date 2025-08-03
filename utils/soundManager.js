@@ -24,10 +24,13 @@ class SoundManager {
     // Skip audio initialization on web
     if (this.isWebPlatform) {
       this.isInitialized = true;
+      console.log('SoundManager: Initialized for web platform (audio disabled)');
       return;
     }
 
     try {
+      console.log('SoundManager: Starting audio initialization...');
+      
       // Configure audio mode for playback only (no permissions needed)
       await setAudioModeAsync({
         allowsRecording: false,
@@ -37,20 +40,28 @@ class SoundManager {
         shouldRouteThroughEarpiece: false,
       });
       
+      console.log('SoundManager: Audio mode configured');
+      
       // Create audio players
       this.createAudioPlayers();
       
       this.isInitialized = true;
-      // Sound manager initialized successfully
+      console.log('SoundManager: Audio initialization completed successfully');
     } catch (error) {
-      // Failed to initialize sound manager
+      console.warn('SoundManager: Failed to initialize audio system:', error);
+      this.isInitialized = false;
     }
   }
 
   createAudioPlayers() {
-    if (this.isWebPlatform || !createAudioPlayer) return;
+    if (this.isWebPlatform || !createAudioPlayer) {
+      console.log('SoundManager: Skipping audio player creation (web platform or missing createAudioPlayer)');
+      return;
+    }
     
     try {
+      console.log('SoundManager: Creating audio players...');
+      
       // Create audio players for each sound
       this.mergePlayer = createAudioPlayer(require('../assets/audio/mergeSound.wav'));
       this.intermediateMergePlayer = createAudioPlayer(require('../assets/audio/intermediateMerge.wav'));
@@ -63,8 +74,9 @@ class SoundManager {
       if (this.dropPlayer) this.dropPlayer.volume = 0.5;
       if (this.gameOverPlayer) this.gameOverPlayer.volume = 0.8;
       
+      console.log('SoundManager: Audio players created successfully');
     } catch (error) {
-      // Failed to create audio players
+      console.warn('SoundManager: Failed to create audio players:', error);
     }
   }
 
@@ -82,46 +94,86 @@ class SoundManager {
   }
 
   async playMergeSound() {
-    if (this.isWebPlatform || !this.mergePlayer) return;
+    if (this.isWebPlatform || !this.mergePlayer) {
+      if (!this.isWebPlatform && !this.mergePlayer) {
+        console.warn('SoundManager: Merge sound player not initialized');
+      }
+      return;
+    }
+    
+    if (!this.isInitialized) {
+      console.warn('SoundManager: Not initialized yet, skipping merge sound');
+      return;
+    }
     
     try {
       this.mergePlayer.seekTo(0); // Reset to beginning
       this.mergePlayer.play();
     } catch (error) {
-      // Failed to play merge sound
+      console.warn('SoundManager: Failed to play merge sound:', error);
     }
   }
 
   async playIntermediateMergeSound() {
-    if (this.isWebPlatform || !this.intermediateMergePlayer) return;
+    if (this.isWebPlatform || !this.intermediateMergePlayer) {
+      if (!this.isWebPlatform && !this.intermediateMergePlayer) {
+        console.warn('SoundManager: Intermediate merge sound player not initialized');
+      }
+      return;
+    }
+    
+    if (!this.isInitialized) {
+      console.warn('SoundManager: Not initialized yet, skipping intermediate merge sound');
+      return;
+    }
     
     try {
       this.intermediateMergePlayer.seekTo(0); // Reset to beginning
       this.intermediateMergePlayer.play();
     } catch (error) {
-      // Failed to play intermediate merge sound
+      console.warn('SoundManager: Failed to play intermediate merge sound:', error);
     }
   }
 
   async playDropSound() {
-    if (this.isWebPlatform || !this.dropPlayer) return;
+    if (this.isWebPlatform || !this.dropPlayer) {
+      if (!this.isWebPlatform && !this.dropPlayer) {
+        console.warn('SoundManager: Drop sound player not initialized');
+      }
+      return;
+    }
+    
+    if (!this.isInitialized) {
+      console.warn('SoundManager: Not initialized yet, skipping drop sound');
+      return;
+    }
     
     try {
       this.dropPlayer.seekTo(0); // Reset to beginning
       this.dropPlayer.play();
     } catch (error) {
-      // Failed to play drop sound
+      console.warn('SoundManager: Failed to play drop sound:', error);
     }
   }
 
   async playGameOverSound() {
-    if (this.isWebPlatform || !this.gameOverPlayer) return;
+    if (this.isWebPlatform || !this.gameOverPlayer) {
+      if (!this.isWebPlatform && !this.gameOverPlayer) {
+        console.warn('SoundManager: Game over sound player not initialized');
+      }
+      return;
+    }
+    
+    if (!this.isInitialized) {
+      console.warn('SoundManager: Not initialized yet, skipping game over sound');
+      return;
+    }
     
     try {
       this.gameOverPlayer.seekTo(0); // Reset to beginning
       this.gameOverPlayer.play();
     } catch (error) {
-      // Failed to play game over sound
+      console.warn('SoundManager: Failed to play game over sound:', error);
     }
   }
 
@@ -216,6 +268,28 @@ class SoundManager {
   checkSoundEnabled() {
     const state = useGameStore.getState();
     return state.soundEnabled;
+  }
+
+  isReady() {
+    return this.isInitialized && !this.isWebPlatform;
+  }
+
+  getStatus() {
+    return {
+      isInitialized: this.isInitialized,
+      isWebPlatform: this.isWebPlatform,
+      hasPlayers: {
+        merge: !!this.mergePlayer,
+        intermediateMerge: !!this.intermediateMergePlayer,
+        drop: !!this.dropPlayer,
+        gameOver: !!this.gameOverPlayer,
+      },
+      soundEnabled: this.checkSoundEnabled(),
+    };
+  }
+
+  logStatus() {
+    console.log('SoundManager Status:', this.getStatus());
   }
 
   playSoundIfEnabled(soundType) {

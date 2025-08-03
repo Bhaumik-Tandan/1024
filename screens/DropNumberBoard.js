@@ -1011,9 +1011,20 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   
-
-  
   // Game over screen styles
+  gameOverContainer: {
+    backgroundColor: 'rgba(30, 30, 40, 0.98)',
+    borderRadius: 16,
+    padding: 30,
+    alignItems: 'center',
+    width: '90%',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  gameOverHeader: {
+    alignItems: 'center',
+    marginBottom: 25,
+  },
   gameOverText: {
     color: '#fff',
     fontSize: 28,
@@ -1021,18 +1032,58 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 1,
   },
+  gameOverUnderline: {
+    width: '50%',
+    height: 2,
+    backgroundColor: '#666',
+    borderRadius: 1,
+    marginTop: 8,
+  },
+  scoreSection: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  finalScoreLabel: {
+    color: '#999',
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
   finalScoreText: {
     color: '#ffd700',
     fontSize: 42,
     fontWeight: '700',
   },
-  
-  // Stats and info styles
-  statsText: {
-    color: '#ccc',
+  newRecordText: {
+    color: '#4CAF50',
     fontSize: 14,
-    marginBottom: 8,
-    textAlign: 'center',
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 30,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    color: '#ffd700',
+    fontSize: 24,
+    fontWeight: '600',
+  },
+  statLabel: {
+    color: '#aaa',
+    fontSize: 13,
+    marginTop: 4,
+  },
+  statDivider: {
+    width: 1,
+    height: '100%',
+    backgroundColor: '#555',
   },
   
   // Button styles
@@ -1065,70 +1116,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-
-  // New styles for game over overlay
-  gameOverContainer: {
-    backgroundColor: 'rgba(30, 30, 40, 0.98)',
-    borderRadius: 16,
-    padding: 30,
-    alignItems: 'center',
-    width: '90%',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  gameOverHeader: {
-    alignItems: 'center',
-    marginBottom: 25,
-  },
-  gameOverUnderline: {
-    width: '50%',
-    height: 2,
-    backgroundColor: '#666',
-    borderRadius: 1,
-    marginTop: 8,
-  },
-  scoreSection: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  finalScoreLabel: {
-    color: '#999',
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 8,
-    letterSpacing: 0.5,
-  },
-  newRecordText: {
-    color: '#4CAF50',
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginBottom: 30,
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statValue: {
-    color: '#ffd700',
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  statLabel: {
-    color: '#aaa',
-    fontSize: 13,
-    marginTop: 4,
-  },
-  statDivider: {
-    width: 1,
-    height: '100%',
-    backgroundColor: '#555',
-    },
-
-  });
+});
 
 export default DropNumberBoard; 

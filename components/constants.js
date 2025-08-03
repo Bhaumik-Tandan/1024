@@ -922,6 +922,184 @@ export const THEME = {
 };
 
 /**
+ * ===========================
+ * MINIMAL iOS-LIKE THEME
+ * ===========================
+ * Clean, premium design following iOS design principles
+ */
+export const MINIMAL_THEME = {
+  // Background colors
+  BACKGROUND_PRIMARY: '#FFFFFF',        // Pure white
+  BACKGROUND_SECONDARY: '#F8F9FA',      // Light gray background
+  BACKGROUND_TERTIARY: '#F1F3F4',       // Subtle gray
+  BACKGROUND_CARD: '#FFFFFF',           // Card background
+  
+  // Text colors
+  TEXT_PRIMARY: '#1D1D1F',              // iOS-style dark text
+  TEXT_SECONDARY: '#86868B',            // iOS-style secondary text
+  TEXT_TERTIARY: '#C7C7CC',             // iOS-style tertiary text
+  TEXT_ACCENT: '#007AFF',               // iOS blue
+  
+  // Interactive elements
+  ACCENT_PRIMARY: '#007AFF',            // iOS blue
+  ACCENT_SECONDARY: '#5856D6',          // iOS purple
+  SUCCESS: '#34C759',                   // iOS green
+  WARNING: '#FF9500',                   // iOS orange
+  ERROR: '#FF3B30',                     // iOS red
+  
+  // Borders and dividers
+  BORDER_PRIMARY: '#E5E5EA',            // iOS-style border
+  BORDER_SECONDARY: '#F2F2F7',          // Subtle border
+  DIVIDER: '#E5E5EA',                   // iOS-style divider
+  
+  // Shadows and effects
+  SHADOW_PRIMARY: 'rgba(0, 0, 0, 0.1)',
+  SHADOW_SECONDARY: 'rgba(0, 0, 0, 0.05)',
+  OVERLAY: 'rgba(0, 0, 0, 0.4)',
+  
+  // Game-specific colors (minimal versions)
+  TILE_BACKGROUND: '#FFFFFF',
+  TILE_BORDER: '#E5E5EA',
+  GRID_BACKGROUND: '#F8F9FA',
+  NEXT_TILE_BACKGROUND: '#F1F3F4',
+};
+
+/**
+ * Minimal color palette for game tiles
+ * Clean, subtle colors that are easy on the eyes
+ */
+export const MINIMAL_COLORS = {
+  2: '#F8F9FA',     // Light gray
+  4: '#E3F2FD',     // Light blue
+  8: '#F3E5F5',     // Light purple
+  16: '#E8F5E8',    // Light green
+  32: '#FFF3E0',    // Light orange
+  64: '#FCE4EC',    // Light pink
+  128: '#E1F5FE',   // Light cyan
+  256: '#F1F8E9',   // Light lime
+  512: '#FFF8E1',   // Light yellow
+  1024: '#EFEBE9',  // Light brown
+  2048: '#ECEFF1',  // Light blue gray
+  // Higher values use gradient variations
+};
+
+/**
+ * Minimal tile gradients - very subtle
+ */
+export const MINIMAL_TILE_GRADIENTS = {
+  2: ['#F8F9FA', '#F1F3F4'],
+  4: ['#E3F2FD', '#BBDEFB'],
+  8: ['#F3E5F5', '#E1BEE7'],
+  16: ['#E8F5E8', '#C8E6C9'],
+  32: ['#FFF3E0', '#FFCC80'],
+  64: ['#FCE4EC', '#F8BBD9'],
+  128: ['#E1F5FE', '#81D4FA'],
+  256: ['#F1F8E9', '#DCEDC8'],
+  512: ['#FFF8E1', '#FFECB3'],
+  1024: ['#EFEBE9', '#D7CCC8'],
+  2048: ['#ECEFF1', '#CFD8DC'],
+};
+
+/**
+ * Typography scale for minimal design
+ * Clean hierarchy following iOS design principles
+ */
+export const MINIMAL_TYPOGRAPHY = {
+  // Font weights
+  WEIGHT: {
+    LIGHT: '300',
+    REGULAR: '400',
+    MEDIUM: '500',
+    SEMIBOLD: '600',
+    BOLD: '700',
+  },
+  
+  // Font sizes
+  SIZE: {
+    CAPTION: 12,
+    BODY: 16,
+    CALLOUT: 17,
+    TITLE3: 20,
+    TITLE2: 22,
+    TITLE1: 28,
+    LARGE_TITLE: 34,
+  },
+  
+  // Line heights
+  LINE_HEIGHT: {
+    TIGHT: 1.2,
+    NORMAL: 1.4,
+    RELAXED: 1.6,
+  },
+};
+
+/**
+ * Spacing system for consistent layout
+ * Following iOS spacing guidelines
+ */
+export const MINIMAL_SPACING = {
+  XS: 4,
+  SM: 8,
+  MD: 16,
+  LG: 24,
+  XL: 32,
+  XXL: 48,
+};
+
+/**
+ * Shadow presets for minimal design
+ */
+export const MINIMAL_SHADOWS = {
+  NONE: {
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  SUBTLE: {
+    shadowColor: MINIMAL_THEME.SHADOW_SECONDARY,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  SMALL: {
+    shadowColor: MINIMAL_THEME.SHADOW_PRIMARY,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  MEDIUM: {
+    shadowColor: MINIMAL_THEME.SHADOW_PRIMARY,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  LARGE: {
+    shadowColor: MINIMAL_THEME.SHADOW_PRIMARY,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+};
+
+/**
+ * Border radius values for consistent rounded corners
+ */
+export const MINIMAL_RADIUS = {
+  XS: 4,
+  SM: 8,
+  MD: 12,
+  LG: 16,
+  XL: 20,
+  FULL: 9999,
+};
+
+/**
  * Animation configuration for cosmic collisions and astronomical effects
  */
 export const ANIMATION_CONFIG = {

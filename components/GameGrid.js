@@ -179,8 +179,8 @@ const GameGrid = React.memo(({
   panHandlers,
   isTouchEnabled = true
 }) => {
-  const isDisabled = gameOver || !falling || (falling?.fastDrop && !falling?.static) || !isTouchEnabled;
   const gridRef = useRef(null);
+  const isDisabled = gameOver || !falling || (falling?.fastDrop && !falling?.static) || !isTouchEnabled;
   
   // Enhanced screen tap handler with accurate coordinates
   const handleGridTap = (event) => {
@@ -229,7 +229,7 @@ const GameGrid = React.memo(({
       </View>
 
       {/* Falling astronomical body - FIXED positioning for perfect alignment */}
-      {falling && !falling.inPreview && (
+      {falling && !falling.inPreview && falling.anim && falling.col !== undefined && (
         <Animated.View
           style={{
             position: 'absolute',
@@ -262,8 +262,8 @@ const GameGrid = React.memo(({
           key={anim.id}
           style={{
             position: 'absolute',
-            left: getCellLeft(anim.col),
-            top: getCellTop(anim.row),
+            left: getCellLeft(anim.col || 0),
+            top: getCellTop(anim.row || 0),
             width: CELL_SIZE,
             height: CELL_SIZE,
             transform: [
@@ -274,156 +274,121 @@ const GameGrid = React.memo(({
                 translateY: anim.moveY || 0 
               },
               { 
-                scale: anim.scale 
+                scale: anim.scale || 1
               },
               ...(anim.rotate ? [{ 
-                rotate: anim.rotate.interpolate({
-                  inputRange: [0, 360],
-                  outputRange: ['0deg', '360deg']
-                }) 
+                rotate: typeof anim.rotate === 'string' ? anim.rotate : `${anim.rotate}deg`
               }] : [])
             ],
-            opacity: anim.opacity,
-            zIndex: 999,
-          }}
-        >
-          {/* Render different content based on animation type */}
-          {anim.id.includes('result') ? (
-            <View style={{ position: 'relative' }}>
-              {/* Energy glow effect for result planet */}
-              <Animated.View
-                style={{
-                  position: 'absolute',
-                  left: -CELL_SIZE * 0.2,
-                  top: -CELL_SIZE * 0.2,
-                  width: CELL_SIZE * 1.4,
-                  height: CELL_SIZE * 1.4,
-                  borderRadius: CELL_SIZE * 0.7,
-                  backgroundColor: '#4A90E2',
-                  opacity: anim.glow ? anim.glow.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, 0.3]
-                  }) : 0,
-                  zIndex: -1,
-                }}
-              />
-              <PlanetTile 
-                value={anim.value}
-                size={CELL_SIZE}
-                isOrbiting={true}
-                orbitSpeed={3} // Fast rotation during formation
-              />
-            </View>
-          ) : (
-            <View style={{ position: 'relative' }}>
-              {/* Energy glow effect for merging planets */}
-              <Animated.View
-                style={{
-                  position: 'absolute',
-                  left: -CELL_SIZE * 0.15,
-                  top: -CELL_SIZE * 0.15,
-                  width: CELL_SIZE * 1.3,
-                  height: CELL_SIZE * 1.3,
-                  borderRadius: CELL_SIZE * 0.65,
-                  backgroundColor: '#FFD700',
-                  opacity: anim.glow ? anim.glow.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, 0.2]
-                  }) : 0,
-                  zIndex: -1,
-                }}
-              />
-              <PlanetTile 
-                value={anim.value}
-                size={CELL_SIZE}
-                isOrbiting={true}
-                orbitSpeed={4} // Very fast rotation during collision
-              />
-            </View>
-          )}
-        </Animated.View>
-      ))}
-
-      {/* Render collision effects */}
-      {collisionEffects.map((effect) => (
-        <View key={effect.id} style={{ position: 'absolute' }}>
-          {/* Shockwave effect */}
-          <Animated.View
-            style={{
-              position: 'absolute',
-              left: getCellLeft(effect.col) + CELL_SIZE / 2 - 30,
-              top: getCellTop(effect.row) + CELL_SIZE / 2 - 30,
-              width: 60,
-              height: 60,
-              borderRadius: 30,
-              borderWidth: 2,
-              borderColor: '#00FFFF',
-              opacity: effect.opacity,
-              transform: [{
-                scale: effect.shockwave.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.5, 2.5]
-                })
-              }],
-              zIndex: 998,
-            }}
-          />
-
-          {/* Flash effect */}
-          <Animated.View
-            style={{
-              position: 'absolute',
-              left: getCellLeft(effect.col),
-              top: getCellTop(effect.row),
-              width: CELL_SIZE,
-              height: CELL_SIZE,
-              borderRadius: CELL_SIZE / 2,
-              backgroundColor: '#FFFFFF',
-              opacity: effect.flash ? effect.flash.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 0.8]
-              }) : 0,
-              zIndex: 997,
-            }}
-          />
-        </View>
-      ))}
-
-      {/* Render legacy merge animations (fallback) */}
-      {mergingTiles.map((tile) => (
-        <Animated.View
-          key={tile.id}
-          style={{
-            position: 'absolute',
-            left: getCellLeft(tile.col),
-            top: getCellTop(tile.row),
-            width: CELL_SIZE,
-            height: CELL_SIZE,
-            transform: [{ scale: tile.scale }],
-            opacity: tile.anim,
-            zIndex: 996,
+            zIndex: 2000,
           }}
         >
           <PlanetTile 
-            value={tile.value}
+            value={anim.value}
             size={CELL_SIZE}
-            isOrbiting={true}
-            orbitSpeed={5} // Very fast rotation for legacy animations
+            isOrbiting={false}
+            isMerging={true}
           />
         </Animated.View>
       ))}
+
+      {/* Render collision effects - Cosmic energy bursts */}
+      {collisionEffects.map((effect) => (
+        <Animated.View
+          key={effect.id}
+          style={{
+            position: 'absolute',
+            left: getCellLeft(effect.col || 0),
+            top: getCellTop(effect.row || 0),
+            width: CELL_SIZE,
+            height: CELL_SIZE,
+            transform: [
+              { 
+                scale: effect.scale || 1
+              },
+              { 
+                rotate: typeof effect.rotate === 'string' ? effect.rotate : `${effect.rotate || 0}deg`
+              }
+            ],
+            zIndex: 3000,
+          }}
+        >
+          <View style={[styles.collisionEffect, { backgroundColor: effect.color }]} />
+        </Animated.View>
+      ))}
+
+      {/* Render energy bursts - Stellar explosions */}
+      {energyBursts.map((burst) => (
+        <Animated.View
+          key={burst.id}
+          style={{
+            position: 'absolute',
+            left: getCellLeft(burst.col || 0),
+            top: getCellTop(burst.row || 0),
+            width: CELL_SIZE * 2,
+            height: CELL_SIZE * 2,
+            transform: [
+              { 
+                scale: burst.scale || 1
+              },
+              { 
+                rotate: typeof burst.rotate === 'string' ? burst.rotate : `${burst.rotate || 0}deg`
+              }
+            ],
+            zIndex: 4000,
+          }}
+        >
+          <View style={[styles.energyBurst, { backgroundColor: burst.color }]} />
+        </Animated.View>
+      ))}
+
+      {/* Render merge result - Cosmic fusion */}
+      {mergeResult && mergeResult.scale && mergeResult.col !== undefined && (
+        <Animated.View
+          style={{
+            position: 'absolute',
+            left: getCellLeft(mergeResult.col),
+            top: getCellTop(mergeResult.row || 0),
+            width: CELL_SIZE,
+            height: CELL_SIZE,
+            transform: [
+              { 
+                scale: mergeResult.scale 
+              }
+            ],
+            zIndex: 5000,
+          }}
+        >
+          <PlanetTile 
+            value={mergeResult.value}
+            size={CELL_SIZE}
+            isOrbiting={false}
+            isMerging={false}
+            isNewlyMerged={true}
+          />
+        </Animated.View>
+      )}
+
+      {/* Guide overlay for new players */}
+      {showGuide && (
+        <View style={styles.guideOverlay}>
+          <Text style={styles.guideText}>Tap to drop tiles</Text>
+        </View>
+      )}
     </View>
   );
 }, (prevProps, nextProps) => {
-  // PERFORMANCE: Custom comparison function to prevent unnecessary re-renders
-  // Only re-render if these specific props change
+  // Custom comparison function to prevent unnecessary re-renders
   return (
-    JSON.stringify(prevProps.board) === JSON.stringify(nextProps.board) &&
+    prevProps.board === nextProps.board &&
     prevProps.falling === nextProps.falling &&
+    prevProps.mergeAnimations === nextProps.mergeAnimations &&
+    prevProps.collisionEffects === nextProps.collisionEffects &&
+    prevProps.energyBursts === nextProps.energyBursts &&
+    prevProps.mergeResult === nextProps.mergeResult &&
     prevProps.gameOver === nextProps.gameOver &&
-    prevProps.isTouchEnabled === nextProps.isTouchEnabled &&
-    prevProps.mergeAnimations.length === nextProps.mergeAnimations.length &&
-    prevProps.collisionEffects.length === nextProps.collisionEffects.length
+    prevProps.showGuide === nextProps.showGuide &&
+    prevProps.isTouchEnabled === nextProps.isTouchEnabled
   );
 });
 
@@ -705,6 +670,18 @@ const styles = StyleSheet.create({
   },
   cellDisabled: {
     opacity: 0.6,
+  },
+  collisionEffect: {
+    width: CELL_SIZE,
+    height: CELL_SIZE,
+    borderRadius: CELL_SIZE / 2,
+    opacity: 0.8,
+  },
+  energyBurst: {
+    width: CELL_SIZE * 2,
+    height: CELL_SIZE * 2,
+    borderRadius: CELL_SIZE,
+    opacity: 0.7,
   },
 });
 

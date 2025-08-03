@@ -297,10 +297,12 @@ const DropNumberBoard = ({ navigation, route }) => {
   // Pause modal handlers
   const handlePause = () => {
     setIsPaused(true);
+    soundManager.playSoundIfEnabled('pauseResume');
   };
 
   const handleResume = () => {
     setIsPaused(false);
+    soundManager.playSoundIfEnabled('pauseResume');
   };
   
   const handleRestart = () => {
@@ -451,10 +453,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       landingRow = canMergeInFull.mergeRow;
     }
     
-    // Play drop sound immediately when user taps
-    vibrateOnTouch().catch(err => {
-      // Drop sound error
-    });
+    // Remove drop sound from tap - it will play when tile reaches landing position
     
     // Disable touch temporarily to prevent rapid successive taps
     setIsTouchEnabled(false);
@@ -577,7 +576,8 @@ const DropNumberBoard = ({ navigation, route }) => {
    */
   const handleTileLanded = (row, col, value) => {
     try {
-      // Note: Drop sound is now played immediately when user taps, not when tile lands
+      // Drop sound is already played when tile is placed in GameLogic.js
+      // No need to play it again here
       
       // Check if the newly landed tile is touching other tiles for additional vibration
       const isTouchingTiles = hasAdjacentTiles(board, row, col);
@@ -652,7 +652,8 @@ const DropNumberBoard = ({ navigation, route }) => {
    */
   const handleFullColumnTileLanded = async (row, col, value) => {
     try {
-      // Note: Drop sound is now played immediately when user taps, not when tile lands
+      // Drop sound is already played when tile is placed in GameLogic.js
+      // No need to play it again here
       
       // Process the full column drop through the special game engine with animation support
       const result = await processFullColumnDrop(board, value, col, showMergeResultAnimation);

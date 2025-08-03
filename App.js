@@ -43,6 +43,11 @@ export default function App() {
       try {
         // Initialize sound manager (handles audio mode configuration internally)
         await soundManager.initialize();
+        
+        // Test sound system after initialization
+        setTimeout(() => {
+          soundManager.testSoundSystem();
+        }, 1000); // Test after 1 second to ensure everything is loaded
       } catch (error) {
         // Audio initialization failed silently - continue without sound
         console.warn('Audio initialization failed:', error);

@@ -10,12 +10,14 @@ import {
   Alert,
   Dimensions,
   Animated,
+  Slider,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import useGameStore from '../store/gameStore';
 import { EnhancedSpaceBackground } from '../components/EnhancedSpaceBackground';
 import { getPlanetType } from '../components/constants';
+import soundManager from '../utils/soundManager';
 
 const SettingsScreen = ({ navigation }) => {
   const {
@@ -27,6 +29,7 @@ const SettingsScreen = ({ navigation }) => {
     toggleVibration,
     toggleSound,
     clearAllData,
+    setSoundVolume,
   } = useGameStore();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -161,6 +164,231 @@ const SettingsScreen = ({ navigation }) => {
                   thumbColor={soundEnabled ? "#4A90E2" : "#f4f3f4"}
                   ios_backgroundColor="#3e3e3e"
                 />
+              </View>
+
+              {/* Volume Slider - Only show when sound is enabled */}
+              {soundEnabled && (
+                <View style={styles.settingItem}>
+                  <View style={styles.settingLeft}>
+                    <View style={styles.settingIconContainer}>
+                      <Ionicons 
+                        name="volume-medium" 
+                        size={22} 
+                        color="#4A90E2" 
+                      />
+                    </View>
+                    <View style={styles.settingTextContainer}>
+                      <Text style={styles.settingTitle}>Volume Level</Text>
+                      <Text style={styles.settingSubtitle}>
+                        Adjust cosmic audio intensity
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.volumeContainer}>
+                    <Slider
+                      style={styles.volumeSlider}
+                      minimumValue={0}
+                      maximumValue={1}
+                      value={soundVolume}
+                      onValueChange={(value) => {
+                        // Update volume in store
+                        const { setSoundVolume } = useGameStore.getState();
+                        setSoundVolume(value);
+                        // Update sound manager volume
+                        soundManager.setVolume(value);
+                      }}
+                      minimumTrackTintColor="#4A90E2"
+                      maximumTrackTintColor="#666"
+                      thumbStyle={styles.volumeThumb}
+                      trackStyle={styles.volumeTrack}
+                    />
+                    <Text style={styles.volumeText}>
+                      {Math.round(soundVolume * 100)}%
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Sound Test Button - Only show when sound is enabled */}
+              {soundEnabled && (
+                <View style={styles.settingItem}>
+                  <View style={styles.settingLeft}>
+                    <View style={styles.settingIconContainer}>
+                      <Ionicons 
+                        name="play-circle" 
+                        size={22} 
+                        color="#4A90E2" 
+                      />
+                    </View>
+                    <View style={styles.settingTextContainer}>
+                      <Text style={styles.settingTitle}>Test Audio</Text>
+                      <Text style={styles.settingSubtitle}>
+                        Preview cosmic sound effects
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.testButton}
+                    onPress={() => {
+                      // Play a sequence of test sounds
+                      soundManager.playMergeSound();
+                      setTimeout(() => {
+                        soundManager.playIntermediateMergeSound();
+                      }, 300);
+                      setTimeout(() => {
+                        soundManager.playDropSound();
+                      }, 600);
+                    }}
+                  >
+                    <Text style={styles.testButtonText}>TEST</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Debug Sound System Button */}
+              <View style={styles.settingItem}>
+                <View style={styles.settingLeft}>
+                  <View style={styles.settingIconContainer}>
+                    <Ionicons 
+                      name="bug" 
+                      size={22} 
+                      color="#FF6B6B" 
+                    />
+                  </View>
+                  <View style={styles.settingTextContainer}>
+                    <Text style={styles.settingTitle}>Debug Audio</Text>
+                    <Text style={styles.settingSubtitle}>
+                      Check sound system status
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.testButton, { backgroundColor: 'rgba(255, 107, 107, 0.1)', borderColor: 'rgba(255, 107, 107, 0.3)' }]}
+                  onPress={() => {
+                    // Run comprehensive sound system debug
+                    soundManager.testSoundSystem();
+                    soundManager.debugDropSound();
+                    console.log('🔍 Manual sound system debug triggered');
+                  }}
+                >
+                  <Text style={[styles.testButtonText, { color: '#FF6B6B' }]}>DEBUG</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Test Drop Sound Button */}
+              <View style={styles.settingItem}>
+                <View style={styles.settingLeft}>
+                  <View style={styles.settingIconContainer}>
+                    <Ionicons 
+                      name="volume-high" 
+                      size={22} 
+                      color="#FF9500" 
+                    />
+                  </View>
+                  <View style={styles.settingTextContainer}>
+                    <Text style={styles.settingTitle}>Test Drop Sound</Text>
+                    <Text style={styles.settingSubtitle}>
+                      Test drop sound specifically
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.testButton, { backgroundColor: 'rgba(255, 149, 0, 0.1)', borderColor: 'rgba(255, 149, 0, 0.3)' }]}
+                  onPress={() => {
+                    // Test drop sound specifically
+                    soundManager.testDropSound();
+                    console.log('🧪 Manual drop sound test triggered');
+                  }}
+                >
+                  <Text style={[styles.testButtonText, { color: '#FF9500' }]}>TEST DROP</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Test All Sounds Button */}
+              <View style={styles.settingItem}>
+                <View style={styles.settingLeft}>
+                  <View style={styles.settingIconContainer}>
+                    <Ionicons 
+                      name="musical-notes" 
+                      size={22} 
+                      color="#34C759" 
+                    />
+                  </View>
+                  <View style={styles.settingTextContainer}>
+                    <Text style={styles.settingTitle}>Test All Sounds</Text>
+                    <Text style={styles.settingSubtitle}>
+                      Test entire audio system
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.testButton, { backgroundColor: 'rgba(52, 199, 89, 0.1)', borderColor: 'rgba(52, 199, 89, 0.3)' }]}
+                  onPress={() => {
+                    // Test all sounds
+                    soundManager.testAudioSystem();
+                    console.log('🧪 Manual audio system test triggered');
+                  }}
+                >
+                  <Text style={[styles.testButtonText, { color: '#34C759' }]}>TEST ALL</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Test Basic Audio API Button */}
+              <View style={styles.settingItem}>
+                <View style={styles.settingLeft}>
+                  <View style={styles.settingIconContainer}>
+                    <Ionicons 
+                      name="settings" 
+                      size={22} 
+                      color="#007AFF" 
+                    />
+                  </View>
+                  <View style={styles.settingTextContainer}>
+                    <Text style={styles.settingTitle}>Test Audio API</Text>
+                    <Text style={styles.settingSubtitle}>
+                      Check basic audio functionality
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.testButton, { backgroundColor: 'rgba(0, 122, 255, 0.1)', borderColor: 'rgba(0, 122, 255, 0.3)' }]}
+                  onPress={() => {
+                    // Test basic audio API
+                    soundManager.testBasicAudioAPI();
+                    console.log('🧪 Manual audio API test triggered');
+                  }}
+                >
+                  <Text style={[styles.testButtonText, { color: '#007AFF' }]}>TEST API</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Test Drop Sound Audibility Button */}
+              <View style={styles.settingItem}>
+                <View style={styles.settingLeft}>
+                  <View style={styles.settingIconContainer}>
+                    <Ionicons 
+                      name="volume-high" 
+                      size={22} 
+                      color="#FF3B30" 
+                    />
+                  </View>
+                  <View style={styles.settingTextContainer}>
+                    <Text style={styles.settingTitle}>Test Drop Audibility</Text>
+                    <Text style={styles.settingSubtitle}>
+                      Check if drop sound is audible
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.testButton, { backgroundColor: 'rgba(255, 59, 48, 0.1)', borderColor: 'rgba(255, 59, 48, 0.3)' }]}
+                  onPress={() => {
+                    // Test drop sound audibility
+                    soundManager.testDropSoundAudibility();
+                    console.log('🔊 Manual drop sound audibility test triggered');
+                  }}
+                >
+                  <Text style={[styles.testButtonText, { color: '#FF3B30' }]}>TEST AUDIBLE</Text>
+                </TouchableOpacity>
               </View>
 
               {/* Vibration Toggle */}
@@ -382,6 +610,38 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   
+  volumeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    paddingHorizontal: 10,
+  },
+
+  volumeSlider: {
+    flex: 1,
+    height: 40,
+    marginHorizontal: 10,
+  },
+
+  volumeThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#4A90E2',
+  },
+
+  volumeTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#666',
+  },
+
+  volumeText: {
+    fontSize: 14,
+    color: '#999',
+    marginLeft: 10,
+  },
+  
   dangerButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -411,6 +671,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FF6B6B',
     marginLeft: 8,
+    letterSpacing: 0.5,
+  },
+
+  testButton: {
+    backgroundColor: 'rgba(74, 144, 226, 0.1)',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 144, 226, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+
+  testButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4A90E2',
     letterSpacing: 0.5,
   },
   

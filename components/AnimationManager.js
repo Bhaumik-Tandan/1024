@@ -128,7 +128,8 @@ export const useAnimationManager = () => {
       // Use simple legacy animation for fast chain reactions
       createMergeAnimation(row, col, value, mergingTilesPositions.length, 'up');
       if (onComplete) {
-        setTimeout(onComplete, 120); // Match legacy timing
+        // Add small delay for chain reactions to prevent sound overlaps
+        setTimeout(onComplete, isChainReaction ? 150 : 120); // 150ms for chains, 120ms for normal
       }
       return;
     }
@@ -319,6 +320,29 @@ export const useAnimationManager = () => {
         }
         if (anim.glow && anim.glow.stopAnimation) {
           anim.glow.stopAnimation();
+        }
+      });
+      
+      // Clear collision effects
+      collisionEffects.forEach(effect => {
+        if (effect.shockwave && effect.shockwave.stopAnimation) {
+          effect.shockwave.stopAnimation();
+        }
+        if (effect.flash && effect.flash.stopAnimation) {
+          effect.flash.stopAnimation();
+        }
+        if (effect.opacity && effect.opacity.stopAnimation) {
+          effect.opacity.stopAnimation();
+        }
+      });
+      
+      // Clear energy bursts
+      energyBursts.forEach(burst => {
+        if (burst.scale && burst.scale.stopAnimation) {
+          burst.scale.stopAnimation();
+        }
+        if (burst.opacity && burst.opacity.stopAnimation) {
+          burst.opacity.stopAnimation();
         }
       });
       

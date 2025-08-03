@@ -9,7 +9,7 @@
 
 import { ROWS, COLS } from './constants';
 import { GAME_CONFIG, GAME_RULES, GameValidator, ScoringSystem, GameHelpers } from './GameRules';
-import { vibrateOnIntermediateMerge, vibrateOnMerge } from '../utils/vibration';
+import { vibrateOnIntermediateMerge, vibrateOnMerge, vibrateOnTouch } from '../utils/vibration';
 import { Dimensions } from 'react-native'; // Added for performance optimization
 
 /**
@@ -332,6 +332,11 @@ export const processChainReactions = async (board, originColumn, showMergeResult
       await new Promise(resolve => setTimeout(resolve, 1));
     }
     
+    // Add small delay between chain reactions to prevent sound overlaps
+    if (iterations > 1) {
+      await new Promise(resolve => setTimeout(resolve, 50)); // 50ms delay between chain reactions
+    }
+    
     // Check entire board for possible merges, prioritizing origin column
     const columnsToCheck = [];
     
@@ -453,6 +458,23 @@ export const processTileDrop = async (board, value, column, showMergeResultAnima
     }
   }
   
+  // Play drop sound AFTER tile has settled (not when placed)
+  // This ensures visual and audio alignment
+  if (finalRow !== -1) {
+    console.log('🎯 Drop sound trigger - Tile settled at:', {
+      column,
+      finalRow,
+      value,
+      boardState: newBoard.map(row => row.slice())
+    });
+    
+    vibrateOnTouch().catch(err => {
+      console.warn('❌ Drop sound error in GameLogic:', err);
+    });
+  } else {
+    console.log('🔇 Drop sound SKIPPED - No tile found after gravity');
+  }
+  
   // STEP 4: Initial merge check for the landed tile
   if (finalRow !== -1) {
     // For all merges, pass the origin column to ensure results stay in the drop column
@@ -563,6 +585,17 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
   
   // Case 1: Direct merge with bottom tile
   if (bottomValue === value) {
+    // Play drop sound when tile is placed
+    console.log('🎯 Drop sound trigger (full column) - Tile placed at:', {
+      column,
+      landingRow,
+      value
+    });
+    
+    vibrateOnTouch().catch(err => {
+      console.warn('❌ Drop sound error in full column drop:', err);
+    });
+    
     // Use the proper merge animation system
     if (showMergeResultAnimation) {
       // Prepare merge positions for animation
@@ -615,6 +648,11 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
     if (pos.row >= 0 && pos.row < ROWS && 
         pos.col >= 0 && pos.col < COLS && 
         newBoard[pos.row][pos.col] === value) {
+      
+      // Play drop sound when tile is placed
+      vibrateOnTouch().catch(err => {
+        // Drop sound error (silently handled)
+      });
       
       // Found an adjacent tile that can merge
       const newValue = value * 2;
@@ -813,10 +851,13 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
     
     // Play sound immediately when merge animation starts for responsive feedback
     if (isChainReaction) {
+      // Only play intermediate sound for actual chain reactions (multiple merges)
+      // Single 3-tile merges should play regular merge sound
       vibrateOnIntermediateMerge().catch(err => {
         // Intermediate merge sound/vibration error (silently handled)
       });
     } else {
+      // For regular merges (including single 3-tile merges), play regular merge sound
       vibrateOnMerge().catch(err => {
         // Regular merge sound/vibration error (silently handled)
       });
@@ -827,6 +868,7 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   } else {
     // If no animation, play sound immediately
     if (isChainReaction) {
+      // Only play intermediate sound for actual chain reactions
       vibrateOnIntermediateMerge().catch(err => {
         // Intermediate merge sound/vibration error (silently handled)
       });
@@ -884,6 +926,17 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
   
   // STEP 1: Place the landing tile
   newBoard[row][col] = value;
+  
+  // Play drop sound when tile is placed
+  console.log('🎯 Drop sound trigger (block landing) - Tile placed at:', {
+    row,
+    col,
+    value
+  });
+  
+  vibrateOnTouch().catch(err => {
+    console.warn('❌ Drop sound error in block landing:', err);
+  });
   
   // STEP 2: Apply physics - upward gravity affects all columns
   for (let c = 0; c < COLS; c++) {
@@ -948,7 +1001,7 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
       finalRow, 
       col, 
       showMergeResultAnimation,
-      willTriggerChains, // Mark as chain reaction if it will trigger chains
+      false, // Initial merge is NEVER a chain reaction - only subsequent merges are
       resultRow, // For 2-tile merges, use dropped tile position
       resultCol, // For 2-tile merges, use dropped tile position
       col       // Origin column (where the drop occurred)
@@ -1174,6 +1227,50 @@ export const clearAllAnimations = (animationManager) => {
     animationManager.clearMergeAnimations();
     animationManager.clearFalling();
   }
+};
+
+/**
+ * Find and process merges on the board
+ * This function was missing and causing runtime errors
+ * 
+ * @param {Array[]} board - The game board (2D array)
+ * @returns {Object} - Merge result with position and value information
+ */
+export const findAndProcessMerges = (board) => {
+  // Validate board
+  if (!GameValidator.isValidBoard(board)) {
+    return { merged: false };
+  }
+
+  // Check entire board for possible merges
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (board[r][c] !== 0) {
+        const connectedTiles = findConnectedTiles(board, r, c);
+        if (connectedTiles.length >= 2) {
+          // Found a merge - return the first one found
+          const numberOfTiles = connectedTiles.length;
+          const targetValue = board[r][c];
+          const newValue = targetValue * Math.pow(2, numberOfTiles - 1);
+          
+          return {
+            merged: true,
+            row: r,
+            col: c,
+            newValue: newValue,
+            mergingPositions: connectedTiles.map(tile => ({
+              row: tile.row,
+              col: tile.col,
+              value: tile.value
+            })),
+            isChainReaction: false
+          };
+        }
+      }
+    }
+  }
+  
+  return { merged: false };
 };
 
 // Optimized merge processing to prevent animation buildup

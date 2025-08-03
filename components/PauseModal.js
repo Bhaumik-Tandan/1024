@@ -15,7 +15,6 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
   const { vibrationEnabled, soundEnabled, toggleVibration, toggleSound } = useGameStore();
 
   const handleButtonPress = (action) => {
-    // Vibrate on button press if enabled
     vibrateOnButtonPress();
     action();
   };

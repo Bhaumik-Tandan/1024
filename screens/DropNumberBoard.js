@@ -20,14 +20,14 @@ import {
   Easing, // Add Easing import
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import soundManager from '../utils/soundManager';
 
 import GameHeader from '../components/GameHeader';
 import GameGrid from '../components/GameGrid';
 import PauseModal from '../components/PauseModal';
-import SpaceBackground from '../components/SpaceBackground';
+import { EnhancedSpaceBackground } from '../components/EnhancedSpaceBackground';
 import PlanetTile from '../components/PlanetTile';
 import { useAnimationManager } from '../components/AnimationManager';
-import { ContinuousStarfield } from '../components/MovingStarfield';
 import { 
   getRandomBlockValue, 
   handleBlockLanding,
@@ -55,6 +55,56 @@ import {
 } from '../components/constants';
 import useGameStore from '../store/gameStore';
 import { vibrateOnTouch } from '../utils/vibration';
+
+// PERFORMANCE: Determine device capability and adjust background intensity
+const getDevicePerformanceLevel = () => {
+  const { width, height } = Dimensions.get('window');
+  const pixelDensity = width * height;
+  
+  // Check if device is likely to be lower performance
+  if (pixelDensity < 400000) { // Very small screens
+    return 'low';
+  } else if (pixelDensity < 800000 || width < 768) { // Medium screens or phones
+    return 'medium';
+  } else { // Large screens/tablets
+    return 'high';
+  }
+};
+
+// PERFORMANCE: Memoized background component
+const OptimizedBackground = React.memo(({ showMovingStars }) => {
+  const intensity = getDevicePerformanceLevel();
+  return (
+    <EnhancedSpaceBackground 
+      showMovingStars={showMovingStars}
+      intensity={intensity}
+    />
+  );
+});
+
+// PERFORMANCE: Memoized header component
+const OptimizedHeader = React.memo(({ score, record, onPause }) => (
+  <GameHeader 
+    score={score}
+    record={record || 0}
+    onPause={onPause}
+  />
+));
+
+// PERFORMANCE: Memoized next block component
+const OptimizedNextBlock = React.memo(({ nextBlock }) => (
+  <View style={styles.nextBlockArea}>
+    <Text style={styles.nextBlockLabel}>Next</Text>
+    <View style={styles.nextBlockContainer}>
+      <PlanetTile 
+        value={nextBlock}
+        size={screenWidth >= 768 ? CELL_SIZE * 1.1 : CELL_SIZE * 0.9}
+        isOrbiting={true}
+        orbitSpeed={0.5}
+      />
+    </View>
+  </View>
+));
 
 /**
  * Main game component with enhanced architecture
@@ -207,7 +257,7 @@ const DropNumberBoard = ({ navigation, route }) => {
     }
   }, [route.params?.resume, loadSavedGame]);
 
-  // Auto-save game state periodically
+  // PERFORMANCE: Increased auto-save interval for better performance
   useEffect(() => {
     if (!gameOver && !isPaused) {
       const autoSaveInterval = setInterval(() => {
@@ -219,7 +269,7 @@ const DropNumberBoard = ({ navigation, route }) => {
           gameStats,
         };
         saveGame(gameState);
-      }, 10000); // Save every 10 seconds
+      }, 15000); // Save every 15 seconds instead of 10 for better performance
 
       return () => clearInterval(autoSaveInterval);
     }
@@ -287,6 +337,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       // Check for game over condition - check if top row is full
       if (GameValidator.isGameOver(board)) {
         setGameOver(true);
+        soundManager.playSoundIfEnabled('gameOver');
         return;
       }
       
@@ -413,10 +464,10 @@ const DropNumberBoard = ({ navigation, route }) => {
       clearTimeout(touchTimeoutRef.current);
     }
     
-    // Re-enable touch after a delay (touch debounce)
+    // PERFORMANCE: Increased debounce delay for better touch handling
     touchTimeoutRef.current = setTimeout(() => {
       setIsTouchEnabled(true);
-    }, 300); // 300ms debounce delay
+    }, 400); // 400ms debounce delay instead of 300ms
     
     // Hide guide overlay permanently
     setShowGuide(false);
@@ -580,11 +631,12 @@ const DropNumberBoard = ({ navigation, route }) => {
         // Update board state
         setBoard(newBoard);
         
-    
+
         
         // Check for game over condition
         if (GameValidator.isGameOver(newBoard)) {
           setGameOver(true);
+          soundManager.playSoundIfEnabled('gameOver');
         }
       }).catch(error => {
         // Error processing tile landing
@@ -656,6 +708,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         // Check for game over condition
         if (GameValidator.isGameOver(newBoard)) {
           setGameOver(true);
+          soundManager.playSoundIfEnabled('gameOver');
         }
       } else {
         // Full column drop failed, should not happen if canMergeInFullColumn worked correctly
@@ -717,16 +770,11 @@ const DropNumberBoard = ({ navigation, route }) => {
   // UI rendering
   return (
     <View style={[styles.container, styles.containerDark]}>
-      <SpaceBackground />
-      {/* Moving starfield for space travel immersion - OPTIMIZED */}
-      <ContinuousStarfield 
-        starCount={screenWidth >= 768 ? 40 : 25} 
-        speed="fast" 
-        spawnRate={screenWidth >= 768 ? 3000 : 4000} 
-      />
-      <GameHeader 
+      <OptimizedBackground showMovingStars={true} />
+      
+      <OptimizedHeader 
         score={score}
-        record={highScore || 0}
+        record={highScore}
         onPause={handlePause}
       />
       
@@ -751,40 +799,45 @@ const DropNumberBoard = ({ navigation, route }) => {
         />
       </View>
       
-      {/* Next Block - styled to match screenshot */}
-      <View style={styles.nextBlockArea}>
-        <Text style={styles.nextBlockLabel}>Next</Text>
-        <View style={styles.nextBlockContainer}>
-          <PlanetTile 
-            value={nextBlock}
-            size={screenWidth >= 768 ? CELL_SIZE * 1.1 : CELL_SIZE * 0.9} // Larger preview on iPad
-            isOrbiting={true}
-            orbitSpeed={0.5} // Slower rotation for preview
-          />
-        </View>
-      </View>
-    
-      
-      
-
+      <OptimizedNextBlock nextBlock={nextBlock} />
 
       {/* Game Over Overlay */}
       {gameOver && (
         <View style={styles.overlay}>
-          <Text style={styles.gameOverText}>Game Over!</Text>
-          <Text style={styles.finalScoreText}>
-            Final Score: {score}
-          </Text>
-          <Text style={styles.statsText}>
-            Tiles Placed: {gameStats.tilesPlaced} | 
-            Chain Reactions: {gameStats.chainReactions}
-          </Text>
-          <Text style={styles.difficultyText}>
-            Difficulty: {getCurrentDifficulty()}
-          </Text>
-          <TouchableOpacity style={styles.restartBtn} onPress={resetGame}>
-            <Text style={styles.restartText}>Play Again</Text>
-          </TouchableOpacity>
+          <View style={styles.gameOverContainer}>
+            {/* Animated Game Over Title */}
+            <View style={styles.gameOverHeader}>
+              <Text style={styles.gameOverText}>MISSION ENDED</Text>
+              <View style={styles.gameOverUnderline} />
+            </View>
+            
+            {/* Score Section */}
+            <View style={styles.scoreSection}>
+              <Text style={styles.finalScoreLabel}>FINAL SCORE</Text>
+              <Text style={styles.finalScoreText}>{score.toLocaleString()}</Text>
+              {score > highScore && (
+                <Text style={styles.newRecordText}>NEW RECORD!</Text>
+              )}
+            </View>
+            
+            {/* Stats Grid */}
+            <View style={styles.statsGrid}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{gameStats.tilesPlaced}</Text>
+                <Text style={styles.statLabel}>Tiles Placed</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{gameStats.chainReactions}</Text>
+                <Text style={styles.statLabel}>Chain Reactions</Text>
+              </View>
+            </View>
+            
+            {/* Action Button */}
+            <TouchableOpacity style={styles.restartBtn} onPress={resetGame}>
+              <Text style={styles.restartText}>PLAY AGAIN</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -962,17 +1015,16 @@ const styles = StyleSheet.create({
   
   // Game over screen styles
   gameOverText: {
-    color: '#ff6b6b',
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 15,
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: '600',
     textAlign: 'center',
+    letterSpacing: 1,
   },
   finalScoreText: {
     color: '#ffd700',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    fontSize: 42,
+    fontWeight: '700',
   },
   
   // Stats and info styles
@@ -982,28 +1034,22 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: 'center',
   },
-  difficultyText: {
-    color: '#4CAF50',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
   
   // Button styles
   restartBtn: {
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 10,
+    backgroundColor: '#4A90E2',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 8,
     marginVertical: 5,
-    minWidth: 150,
+    minWidth: 180,
   },
   restartText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '600',
     textAlign: 'center',
+    letterSpacing: 0.5,
   },
   continueBtn: {
     backgroundColor: '#2196F3',
@@ -1020,6 +1066,69 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-});
+  // New styles for game over overlay
+  gameOverContainer: {
+    backgroundColor: 'rgba(30, 30, 40, 0.98)',
+    borderRadius: 16,
+    padding: 30,
+    alignItems: 'center',
+    width: '90%',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  gameOverHeader: {
+    alignItems: 'center',
+    marginBottom: 25,
+  },
+  gameOverUnderline: {
+    width: '50%',
+    height: 2,
+    backgroundColor: '#666',
+    borderRadius: 1,
+    marginTop: 8,
+  },
+  scoreSection: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  finalScoreLabel: {
+    color: '#999',
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  newRecordText: {
+    color: '#4CAF50',
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 30,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    color: '#ffd700',
+    fontSize: 24,
+    fontWeight: '600',
+  },
+  statLabel: {
+    color: '#aaa',
+    fontSize: 13,
+    marginTop: 4,
+  },
+  statDivider: {
+    width: 1,
+    height: '100%',
+    backgroundColor: '#555',
+    },
+
+  });
 
 export default DropNumberBoard; 

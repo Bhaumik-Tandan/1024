@@ -15,6 +15,7 @@ class SoundManager {
     this.mergePlayer = null;
     this.intermediateMergePlayer = null;
     this.dropPlayer = null;
+    this.gameOverPlayer = null;
     this.isInitialized = false;
     this.isWebPlatform = Platform.OS === 'web';
   }
@@ -54,11 +55,13 @@ class SoundManager {
       this.mergePlayer = createAudioPlayer(require('../assets/audio/mergeSound.wav'));
       this.intermediateMergePlayer = createAudioPlayer(require('../assets/audio/intermediateMerge.wav'));
       this.dropPlayer = createAudioPlayer(require('../assets/audio/drop.wav'));
+      this.gameOverPlayer = createAudioPlayer(require('../assets/audio/gameOver.wav'));
       
       // Set volume levels
       if (this.mergePlayer) this.mergePlayer.volume = 0.7;
       if (this.intermediateMergePlayer) this.intermediateMergePlayer.volume = 0.6;
       if (this.dropPlayer) this.dropPlayer.volume = 0.5;
+      if (this.gameOverPlayer) this.gameOverPlayer.volume = 0.8;
       
     } catch (error) {
       // Failed to create audio players
@@ -111,6 +114,17 @@ class SoundManager {
     }
   }
 
+  async playGameOverSound() {
+    if (this.isWebPlatform || !this.gameOverPlayer) return;
+    
+    try {
+      this.gameOverPlayer.seekTo(0); // Reset to beginning
+      this.gameOverPlayer.play();
+    } catch (error) {
+      // Failed to play game over sound
+    }
+  }
+
   async stopAllSounds() {
     if (this.isWebPlatform) return;
     
@@ -123,6 +137,9 @@ class SoundManager {
       }
       if (this.dropPlayer) {
         this.dropPlayer.pause();
+      }
+      if (this.gameOverPlayer) {
+        this.gameOverPlayer.pause();
       }
     } catch (error) {
       // Failed to stop sounds
@@ -145,6 +162,10 @@ class SoundManager {
         this.dropPlayer.remove();
         this.dropPlayer = null;
       }
+      if (this.gameOverPlayer) {
+        this.gameOverPlayer.remove();
+        this.gameOverPlayer = null;
+      }
     } catch (error) {
       // Failed to unload sounds
     }
@@ -163,6 +184,9 @@ class SoundManager {
       if (this.dropPlayer) {
         this.dropPlayer.volume = volume * 0.5;
       }
+      if (this.gameOverPlayer) {
+        this.gameOverPlayer.volume = volume * 0.8;
+      }
     } catch (error) {
       // Failed to set volume
     }
@@ -180,6 +204,9 @@ class SoundManager {
         break;
       case 'drop':
         this.playDropSound();
+        break;
+      case 'gameOver':
+        this.playGameOverSound();
         break;
       default:
         break;

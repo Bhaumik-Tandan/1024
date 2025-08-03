@@ -491,12 +491,12 @@ const DropNumberBoard = ({ navigation, route }) => {
     };
     setFalling(updatedFalling);
     
-    // Animate from BOTTOM ROW to target position (always start from bottom visually)
-    const bottomRowPosition = 0; // Bottom row visual position
-    const targetRowPosition = (landingRow - (ROWS - 1)) * (CELL_SIZE + CELL_MARGIN); // Target position (negative for upward)
+    // Animate from BELOW THE GRID to target position (ball rises from below)
+    const startPosition = (ROWS) * (CELL_SIZE + CELL_MARGIN); // Start from below the grid
+    const targetRowPosition = (landingRow + 1) * (CELL_SIZE + CELL_MARGIN); // Target position (ball top touches tile bottom)
     
-    // Always start the animation from the bottom row
-    falling.anim.setValue(bottomRowPosition);
+    // Start the animation from below the grid
+    falling.anim.setValue(startPosition);
     Animated.timing(falling.anim, {
       toValue: targetRowPosition,
       duration: GAME_CONFIG.TIMING.COSMIC_DROP_DURATION,

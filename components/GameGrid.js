@@ -233,10 +233,12 @@ const GameGrid = React.memo(({
         <Animated.View
           style={{
             position: 'absolute',
-            left: getExactCellPosition(falling.col),
+            left: getCellLeft(falling.col), // Left edge of the cell
             top: getCellTop(-1), // Start above the grid
             width: CELL_SIZE,
             height: CELL_SIZE,
+            justifyContent: 'center',
+            alignItems: 'center',
             transform: [
               {
                 translateY: falling.anim,

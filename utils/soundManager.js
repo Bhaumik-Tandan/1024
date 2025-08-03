@@ -30,6 +30,10 @@ class SoundManager {
       pauseResume: 0
     };
     
+    // Sound completion tracking for chain merges
+    this.activeSounds = new Set();
+    this.soundCompletionPromises = new Map();
+    
     // Minimum intervals between sounds (in milliseconds)
     this.soundIntervals = {
       merge: 180,           // Reduced from 200ms for faster feedback
@@ -99,45 +103,69 @@ class SoundManager {
       console.log(`🔇 ${soundType} sound SKIPPED - Not initialized or web platform`);
       return;
     }
-    
-    if (!this.checkSoundEnabled()) {
-      console.log(`🔇 ${soundType} sound SKIPPED - Sound disabled in settings`);
-      return;
+
+    // Wait for any active sounds to complete before playing new ones
+    if (this.activeSounds.has(soundType)) {
+      console.log(`⏳ Waiting for previous ${soundType} sound to complete...`);
+      const completionPromise = this.soundCompletionPromises.get(soundType);
+      if (completionPromise) {
+        await completionPromise;
+      }
     }
-    
+
+    // Check if enough time has passed since last sound of this type
     const now = Date.now();
     const lastTime = this.lastSoundTimes[soundType] || 0;
-    const minInterval = this.soundIntervals[soundType] || 100;
+    const interval = this.soundIntervals[soundType] || 100;
     
-    // Check if enough time has passed since last sound of this type
-    if (now - lastTime < minInterval) {
-      console.log(`🔇 ${soundType} sound skipped - too soon (${now - lastTime}ms < ${minInterval}ms)`);
+    if (now - lastTime < interval) {
+      console.log(`⏰ ${soundType} sound SKIPPED - Too soon since last sound (${now - lastTime}ms < ${interval}ms)`);
       return;
     }
-    
+
     // Add to queue with priority
     const soundRequest = {
       type: soundType,
-      priority: this.soundPriorities[soundType] || 1,
+      priority,
       timestamp: now,
-      id: Math.random().toString(36).substr(2, 9)
+      id: `${soundType}-${now}-${Math.random().toString(36).substr(2, 9)}`
     };
-    
+
     this.soundQueue.push(soundRequest);
-    
-    // Sort queue by priority (highest first)
-    this.soundQueue.sort((a, b) => b.priority - a.priority);
-    
-    console.log(`✅ ${soundType} sound queued successfully (priority: ${soundRequest.priority})`);
-    console.log(`📊 Queue status after adding:`, {
-      queueLength: this.soundQueue.length,
-      isProcessingQueue: this.isProcessingQueue
-    });
-    
+    this.soundQueue.sort((a, b) => b.priority - a.priority); // Higher priority first
+
+    console.log(`📝 Added ${soundType} to queue (Priority: ${priority}, Queue length: ${this.soundQueue.length})`);
+
     // Process queue if not already processing
     if (!this.isProcessingQueue) {
-      console.log('🔄 Starting queue processing...');
       this.processSoundQueue();
+    }
+  }
+
+  // Wait for specific sound type to complete
+  async waitForSoundCompletion(soundType) {
+    if (this.activeSounds.has(soundType)) {
+      const completionPromise = this.soundCompletionPromises.get(soundType);
+      if (completionPromise) {
+        console.log(`⏳ Waiting for ${soundType} sound to complete...`);
+        await completionPromise;
+        console.log(`✅ ${soundType} sound completed`);
+      }
+    }
+  }
+
+  // Wait for all active sounds to complete
+  async waitForAllSoundsToComplete() {
+    if (this.activeSounds.size > 0) {
+      console.log(`⏳ Waiting for ${this.activeSounds.size} active sounds to complete...`);
+      const promises = Array.from(this.activeSounds).map(soundType => 
+        this.soundCompletionPromises.get(soundType)
+      ).filter(Boolean);
+      
+      if (promises.length > 0) {
+        await Promise.all(promises);
+        console.log(`✅ All sounds completed`);
+      }
     }
   }
   
@@ -192,19 +220,60 @@ class SoundManager {
   }
   
   async playSoundDirectly(soundType) {
+    // Track sound completion for chain merges
+    this.activeSounds.add(soundType);
+    
+    // Create completion promise
+    const completionPromise = new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        this.activeSounds.delete(soundType);
+        this.soundCompletionPromises.delete(soundType);
+        resolve();
+      }, this.getSoundDuration(soundType));
+      
+      // Store the promise for waiting
+      this.soundCompletionPromises.set(soundType, completionPromise);
+    });
+
+    try {
+      switch (soundType) {
+        case 'merge':
+          return await this.playMergeSoundDirectly();
+        case 'intermediateMerge':
+          return await this.playIntermediateMergeSoundDirectly();
+        case 'drop':
+          return await this.playDropSoundDirectly();
+        case 'gameOver':
+          return await this.playGameOverSoundDirectly();
+        case 'pauseResume':
+          return await this.playPauseResumeSoundDirectly();
+        default:
+          throw new Error(`Unknown sound type: ${soundType}`);
+      }
+    } finally {
+      // Clean up after sound completes
+      setTimeout(() => {
+        this.activeSounds.delete(soundType);
+        this.soundCompletionPromises.delete(soundType);
+      }, this.getSoundDuration(soundType));
+    }
+  }
+
+  // Get estimated sound duration for completion tracking
+  getSoundDuration(soundType) {
     switch (soundType) {
       case 'merge':
-        return this.playMergeSoundDirectly();
+        return 300; // 300ms for merge sound
       case 'intermediateMerge':
-        return this.playIntermediateMergeSoundDirectly();
+        return 200; // 200ms for intermediate merge sound
       case 'drop':
-        return this.playDropSoundDirectly();
+        return 150; // 150ms for drop sound
       case 'gameOver':
-        return this.playGameOverSoundDirectly();
+        return 2000; // 2000ms for game over sound
       case 'pauseResume':
-        return this.playPauseResumeSoundDirectly();
+        return 100; // 100ms for pause/resume sound
       default:
-        throw new Error(`Unknown sound type: ${soundType}`);
+        return 200; // Default 200ms
     }
   }
 

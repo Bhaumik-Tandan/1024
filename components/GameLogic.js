@@ -10,6 +10,7 @@
 import { ROWS, COLS } from './constants';
 import { GAME_CONFIG, GAME_RULES, GameValidator, ScoringSystem, GameHelpers } from './GameRules';
 import { vibrateOnIntermediateMerge, vibrateOnMerge, vibrateOnTouch } from '../utils/vibration';
+import soundManager from '../utils/soundManager';
 import { Dimensions } from 'react-native'; // Added for performance optimization
 
 /**
@@ -359,6 +360,12 @@ export const processChainReactions = async (board, originColumn, showMergeResult
     outerLoop: for (let r = 0; r < ROWS; r++) {
       for (const c of columnsToCheck) {
         if (board[r][c] !== 0) {
+          // Wait for any active merge sounds to complete before starting new merge
+          if (chainReactionCount > 0) {
+            // Wait for previous merge sound to complete
+            await soundManager.waitForSoundCompletion('intermediateMerge');
+          }
+          
           // Use the animated merge function if animation callback is provided
           let mergeResult;
           if (showMergeResultAnimation) {
@@ -870,6 +877,9 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
     if (isChainReaction) {
       // Only play intermediate sound for actual chain reactions (multiple merges)
       // Single 3-tile merges should play regular merge sound
+      // Wait for any active merge sounds to complete first
+      await soundManager.waitForSoundCompletion('intermediateMerge');
+      
       // Add small delay for large chain reactions to prevent sound conflicts
       setTimeout(() => {
         vibrateOnIntermediateMerge().catch(err => {
@@ -878,6 +888,9 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
       }, isChainReaction && mergingTilePositions.length >= GAME_CONFIG.TIMING.LARGE_CHAIN_THRESHOLD ? 10 : 0);
     } else {
       // For regular merges (including single 3-tile merges), play regular merge sound
+      // Wait for any active merge sounds to complete first
+      await soundManager.waitForSoundCompletion('merge');
+      
       vibrateOnMerge().catch(err => {
         // Regular merge sound/vibration error (silently handled)
       });
@@ -889,6 +902,9 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
     // If no animation, play sound immediately
     if (isChainReaction) {
       // Only play intermediate sound for actual chain reactions
+      // Wait for any active merge sounds to complete first
+      await soundManager.waitForSoundCompletion('intermediateMerge');
+      
       // Add small delay for large chain reactions to prevent sound conflicts
       setTimeout(() => {
         vibrateOnIntermediateMerge().catch(err => {
@@ -897,6 +913,9 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
       }, isChainReaction && mergingTilePositions.length >= GAME_CONFIG.TIMING.LARGE_CHAIN_THRESHOLD ? 10 : 0);
     } else {
       // For regular merges, play regular merge sound
+      // Wait for any active merge sounds to complete first
+      await soundManager.waitForSoundCompletion('merge');
+      
       vibrateOnMerge().catch(err => {
         // Regular merge sound/vibration error (silently handled)
       });

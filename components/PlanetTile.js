@@ -162,41 +162,58 @@ const PlanetTile = ({ value, isOrbiting = true, orbitSpeed = 1, size, isCollidin
         />
       )}
 
-      {/* Planet name and value display */}
+      {/* Circular clipping mask for text container */}
       <View style={{
         position: 'absolute',
-        bottom: 2,
-        left: 2,
-        right: 2,
-        backgroundColor: 'rgba(0,0,0,0.8)', // Darker background for better contrast
-        borderRadius: 8,
-        paddingHorizontal: 6,
-        paddingVertical: 3,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.2)',
+        width: planetSize,
+        height: planetSize,
+        borderRadius: planetSize / 2,
+        overflow: 'hidden', // Clip content at planet circumference
       }}>
+        {/* Planet name and value display - Optimized layout with better proportions */}
+        <View style={{
+          position: 'absolute',
+          bottom: -2,  // Move even lower to the very bottom
+          left: -18,   // Keep full width extension
+          right: -18,  // Keep full width extension
+          height: planetSize * 0.55, // Keep reduced height for better proportions
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          borderTopLeftRadius: planetSize * 0.3,  // Adjust curve for new height
+          borderTopRightRadius: planetSize * 0.3, // Adjust curve for new height
+          paddingHorizontal: 16,
+          paddingTop: 6,  // Further reduced top padding
+          paddingBottom: 4,  // Further reduced bottom padding
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.2)',
+          justifyContent: 'flex-end', // Push content to bottom
+          alignItems: 'center',
+        }}>
         <Text style={{
           color: '#FFFFFF',
-          fontSize: Math.max(12, planetSize * 0.16), // Increased font size
+          fontSize: Math.max(10, planetSize * 0.12), // Slightly smaller font
           fontWeight: 'bold',
           textAlign: 'center',
           textShadowColor: 'rgba(0,0,0,0.9)',
           textShadowOffset: { width: 1, height: 1 },
           textShadowRadius: 2,
-        }}>
+          marginBottom: 1, // Minimal space between name and number
+        }} numberOfLines={1}>
           {planet.name}
         </Text>
         <Text style={{
           color: '#FFD700',
-          fontSize: Math.max(16, planetSize * 0.20), // Much larger number font
+          fontSize: Math.max(13, planetSize * 0.16), // Slightly smaller font
           fontWeight: 'bold',
           textAlign: 'center',
           textShadowColor: 'rgba(0,0,0,0.9)',
           textShadowOffset: { width: 1, height: 1 },
           textShadowRadius: 2,
-        }}>
+          flex: 0, // Prevent text from expanding
+          marginBottom: 0, // Remove any bottom margin
+        }} numberOfLines={1} adjustsFontSizeToFit={true} minimumFontScale={0.7}>
           {value}
         </Text>
+        </View>
       </View>
     </View>
   );

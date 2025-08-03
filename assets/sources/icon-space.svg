@@ -1,70 +1,619 @@
-
-<svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- HUBBLE SPACE TELESCOPE QUALITY SOLAR SYSTEM ICON -->
   <defs>
-    <radialGradient id="spaceBackground" cx="50%" cy="50%" r="70%">
-      <stop offset="0%" style="stop-color:#1a0a2e"/>
-      <stop offset="70%" style="stop-color:#16213e"/>
-      <stop offset="100%" style="stop-color:#0a0a1a"/>
+    <!-- Ultra-enhanced deep space background -->
+    <radialGradient id="spaceGradient" cx="50%" cy="50%" r="98%">
+      <stop offset="0%" style="stop-color:#16213e;stop-opacity:1" />
+      <stop offset="20%" style="stop-color:#1a0a2e;stop-opacity:1" />
+      <stop offset="60%" style="stop-color:#0a0a1a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#000000;stop-opacity:1" />
     </radialGradient>
-    <radialGradient id="earth" cx="35%" cy="35%" r="65%">
-      <stop offset="0%" style="stop-color:#87CEEB"/>
-      <stop offset="30%" style="stop-color:#4169E1"/>
-      <stop offset="60%" style="stop-color:#228B22"/>
-      <stop offset="100%" style="stop-color:#006400"/>
+    
+    <!-- Precision Sun system matching main menu specifications -->
+    <radialGradient id="sunCore" cx="20%" cy="20%" r="80%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="10%" style="stop-color:#fff7d4;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#ffd700;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#ff8c00;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff6500;stop-opacity:1" />
     </radialGradient>
-    <radialGradient id="mars" cx="40%" cy="40%" r="60%">
-      <stop offset="0%" style="stop-color:#FF6B35"/>
-      <stop offset="50%" style="stop-color:#CD5C5C"/>
-      <stop offset="100%" style="stop-color:#8B0000"/>
+    
+    <radialGradient id="sunCorona" cx="50%" cy="50%" r="100%">
+      <stop offset="0%" style="stop-color:#ffd700;stop-opacity:0.95" />
+      <stop offset="25%" style="stop-color:#ffa500;stop-opacity:0.7" />
+      <stop offset="60%" style="stop-color:#ff8c00;stop-opacity:0.4" />
+      <stop offset="100%" style="stop-color:#ff6500;stop-opacity:0" />
     </radialGradient>
-    <radialGradient id="venus" cx="35%" cy="35%" r="65%">
-      <stop offset="0%" style="stop-color:#FFD700"/>
-      <stop offset="50%" style="stop-color:#FFA500"/>
-      <stop offset="100%" style="stop-color:#FF8C00"/>
+    
+    <!-- 20 solar wind particle gradients (matching main menu count) -->
+    <radialGradient id="solarWind1" cx="50%" cy="50%" r="100%">
+      <stop offset="0%" style="stop-color:#ffd700;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#ffd700;stop-opacity:0" />
     </radialGradient>
-    <radialGradient id="moon" cx="40%" cy="40%" r="60%">
-      <stop offset="0%" style="stop-color:#F5F5DC"/>
-      <stop offset="50%" style="stop-color:#C0C0C0"/>
-      <stop offset="100%" style="stop-color:#808080"/>
+    
+    <radialGradient id="solarWind2" cx="50%" cy="50%" r="100%">
+      <stop offset="0%" style="stop-color:#ffa500;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#ffa500;stop-opacity:0" />
+    </radialGradient>
+    
+    <radialGradient id="solarWind3" cx="50%" cy="50%" r="100%">
+      <stop offset="0%" style="stop-color:#ff8c00;stop-opacity:0.7" />
+      <stop offset="100%" style="stop-color:#ff8c00;stop-opacity:0" />
+    </radialGradient>
+    
+    <!-- Enhanced planetary gradients with microscopic precision -->
+    <radialGradient id="earthGradient" cx="20%" cy="20%" r="85%">
+      <stop offset="0%" style="stop-color:#87ceeb;stop-opacity:1" />
+      <stop offset="25%" style="stop-color:#4682b4;stop-opacity:1" />
+      <stop offset="60%" style="stop-color:#1e40af;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+    </radialGradient>
+    
+    <radialGradient id="marsGradient" cx="20%" cy="20%" r="85%">
+      <stop offset="0%" style="stop-color:#ff6b35;stop-opacity:1" />
+      <stop offset="35%" style="stop-color:#cd5c5c;stop-opacity:1" />
+      <stop offset="75%" style="stop-color:#8b0000;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4a0000;stop-opacity:1" />
+    </radialGradient>
+    
+    <radialGradient id="venusGradient" cx="20%" cy="20%" r="85%">
+      <stop offset="0%" style="stop-color:#fff8dc;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#ffd700;stop-opacity:1" />
+      <stop offset="65%" style="stop-color:#ffa500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff8c00;stop-opacity:1" />
+    </radialGradient>
+    
+    <radialGradient id="jupiterGradient" cx="20%" cy="20%" r="85%">
+      <stop offset="0%" style="stop-color:#ffeaa7;stop-opacity:1" />
+      <stop offset="20%" style="stop-color:#ff8c00;stop-opacity:1" />
+      <stop offset="55%" style="stop-color:#cd853f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b4513;stop-opacity:1" />
+    </radialGradient>
+    
+    <radialGradient id="saturnGradient" cx="20%" cy="20%" r="85%">
+      <stop offset="0%" style="stop-color:#fff8dc;stop-opacity:1" />
+      <stop offset="35%" style="stop-color:#fad5a5;stop-opacity:1" />
+      <stop offset="75%" style="stop-color:#deb887;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#cd853f;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Ultra-precise atmospheric effects -->
+    <radialGradient id="earthAtmosphere" cx="50%" cy="50%" r="85%">
+      <stop offset="0%" style="stop-color:#87ceeb;stop-opacity:0" />
+      <stop offset="55%" style="stop-color:#87ceeb;stop-opacity:0.6" />
+      <stop offset="80%" style="stop-color:#4169e1;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+    </radialGradient>
+    
+    <radialGradient id="venusAtmosphere" cx="50%" cy="50%" r="85%">
+      <stop offset="0%" style="stop-color:#ffff66;stop-opacity:0" />
+      <stop offset="45%" style="stop-color:#ffff66;stop-opacity:0.5" />
+      <stop offset="75%" style="stop-color:#ffd700;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#ff8c00;stop-opacity:0.9" />
+    </radialGradient>
+    
+    <!-- Microscopic lighting system -->
+    <radialGradient id="sunIllumination" cx="75%" cy="25%" r="65%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.9" />
+      <stop offset="35%" style="stop-color:#ffffff;stop-opacity:0.6" />
+      <stop offset="75%" style="stop-color:#ffffff;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+    </radialGradient>
+    
+    <!-- Enhanced space dust effect -->
+    <radialGradient id="spaceDust" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+    </radialGradient>
+    
+    <!-- 5 asteroid color variations (matching main menu) -->
+    <radialGradient id="asteroid1" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:#8B7355;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#696969;stop-opacity:1" />
+    </radialGradient>
+    
+    <radialGradient id="asteroid2" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:#A0522D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B7355;stop-opacity:1" />
+    </radialGradient>
+    
+    <radialGradient id="asteroid3" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:#CD853F;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#A0522D;stop-opacity:1" />
+    </radialGradient>
+    
+    <radialGradient id="asteroid4" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:#BC8F8F;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#CD853F;stop-opacity:1" />
+    </radialGradient>
+    
+    <radialGradient id="asteroid5" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:#696969;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#BC8F8F;stop-opacity:1" />
     </radialGradient>
   </defs>
   
-  <rect width="1024" height="1024" fill="url(#spaceBackground)" rx="200"/>
+  <!-- Deep space background -->
+  <rect width="1024" height="1024" fill="url(#spaceGradient)" rx="200" ry="200" />
   
-  <!-- Background stars -->
-  <circle cx="150" cy="200" r="3" fill="#FFFFFF" opacity="0.6"/>
-  <circle cx="300" cy="150" r="2" fill="#F0F8FF" opacity="0.5"/>
-  <circle cx="500" cy="180" r="2.5" fill="#FFFACD" opacity="0.7"/>
-  <circle cx="700" cy="130" r="2" fill="#FFFFFF" opacity="0.6"/>
-  <circle cx="850" cy="220" r="1.5" fill="#E6E6FA" opacity="0.5"/>
-  <circle cx="900" cy="100" r="3" fill="#FFFFFF" opacity="0.8"/>
+  <!-- Hubble-quality star field with stellar classification -->
+  <g opacity="0.95">
+    <!-- Supergiant stars (class O) -->
+    <circle cx="100" cy="120" r="4" fill="#b0e0e6" opacity="1"/>
+    <circle cx="924" cy="180" r="3.8" fill="#ffffff" opacity="0.95"/>
+    <circle cx="150" cy="300" r="4.2" fill="#e6e6fa" opacity="0.9"/>
+    
+    <!-- Blue giant stars (class B) -->
+    <circle cx="900" cy="450" r="3.5" fill="#b0e0e6" opacity="0.9"/>
+    <circle cx="80" cy="650" r="3.2" fill="#ffffff" opacity="0.85"/>
+    <circle cx="950" cy="800" r="3.8" fill="#e6e6fa" opacity="0.8"/>
+    
+    <!-- White main sequence stars (class A) -->
+    <circle cx="250" cy="80" r="2.8" fill="#ffffff" opacity="0.85"/>
+    <circle cx="700" cy="100" r="2.5" fill="#f0f8ff" opacity="0.8"/>
+    <circle cx="400" cy="950" r="3" fill="#ffffff" opacity="0.9"/>
+    
+    <!-- Solar-type stars (class G) -->
+    <circle cx="680" cy="200" r="2.2" fill="#fffacd" opacity="0.8"/>
+    <circle cx="40" cy="400" r="2.5" fill="#fff8dc" opacity="0.85"/>
+    <circle cx="800" cy="750" r="2.3" fill="#fffacd" opacity="0.9"/>
+    <circle cx="420" cy="50" r="2.1" fill="#fff8dc" opacity="0.75"/>
+    <circle cx="580" cy="980" r="2.4" fill="#fffacd" opacity="0.8"/>
+    
+    <!-- Orange dwarf stars (class K) -->
+    <circle cx="320" cy="250" r="1.8" fill="#ffa500" opacity="0.7"/>
+    <circle cx="750" cy="650" r="1.5" fill="#ff8c00" opacity="0.6"/>
+    <circle cx="120" cy="550" r="2" fill="#ffa500" opacity="0.8"/>
+    <circle cx="880" cy="300" r="1.6" fill="#ff8c00" opacity="0.5"/>
+    
+    <!-- Red dwarf stars (class M) -->
+    <circle cx="600" cy="150" r="1.3" fill="#ff6347" opacity="0.6"/>
+    <circle cx="200" cy="700" r="1.1" fill="#ff7f50" opacity="0.5"/>
+    <circle cx="850" cy="500" r="1.4" fill="#ff6347" opacity="0.7"/>
+    <circle cx="450" cy="350" r="1.2" fill="#ff7f50" opacity="0.4"/>
+    
+    <!-- Binary star systems -->
+    <circle cx="300" cy="600" r="1.8" fill="#ffffff" opacity="0.8"/>
+    <circle cx="305" cy="605" r="1.5" fill="#b0e0e6" opacity="0.7"/>
+    
+    <circle cx="750" cy="400" r="1.6" fill="#fffacd" opacity="0.8"/>
+    <circle cx="754" cy="396" r="1.3" fill="#ffa500" opacity="0.6"/>
+    
+    <!-- Distant background stars -->
+    <circle cx="180" cy="180" r="0.8" fill="#ffffff" opacity="0.3"/>
+    <circle cx="660" cy="660" r="0.6" fill="#f0f8ff" opacity="0.4"/>
+    <circle cx="380" cy="380" r="0.9" fill="#fffacd" opacity="0.2"/>
+    <circle cx="220" cy="820" r="0.7" fill="#e6e6fa" opacity="0.3"/>
+    <circle cx="820" cy="220" r="1" fill="#ffffff" opacity="0.5"/>
+    <circle cx="540" cy="540" r="0.8" fill="#b0e0e6" opacity="0.4"/>
+  </g>
   
-  <!-- More background stars -->
-  <circle cx="100" cy="400" r="1.5" fill="#FFFFFF" opacity="0.4"/>
-  <circle cx="200" cy="450" r="1" fill="#F0F8FF" opacity="0.5"/>
-  <circle cx="900" cy="400" r="2" fill="#FFFACD" opacity="0.6"/>
-  <circle cx="950" cy="350" r="1.5" fill="#FFFFFF" opacity="0.5"/>
+  <!-- Enhanced space dust throughout the galaxy -->
+  <g opacity="0.5">
+    <!-- Dense space dust clouds -->
+    <circle cx="140" cy="160" r="1.2" fill="url(#spaceDust)"/>
+    <circle cx="280" cy="120" r="0.9" fill="url(#spaceDust)"/>
+    <circle cx="420" cy="200" r="1.4" fill="url(#spaceDust)"/>
+    <circle cx="560" cy="140" r="1.1" fill="url(#spaceDust)"/>
+    <circle cx="700" cy="180" r="1.3" fill="url(#spaceDust)"/>
+    <circle cx="840" cy="160" r="0.8" fill="url(#spaceDust)"/>
+    <circle cx="980" cy="120" r="1" fill="url(#spaceDust)"/>
+    
+    <!-- Mid-region dust -->
+    <circle cx="100" cy="360" r="1.1" fill="url(#spaceDust)"/>
+    <circle cx="240" cy="320" r="0.8" fill="url(#spaceDust)"/>
+    <circle cx="380" cy="400" r="1.3" fill="url(#spaceDust)"/>
+    <circle cx="520" cy="340" r="1" fill="url(#spaceDust)"/>
+    <circle cx="660" cy="380" r="1.2" fill="url(#spaceDust)"/>
+    <circle cx="800" cy="360" r="0.9" fill="url(#spaceDust)"/>
+    <circle cx="940" cy="320" r="1.1" fill="url(#spaceDust)"/>
+    
+    <!-- Outer region dust -->
+    <circle cx="160" cy="560" r="0.9" fill="url(#spaceDust)"/>
+    <circle cx="300" cy="520" r="1.2" fill="url(#spaceDust)"/>
+    <circle cx="440" cy="600" r="0.8" fill="url(#spaceDust)"/>
+    <circle cx="580" cy="540" r="1.4" fill="url(#spaceDust)"/>
+    <circle cx="720" cy="580" r="1" fill="url(#spaceDust)"/>
+    <circle cx="860" cy="560" r="1.1" fill="url(#spaceDust)"/>
+    
+    <!-- Lower region dust -->
+    <circle cx="120" cy="760" r="1.3" fill="url(#spaceDust)"/>
+    <circle cx="260" cy="720" r="0.9" fill="url(#spaceDust)"/>
+    <circle cx="400" cy="800" r="1.1" fill="url(#spaceDust)"/>
+    <circle cx="540" cy="740" r="1.2" fill="url(#spaceDust)"/>
+    <circle cx="680" cy="780" r="0.8" fill="url(#spaceDust)"/>
+    <circle cx="820" cy="760" r="1" fill="url(#spaceDust)"/>
+    <circle cx="960" cy="720" r="1.1" fill="url(#spaceDust)"/>
+    
+    <!-- Bottom region dust -->
+    <circle cx="180" cy="860" r="1" fill="url(#spaceDust)"/>
+    <circle cx="320" cy="920" r="0.8" fill="url(#spaceDust)"/>
+    <circle cx="460" cy="880" r="1.2" fill="url(#spaceDust)"/>
+    <circle cx="600" cy="940" r="0.9" fill="url(#spaceDust)"/>
+    <circle cx="740" cy="900" r="1.1" fill="url(#spaceDust)"/>
+    <circle cx="880" cy="860" r="1" fill="url(#spaceDust)"/>
+  </g>
   
-  <circle cx="180" cy="700" r="2" fill="#FFFFFF" opacity="0.6"/>
-  <circle cx="350" cy="750" r="1.5" fill="#E6E6FA" opacity="0.5"/>
-  <circle cx="700" cy="800" r="2.5" fill="#FFFFFF" opacity="0.7"/>
-  <circle cx="850" cy="720" r="1" fill="#F0F8FF" opacity="0.4"/>
+  <!-- Precision orbital paths -->
+  <g opacity="0.25">
+    <circle cx="512" cy="512" r="125" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1" stroke-dasharray="1,1"/>
+    <circle cx="512" cy="512" r="165" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+    <circle cx="512" cy="512" r="215" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
+    <circle cx="512" cy="512" r="275" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+    <circle cx="512" cy="512" r="345" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+    <circle cx="512" cy="512" r="415" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="3,3"/>
+    <circle cx="512" cy="512" r="475" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  </g>
   
-  <circle cx="120" cy="900" r="1.5" fill="#FFFACD" opacity="0.6"/>
-  <circle cx="400" cy="920" r="2" fill="#FFFFFF" opacity="0.5"/>
-  <circle cx="800" cy="950" r="1.5" fill="#E6E6FA" opacity="0.5"/>
-  <circle cx="950" cy="900" r="2" fill="#FFFFFF" opacity="0.6"/>
+  <!-- ULTRA-REALISTIC CENTRAL SUN with 20 solar wind particles -->
+  <g>
+    <!-- 20 solar wind particles (matching main menu specification) -->
+    <g opacity="0.8">
+      <!-- Particle 1: angle 0° + random -->
+      <ellipse cx="485" cy="475" rx="35" ry="3" fill="url(#solarWind1)" transform="rotate(-8 485 475)"/>
+      <!-- Particle 2: angle 18° + random -->
+      <ellipse cx="560" cy="485" rx="38" ry="3.2" fill="url(#solarWind2)" transform="rotate(25 560 485)"/>
+      <!-- Particle 3: angle 36° + random -->
+      <ellipse cx="545" cy="520" rx="32" ry="2.8" fill="url(#solarWind3)" transform="rotate(45 545 520)"/>
+      <!-- Particle 4: angle 54° + random -->
+      <ellipse cx="525" cy="560" rx="40" ry="3.5" fill="url(#solarWind1)" transform="rotate(62 525 560)"/>
+      <!-- Particle 5: angle 72° + random -->
+      <ellipse cx="485" cy="580" rx="36" ry="3.1" fill="url(#solarWind2)" transform="rotate(80 485 580)"/>
+      <!-- Particle 6: angle 90° + random -->
+      <ellipse cx="450" cy="570" rx="34" ry="2.9" fill="url(#solarWind3)" transform="rotate(98 450 570)"/>
+      <!-- Particle 7: angle 108° + random -->
+      <ellipse cx="420" cy="545" rx="37" ry="3.3" fill="url(#solarWind1)" transform="rotate(115 420 545)"/>
+      <!-- Particle 8: angle 126° + random -->
+      <ellipse cx="405" cy="505" rx="33" ry="2.7" fill="url(#solarWind2)" transform="rotate(135 405 505)"/>
+      <!-- Particle 9: angle 144° + random -->
+      <ellipse cx="415" cy="465" rx="39" ry="3.4" fill="url(#solarWind3)" transform="rotate(152 415 465)"/>
+      <!-- Particle 10: angle 162° + random -->
+      <ellipse cx="440" cy="435" rx="35" ry="3" fill="url(#solarWind1)" transform="rotate(170 440 435)"/>
+      <!-- Particle 11: angle 180° + random -->
+      <ellipse cx="485" cy="425" rx="31" ry="2.6" fill="url(#solarWind2)" transform="rotate(188 485 425)"/>
+      <!-- Particle 12: angle 198° + random -->
+      <ellipse cx="530" cy="440" rx="36" ry="3.1" fill="url(#solarWind3)" transform="rotate(205 530 440)"/>
+      <!-- Particle 13: angle 216° + random -->
+      <ellipse cx="570" cy="470" rx="38" ry="3.3" fill="url(#solarWind1)" transform="rotate(225 570 470)"/>
+      <!-- Particle 14: angle 234° + random -->
+      <ellipse cx="585" cy="510" rx="34" ry="2.8" fill="url(#solarWind2)" transform="rotate(242 585 510)"/>
+      <!-- Particle 15: angle 252° + random -->
+      <ellipse cx="575" cy="550" rx="37" ry="3.2" fill="url(#solarWind3)" transform="rotate(260 575 550)"/>
+      <!-- Particle 16: angle 270° + random -->
+      <ellipse cx="545" cy="585" rx="35" ry="3" fill="url(#solarWind1)" transform="rotate(278 545 585)"/>
+      <!-- Particle 17: angle 288° + random -->
+      <ellipse cx="505" cy="595" rx="33" ry="2.7" fill="url(#solarWind2)" transform="rotate(295 505 595)"/>
+      <!-- Particle 18: angle 306° + random -->
+      <ellipse cx="470" cy="580" rx="39" ry="3.4" fill="url(#solarWind3)" transform="rotate(315 470 580)"/>
+      <!-- Particle 19: angle 324° + random -->
+      <ellipse cx="445" cy="550" rx="36" ry="3.1" fill="url(#solarWind1)" transform="rotate(332 445 550)"/>
+      <!-- Particle 20: angle 342° + random -->
+      <ellipse cx="435" cy="510" rx="34" ry="2.9" fill="url(#solarWind2)" transform="rotate(350 435 510)"/>
+    </g>
+    
+    <!-- Ultra-enhanced corona system -->
+    <circle cx="512" cy="512" r="120" fill="url(#sunCorona)" opacity="0.3"/>
+    <circle cx="512" cy="512" r="95" fill="url(#sunCorona)" opacity="0.5"/>
+    <circle cx="512" cy="512" r="75" fill="url(#sunCorona)" opacity="0.7"/>
+    <circle cx="512" cy="512" r="58" fill="url(#sunCorona)" opacity="0.9"/>
+    <circle cx="512" cy="512" r="45" fill="rgba(255,215,0,0.6)" opacity="1"/>
+    
+    <!-- Main sun body with microscopic surface detail -->
+    <circle cx="512" cy="512" r="35" fill="url(#sunCore)"/>
+    
+    <!-- Ultra-detailed sun surface features -->
+    <circle cx="490" cy="490" r="18" fill="rgba(255,255,255,0.8)" opacity="0.95"/>
+    <circle cx="525" cy="500" r="14" fill="rgba(255,255,255,0.6)" opacity="0.8"/>
+    <circle cx="500" cy="530" r="11" fill="rgba(255,255,255,0.7)" opacity="0.9"/>
+    <circle cx="530" cy="480" r="9" fill="rgba(255,255,255,0.5)" opacity="0.7"/>
+    <circle cx="485" cy="520" r="7" fill="rgba(255,255,255,0.6)" opacity="0.8"/>
+    <circle cx="520" cy="520" r="6" fill="rgba(255,255,255,0.4)" opacity="0.6"/>
+    
+    <!-- Ultra-precise solar spots -->
+    <circle cx="532" cy="485" r="4.5" fill="rgba(139,69,19,0.8)" opacity="0.95"/>
+    <circle cx="488" cy="535" r="3.8" fill="rgba(160,82,45,0.7)" opacity="0.9"/>
+    <circle cx="510" cy="545" r="3.2" fill="rgba(139,69,19,0.6)" opacity="0.8"/>
+    <circle cx="480" cy="480" r="2.8" fill="rgba(160,82,45,0.7)" opacity="0.85"/>
+    <circle cx="540" cy="510" r="2.5" fill="rgba(139,69,19,0.5)" opacity="0.7"/>
+    
+    <!-- Solar flares and prominences -->
+    <ellipse cx="465" cy="470" rx="12" ry="3" fill="rgba(255,140,0,0.7)" transform="rotate(-35 465 470)"/>
+    <ellipse cx="550" cy="540" rx="10" ry="2.5" fill="rgba(255,140,0,0.6)" transform="rotate(40 550 540)"/>
+    <ellipse cx="535" cy="460" rx="8" ry="2.2" fill="rgba(255,165,0,0.5)" transform="rotate(-65 535 460)"/>
+    <ellipse cx="475" cy="555" rx="9" ry="2.8" fill="rgba(255,140,0,0.6)" transform="rotate(85 475 555)"/>
+  </g>
   
-  <!-- Central planets -->
-  <circle cx="512" cy="650" r="120" fill="url(#earth)"/>
-  <circle cx="350" cy="450" r="70" fill="url(#mars)"/>
-  <circle cx="680" cy="420" r="75" fill="url(#venus)"/>
-  <circle cx="500" cy="280" r="45" fill="url(#moon)"/>
+  <!-- ULTRA-PRECISE PLANETS with microscopic details -->
   
-  <!-- Cosmic accents -->
-  <circle cx="200" cy="300" r="8" fill="#00BFFF" opacity="0.7"/>
-  <circle cx="800" cy="250" r="6" fill="#9B59B6" opacity="0.6"/>
-  <circle cx="150" cy="600" r="5" fill="#1ABC9C" opacity="0.5"/>
-  <circle cx="880" cy="600" r="7" fill="#FFD700" opacity="0.6"/>
+  <!-- Mercury (heavily cratered, exact positioning) -->
+  <circle cx="637" cy="512" r="7" fill="#8c7853"/>
+  <circle cx="635" cy="510" r="2.2" fill="rgba(105,105,105,0.95)"/>
+  <circle cx="639" cy="514" r="1.6" fill="rgba(139,139,131,0.8)"/>
+  <circle cx="636" cy="509" r="1.1" fill="rgba(160,160,160,0.7)"/>
+  <circle cx="640" cy="515" r="0.8" fill="rgba(128,128,128,0.6)"/>
+  <circle cx="632" cy="513" r="3.2" fill="url(#sunIllumination)"/>
+  
+  <!-- Venus with ultra-sophisticated atmospheric layers -->
+  <circle cx="512" cy="347" r="32" fill="url(#venusAtmosphere)" opacity="0.9"/>
+  <circle cx="512" cy="347" r="22" fill="url(#venusGradient)"/>
+  
+  <!-- Venus atmospheric band system (matching main menu precision) -->
+  <ellipse cx="512" cy="338" rx="20" ry="3.5" fill="rgba(255,255,153,0.7)"/>
+  <ellipse cx="512" cy="347" rx="18" ry="3" fill="rgba(255,204,73,0.6)"/>
+  <ellipse cx="512" cy="356" rx="16" ry="2.5" fill="rgba(255,215,0,0.5)"/>
+  <ellipse cx="512" cy="332" rx="17" ry="2.8" fill="rgba(255,255,102,0.8)"/>
+  <ellipse cx="512" cy="362" rx="14" ry="2.2" fill="rgba(255,187,0,0.4)"/>
+  
+  <circle cx="502" cy="340" r="9" fill="url(#sunIllumination)"/>
+  
+  <!-- Earth with ultra-detailed continental system -->
+  <circle cx="297" cy="512" r="36" fill="url(#earthAtmosphere)" opacity="0.8"/>
+  <circle cx="297" cy="512" r="24" fill="url(#earthGradient)"/>
+  
+  <!-- Ultra-detailed Earth continental system (matching main menu precision) -->
+  <path d="M 285 505 Q 292 498 305 503 Q 312 508 308 515 Q 300 522 285 505 Z" fill="#228b22" opacity="0.95"/>
+  <ellipse cx="315" cy="492" rx="6" ry="4.5" fill="#006400" opacity="0.9"/>
+  <circle cx="282" cy="528" r="3.8" fill="#228b22" opacity="0.9"/>
+  <ellipse cx="275" cy="500" rx="3" ry="2.5" fill="#2d5a2d" opacity="0.8"/>
+  <circle cx="308" cy="523" r="2.5" fill="#228b22" opacity="0.7"/>
+  <ellipse cx="290" cy="485" rx="4" ry="3" fill="#006400" opacity="0.8"/>
+  <circle cx="280" cy="515" r="2" fill="#2d5a2d" opacity="0.7"/>
+  <ellipse cx="320" cy="505" rx="2.5" ry="2" fill="#228b22" opacity="0.6"/>
+  
+  <!-- Earth's enhanced atmospheric glow -->
+  <circle cx="275" cy="495" r="12" fill="url(#sunIllumination)"/>
+  
+  <!-- Earth's Moon with ultra-realistic lunar features -->
+  <circle cx="340" cy="480" r="6.5" fill="#c0c0c0"/>
+  <circle cx="337" cy="477" r="2.2" fill="#a9a9a9"/>
+  <circle cx="343" cy="483" r="1.5" fill="#808080"/>
+  <circle cx="335" cy="475" r="2.8" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="345" cy="485" r="1.2" fill="#696969"/>
+  <circle cx="339" cy="479" r="0.8" fill="#2f4f4f"/>
+  
+  <!-- Mars with ultra-precise polar caps and surface features -->
+  <circle cx="237" cy="512" r="18" fill="url(#marsGradient)"/>
+  
+  <!-- Mars polar caps (exact positioning matching main menu) -->
+  <ellipse cx="232" cy="500" rx="4.5" ry="2.7" fill="rgba(255,255,255,0.98)" opacity="0.95"/>
+  <ellipse cx="242" cy="524" rx="3.6" ry="2.2" fill="rgba(255,255,255,0.9)" opacity="0.9"/>
+  
+  <!-- Mars ultra-detailed surface features -->
+  <circle cx="244" cy="510" r="2.8" fill="#654321" opacity="0.8"/>
+  <ellipse cx="228" cy="517" rx="3.5" ry="1.8" fill="#8b4513" opacity="0.7"/>
+  <circle cx="248" cy="502" r="2.2" fill="#a0522d" opacity="0.6"/>
+  <ellipse cx="225" cy="508" rx="2.5" ry="1.4" fill="#cd853f" opacity="0.7"/>
+  <circle cx="250" cy="520" r="1.8" fill="#bc8f8f" opacity="0.5"/>
+  <circle cx="218" cy="500" r="6" fill="url(#sunIllumination)"/>
+  
+  <!-- Mars moons with ultra-realistic detail -->
+  <circle cx="258" cy="490" r="1.8" fill="#8B7355"/> <!-- Phobos -->
+  <circle cx="257" cy="489" r="0.6" fill="#A0522D"/>
+  <circle cx="258.5" cy="490.5" r="0.3" fill="#654321"/>
+  
+  <circle cx="218" cy="535" r="1.4" fill="#A0522D"/> <!-- Deimos -->
+  <circle cx="217.5" cy="534.5" r="0.4" fill="#654321"/>
+  
+  <!-- Jupiter with ultra-sophisticated atmospheric system -->
+  <circle cx="787" cy="512" r="52" fill="url(#jupiterGradient)"/>
+  
+  <!-- Jupiter's ultra-detailed atmospheric band system -->
+  <ellipse cx="787" cy="495" rx="46" ry="4.8" fill="rgba(139,69,19,0.8)"/>
+  <ellipse cx="787" cy="508" rx="49" ry="4.2" fill="rgba(160,82,45,0.7)"/>
+  <ellipse cx="787" cy="521" rx="44" ry="3.8" fill="rgba(205,133,63,0.8)"/>
+  <ellipse cx="787" cy="534" rx="42" ry="3.5" fill="rgba(139,69,19,0.6)"/>
+  <ellipse cx="787" cy="482" rx="43" ry="3.2" fill="rgba(160,82,45,0.7)"/>
+  <ellipse cx="787" cy="547" rx="40" ry="3" fill="rgba(184,134,11,0.5)"/>
+  
+  <!-- Enhanced Great Red Spot (exact dimensions matching main menu) -->
+  <ellipse cx="806" cy="505" rx="13" ry="7.8" fill="#DC143C" opacity="0.98"/>
+  <ellipse cx="806" cy="505" rx="9" ry="5.2" fill="#b22222" opacity="0.95"/>
+  <ellipse cx="806" cy="505" rx="5.5" ry="3.2" fill="#8b0000" opacity="0.9"/>
+  <ellipse cx="806" cy="505" rx="3" ry="1.8" fill="#654321" opacity="0.7"/>
+  
+  <!-- Jupiter ultra-sophisticated lighting -->
+  <circle cx="760" cy="485" r="20" fill="url(#sunIllumination)"/>
+  
+  <!-- Jupiter's four major moons with ultra-comprehensive detail -->
+  <!-- Io (volcanic features) -->
+  <circle cx="735" cy="475" r="3.2" fill="#fffacd"/>
+  <circle cx="734" cy="474" r="1.1" fill="#ffeb9c"/>
+  <circle cx="735.5" cy="475.5" r="0.6" fill="#ffd700"/>
+  <circle cx="733.5" cy="473.5" r="0.4" fill="#ff8c00"/>
+  
+  <!-- Europa (icy cracks) -->
+  <circle cx="838" cy="490" r="3.2" fill="#e6e6fa"/>
+  <circle cx="837" cy="489" r="0.9" fill="#ddd"/>
+  <circle cx="838.5" cy="490.5" r="0.5" fill="#f0f8ff"/>
+  <circle cx="836.5" cy="488.5" r="0.3" fill="#b0e0e6"/>
+  
+  <!-- Ganymede (largest, mixed terrain) -->
+  <circle cx="740" cy="555" r="3.8" fill="#d2b48c"/>
+  <circle cx="739" cy="554" r="1.3" fill="#bc9a6a"/>
+  <circle cx="740.5" cy="555.5" r="0.8" fill="#8b7355"/>
+  <circle cx="738.5" cy="553.5" r="0.5" fill="#a0522d"/>
+  
+  <!-- Callisto (heavily cratered) -->
+  <circle cx="835" cy="545" r="3.8" fill="#696969"/>
+  <circle cx="834" cy="544" r="1.1" fill="#555"/>
+  <circle cx="835.5" cy="545.5" r="0.7" fill="#2f4f4f"/>
+  <circle cx="833.5" cy="543.5" r="0.4" fill="#1c1c1c"/>
+  
+  <!-- Saturn with ultra-sophisticated ring system -->
+  <circle cx="512" cy="787" r="38" fill="url(#saturnGradient)"/>
+  
+  <!-- Saturn's ultra-comprehensive multi-ring system -->
+  <ellipse cx="512" cy="787" rx="72" ry="14.5" fill="none" stroke="rgba(218,165,32,0.95)" stroke-width="3"/>
+  <ellipse cx="512" cy="787" rx="61" ry="12.5" fill="none" stroke="rgba(255,215,0,0.8)" stroke-width="2.5"/>
+  <ellipse cx="512" cy="787" rx="82" ry="16.5" fill="none" stroke="rgba(184,134,11,0.9)" stroke-width="2.5"/>
+  <ellipse cx="512" cy="787" rx="51" ry="10.5" fill="none" stroke="rgba(255,255,0,0.7)" stroke-width="2"/>
+  <ellipse cx="512" cy="787" rx="92" ry="18.5" fill="none" stroke="rgba(205,133,63,0.6)" stroke-width="2"/>
+  <ellipse cx="512" cy="787" rx="41" ry="8.5" fill="none" stroke="rgba(255,215,0,0.5)" stroke-width="1.8"/>
+  
+  <!-- Saturn ring gaps (Cassini Division and others) -->
+  <ellipse cx="512" cy="787" rx="66" ry="13.5" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.2"/>
+  <ellipse cx="512" cy="787" rx="56" ry="11.5" fill="none" stroke="rgba(0,0,0,0.4)" stroke-width="1"/>
+  <ellipse cx="512" cy="787" rx="76" ry="15.5" fill="none" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
+  
+  <!-- Saturn ultra-sophisticated lighting -->
+  <circle cx="490" cy="770" r="16" fill="url(#sunIllumination)"/>
+  
+  <!-- Saturn's major moons with detail -->
+  <circle cx="465" cy="755" r="2.8" fill="#fffacd"/> <!-- Titan -->
+  <circle cx="464" cy="754" r="0.8" fill="#ffeb9c"/>
+  
+  <circle cx="485" cy="820" r="2.2" fill="#c0c0c0"/> <!-- Enceladus -->
+  <circle cx="484.5" cy="819.5" r="0.6" fill="#e6e6fa"/>
+  
+  <circle cx="555" cy="740" r="2.5" fill="#d2b48c"/> <!-- Iapetus -->
+  <circle cx="554.5" cy="739.5" r="0.7" fill="#bc9a6a"/>
+  
+  <!-- Uranus (ice giant with ultra-sophisticated ring system) -->
+  <circle cx="157" cy="637" r="20" fill="#4fd0e7"/>
+  <circle cx="151" cy="631" r="8" fill="url(#sunIllumination)"/>
+  <ellipse cx="157" cy="637" rx="32" ry="3.5" fill="none" stroke="rgba(100,149,237,0.7)" stroke-width="1.5"/>
+  <ellipse cx="157" cy="637" rx="26" ry="2.8" fill="none" stroke="rgba(135,206,235,0.6)" stroke-width="1.2"/>
+  <ellipse cx="157" cy="637" rx="38" ry="4.2" fill="none" stroke="rgba(70,130,180,0.5)" stroke-width="1.2"/>
+  <ellipse cx="157" cy="637" rx="20" ry="2.2" fill="none" stroke="rgba(176,224,230,0.4)" stroke-width="1"/>
+  
+  <!-- Neptune (deep blue with ultra-detailed atmospheric features) -->
+  <circle cx="807" cy="747" r="19" fill="#4169e1"/>
+  <ellipse cx="807" cy="741" rx="16" ry="2.5" fill="rgba(30,144,255,0.7)"/>
+  <ellipse cx="807" cy="753" rx="14" ry="2.2" fill="rgba(0,100,200,0.6)"/>
+  <ellipse cx="807" cy="735" rx="12" ry="1.8" fill="rgba(70,130,180,0.5)"/>
+  <circle cx="799" cy="739" r="7" fill="url(#sunIllumination)"/>
+  
+  <!-- Neptune's Great Dark Spot -->
+  <ellipse cx="815" cy="745" rx="5.5" ry="3.5" fill="rgba(25,25,112,0.8)"/>
+  <ellipse cx="815" cy="745" rx="3.5" ry="2.2" fill="rgba(0,0,128,0.6)"/>
+  
+  <!-- Dwarf planets with ultra-realistic detail -->
+  <circle cx="375" cy="685" r="4.2" fill="#8b7355"/> <!-- Ceres -->
+  <circle cx="374" cy="684" r="1.2" fill="#a0522d"/>
+  <circle cx="375.5" cy="685.5" r="0.6" fill="#cd853f"/>
+  
+  <circle cx="185" cy="385" r="3.8" fill="#a0522d"/> <!-- Pluto -->
+  <circle cx="184.5" cy="384.5" r="0.9" fill="#8b4513"/>
+  <circle cx="185.3" cy="385.3" r="0.5" fill="#654321"/>
+  
+  <circle cx="845" cy="185" r="3.5" fill="#bc8f8f"/> <!-- Eris -->
+  <circle cx="844.5" cy="184.5" r="0.8" fill="#a0522d"/>
+  
+  <!-- Enhanced asteroid belt with 24 individual asteroids (matching main menu) -->
+  <g opacity="0.8">
+    <!-- Asteroid 1: angle 0° + random 5° -->
+    <ellipse cx="355" cy="512" rx="3.2" ry="2.1" fill="url(#asteroid1)" transform="rotate(5 355 512)"/>
+    <!-- Asteroid 2: angle 15° + random 8° -->
+    <ellipse cx="368" cy="485" rx="2.8" ry="1.9" fill="url(#asteroid2)" transform="rotate(23 368 485)"/>
+    <!-- Asteroid 3: angle 30° + random 6° -->
+    <ellipse cx="385" cy="465" rx="3.5" ry="2.3" fill="url(#asteroid3)" transform="rotate(36 385 465)"/>
+    <!-- Asteroid 4: angle 45° + random 7° -->
+    <ellipse cx="405" cy="450" rx="2.9" ry="2" fill="url(#asteroid4)" transform="rotate(52 405 450)"/>
+    <!-- Asteroid 5: angle 60° + random 9° -->
+    <ellipse cx="425" cy="440" rx="3.1" ry="2.2" fill="url(#asteroid5)" transform="rotate(69 425 440)"/>
+    <!-- Asteroid 6: angle 75° + random 4° -->
+    <ellipse cx="445" cy="435" rx="2.7" ry="1.8" fill="url(#asteroid1)" transform="rotate(79 445 435)"/>
+    <!-- Asteroid 7: angle 90° + random 8° -->
+    <ellipse cx="465" cy="433" rx="3.3" ry="2.4" fill="url(#asteroid2)" transform="rotate(98 465 433)"/>
+    <!-- Asteroid 8: angle 105° + random 5° -->
+    <ellipse cx="485" cy="435" rx="2.6" ry="1.7" fill="url(#asteroid3)" transform="rotate(110 485 435)"/>
+    <!-- Asteroid 9: angle 120° + random 7° -->
+    <ellipse cx="505" cy="440" rx="3.4" ry="2.3" fill="url(#asteroid4)" transform="rotate(127 505 440)"/>
+    <!-- Asteroid 10: angle 135° + random 6° -->
+    <ellipse cx="525" cy="450" rx="2.9" ry="2" fill="url(#asteroid5)" transform="rotate(141 525 450)"/>
+    <!-- Asteroid 11: angle 150° + random 9° -->
+    <ellipse cx="545" cy="465" rx="3.1" ry="2.1" fill="url(#asteroid1)" transform="rotate(159 545 465)"/>
+    <!-- Asteroid 12: angle 165° + random 4° -->
+    <ellipse cx="565" cy="485" rx="2.8" ry="1.9" fill="url(#asteroid2)" transform="rotate(169 565 485)"/>
+    <!-- Asteroid 13: angle 180° + random 8° -->
+    <ellipse cx="580" cy="512" rx="3.2" ry="2.2" fill="url(#asteroid3)" transform="rotate(188 580 512)"/>
+    <!-- Asteroid 14: angle 195° + random 5° -->
+    <ellipse cx="575" cy="540" rx="2.7" ry="1.8" fill="url(#asteroid4)" transform="rotate(200 575 540)"/>
+    <!-- Asteroid 15: angle 210° + random 7° -->
+    <ellipse cx="565" cy="565" rx="3.3" ry="2.4" fill="url(#asteroid5)" transform="rotate(217 565 565)"/>
+    <!-- Asteroid 16: angle 225° + random 6° -->
+    <ellipse cx="545" cy="585" rx="2.9" ry="2" fill="url(#asteroid1)" transform="rotate(231 545 585)"/>
+    <!-- Asteroid 17: angle 240° + random 9° -->
+    <ellipse cx="525" cy="600" rx="3.1" ry="2.1" fill="url(#asteroid2)" transform="rotate(249 525 600)"/>
+    <!-- Asteroid 18: angle 255° + random 4° -->
+    <ellipse cx="505" cy="610" rx="2.8" ry="1.9" fill="url(#asteroid3)" transform="rotate(259 505 610)"/>
+    <!-- Asteroid 19: angle 270° + random 8° -->
+    <ellipse cx="485" cy="615" rx="3.2" ry="2.2" fill="url(#asteroid4)" transform="rotate(278 485 615)"/>
+    <!-- Asteroid 20: angle 285° + random 5° -->
+    <ellipse cx="465" cy="610" rx="2.7" ry="1.8" fill="url(#asteroid5)" transform="rotate(290 465 610)"/>
+    <!-- Asteroid 21: angle 300° + random 7° -->
+    <ellipse cx="445" cy="600" rx="3.3" ry="2.4" fill="url(#asteroid1)" transform="rotate(307 445 600)"/>
+    <!-- Asteroid 22: angle 315° + random 6° -->
+    <ellipse cx="425" cy="585" rx="2.9" ry="2" fill="url(#asteroid2)" transform="rotate(321 425 585)"/>
+    <!-- Asteroid 23: angle 330° + random 9° -->
+    <ellipse cx="405" cy="565" rx="3.1" ry="2.1" fill="url(#asteroid3)" transform="rotate(339 405 565)"/>
+    <!-- Asteroid 24: angle 345° + random 4° -->
+    <ellipse cx="385" cy="540" rx="2.8" ry="1.9" fill="url(#asteroid4)" transform="rotate(349 385 540)"/>
+  </g>
+  
+  <!-- Ultra-enhanced comets with sophisticated multi-layer tail systems -->
+  <g opacity="0.85">
+    <!-- Comet 1 with ultra-comprehensive tail system -->
+    <ellipse cx="280" cy="280" rx="26" ry="4.5" fill="rgba(135,206,235,0.8)" transform="rotate(-40 280 280)"/>
+    <ellipse cx="280" cy="280" rx="22" ry="3.8" fill="rgba(173,216,230,0.7)" transform="rotate(-40 280 280)"/>
+    <ellipse cx="280" cy="280" rx="18" ry="3.1" fill="rgba(224,255,255,0.6)" transform="rotate(-40 280 280)"/>
+    <ellipse cx="280" cy="280" rx="14" ry="2.4" fill="rgba(240,248,255,0.5)" transform="rotate(-40 280 280)"/>
+    <ellipse cx="280" cy="280" rx="10" ry="1.8" fill="rgba(248,248,255,0.4)" transform="rotate(-40 280 280)"/>
+    <circle cx="295" cy="265" r="4.5" fill="#e0ffff"/>
+    <circle cx="295" cy="265" r="3" fill="#ffffff"/>
+    <circle cx="295" cy="265" r="2" fill="#f0ffff"/>
+    <circle cx="295" cy="265" r="1.2" fill="#ffffff"/>
+    
+    <!-- Comet 2 with pulsing tail system -->
+    <ellipse cx="740" cy="200" rx="24" ry="4.2" fill="rgba(135,206,235,0.7)" transform="rotate(35 740 200)"/>
+    <ellipse cx="740" cy="200" rx="20" ry="3.5" fill="rgba(173,216,230,0.6)" transform="rotate(35 740 200)"/>
+    <ellipse cx="740" cy="200" rx="16" ry="2.8" fill="rgba(224,255,255,0.5)" transform="rotate(35 740 200)"/>
+    <ellipse cx="740" cy="200" rx="12" ry="2.1" fill="rgba(240,248,255,0.4)" transform="rotate(35 740 200)"/>
+    <circle cx="728" cy="212" r="4" fill="#f0ffff"/>
+    <circle cx="728" cy="212" r="2.8" fill="#ffffff"/>
+    <circle cx="728" cy="212" r="1.8" fill="#f8f8ff"/>
+    
+    <!-- Comet 3 (distant, smaller) -->
+    <ellipse cx="820" cy="180" rx="20" ry="3.5" fill="rgba(135,206,235,0.6)" transform="rotate(65 820 180)"/>
+    <ellipse cx="820" cy="180" rx="16" ry="2.8" fill="rgba(173,216,230,0.5)" transform="rotate(65 820 180)"/>
+    <ellipse cx="820" cy="180" rx="12" ry="2.1" fill="rgba(224,255,255,0.4)" transform="rotate(65 820 180)"/>
+    <circle cx="810" cy="192" r="3.5" fill="#e0ffff"/>
+    <circle cx="810" cy="192" r="2.2" fill="#ffffff"/>
+    <circle cx="810" cy="192" r="1.4" fill="#f0ffff"/>
+  </g>
+  
+  <!-- Ultra-sophisticated distant galaxies with spiral structure -->
+  <g opacity="0.4">
+    <ellipse cx="180" cy="180" rx="40" ry="24" fill="rgba(138,43,226,0.4)" transform="rotate(50 180 180)"/>
+    <ellipse cx="176" cy="176" rx="28" ry="16" fill="rgba(75,0,130,0.5)" transform="rotate(50 176 176)"/>
+    <ellipse cx="172" cy="172" rx="18" ry="10" fill="rgba(147,112,219,0.6)" transform="rotate(50 172 172)"/>
+    <ellipse cx="168" cy="168" rx="10" ry="6" fill="rgba(138,43,226,0.7)" transform="rotate(50 168 168)"/>
+    
+    <ellipse cx="850" cy="850" rx="45" ry="28" fill="rgba(30,144,255,0.3)" transform="rotate(-20 850 850)"/>
+    <ellipse cx="846" cy="846" rx="32" ry="20" fill="rgba(0,100,200,0.4)" transform="rotate(-20 846 846)"/>
+    <ellipse cx="842" cy="842" rx="22" ry="13" fill="rgba(70,130,180,0.5)" transform="rotate(-20 842 842)"/>
+    <ellipse cx="838" cy="838" rx="14" ry="8" fill="rgba(30,144,255,0.6)" transform="rotate(-20 838 838)"/>
+  </g>
+  
+  <!-- Ultra-enhanced nebula systems with multi-layer detail -->
+  <g opacity="0.35">
+    <ellipse cx="150" cy="340" rx="90" ry="60" fill="rgba(255,20,147,0.2)" transform="rotate(20 150 340)"/>
+    <ellipse cx="145" cy="335" rx="70" ry="45" fill="rgba(255,105,180,0.3)" transform="rotate(20 145 335)"/>
+    <ellipse cx="140" cy="330" rx="50" ry="32" fill="rgba(255,20,147,0.4)" transform="rotate(20 140 330)"/>
+    <ellipse cx="135" cy="325" rx="32" ry="20" fill="rgba(255,182,193,0.5)" transform="rotate(20 135 325)"/>
+    
+    <ellipse cx="900" cy="720" rx="100" ry="65" fill="rgba(138,43,226,0.18)" transform="rotate(-15 900 720)"/>
+    <ellipse cx="895" cy="715" rx="78" ry="50" fill="rgba(147,112,219,0.28)" transform="rotate(-15 895 715)"/>
+    <ellipse cx="890" cy="710" rx="58" ry="37" fill="rgba(138,43,226,0.38)" transform="rotate(-15 890 710)"/>
+    <ellipse cx="885" cy="705" rx="38" ry="24" fill="rgba(186,85,211,0.48)" transform="rotate(-15 885 705)"/>
+    
+    <ellipse cx="800" cy="160" rx="80" ry="50" fill="rgba(255,140,0,0.2)" transform="rotate(55 800 160)"/>
+    <ellipse cx="796" cy="156" rx="60" ry="38" fill="rgba(123,104,238,0.35)" transform="rotate(55 796 156)"/>
+    <ellipse cx="792" cy="152" rx="42" ry="26" fill="rgba(70,130,180,0.5)" transform="rotate(55 792 152)"/>
+    
+    <ellipse cx="180" cy="800" rx="70" ry="45" fill="rgba(72,61,139,0.25)" transform="rotate(-35 180 800)"/>
+    <ellipse cx="176" cy="796" rx="50" ry="32" fill="rgba(123,104,238,0.35)" transform="rotate(-35 176 796)"/>
+  </g>
 </svg>
   

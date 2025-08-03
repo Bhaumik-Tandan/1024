@@ -1,107 +1,382 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { THEME, FONT_SIZES } from './constants';
+import { THEME, FONT_SIZES, getPlanetType } from './constants';
 
 const { width, height } = Dimensions.get('window');
 
-// Animated floating planet component
-const FloatingPlanet = ({ size, colors, initialX, initialY, duration, delay }) => {
-  const floatAnim = useRef(new Animated.Value(0)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+// Solar system configuration for splash screen
+const SPLASH_SOLAR_SYSTEM = {
+  sun: {
+    value: 8192,
+    size: 30,
+    x: width / 2,
+    y: height / 2,
+  },
+  planets: [
+    {
+      value: 8, // Mercury
+      size: 8,
+      orbitRadius: 60,
+      orbitSpeed: 8000,
+      initialAngle: 0,
+    },
+    {
+      value: 32, // Venus
+      size: 10,
+      orbitRadius: 85,
+      orbitSpeed: 12000,
+      initialAngle: 90,
+      hasAtmosphere: true,
+      atmosphereColor: 'rgba(255, 255, 102, 0.3)',
+    },
+    {
+      value: 64, // Earth
+      size: 11,
+      orbitRadius: 110,
+      orbitSpeed: 16000,
+      initialAngle: 180,
+      hasAtmosphere: true,
+      atmosphereColor: 'rgba(135, 206, 235, 0.4)',
+      moons: [{ size: 3, distance: 18, speed: 6000, color: '#C0C0C0' }],
+    },
+    {
+      value: 16, // Mars
+      size: 9,
+      orbitRadius: 135,
+      orbitSpeed: 20000,
+      initialAngle: 270,
+    },
+    {
+      value: 1024, // Jupiter
+      size: 22,
+      orbitRadius: 180,
+      orbitSpeed: 35000,
+      initialAngle: 45,
+      hasAtmosphere: true,
+      atmosphereColor: 'rgba(255, 140, 0, 0.3)',
+    },
+    {
+      value: 512, // Saturn
+      size: 18,
+      orbitRadius: 210,
+      orbitSpeed: 45000,
+      initialAngle: 135,
+      hasRings: true,
+    },
+  ],
+};
 
+// Enhanced Central Sun Component
+const SplashSun = () => {
+  const sunGlowAnim = useRef(new Animated.Value(0.8)).current;
+  const sunRotationAnim = useRef(new Animated.Value(0)).current;
+  
   useEffect(() => {
-    // Entrance animation
-    const entranceAnimation = Animated.parallel([
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 800,
-        delay: delay,
-        useNativeDriver: true,
-      }),
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 2000,
-        delay: delay,
-        useNativeDriver: true,
-      }),
-    ]);
-
-    // Floating animation
-    const floatingAnimation = Animated.loop(
+    const glowAnimation = Animated.loop(
       Animated.sequence([
-        Animated.timing(floatAnim, {
-          toValue: 1,
-          duration: duration,
+        Animated.timing(sunGlowAnim, {
+          toValue: 1.0,
+          duration: 3000,
           useNativeDriver: true,
         }),
-        Animated.timing(floatAnim, {
-          toValue: 0,
-          duration: duration,
+        Animated.timing(sunGlowAnim, {
+          toValue: 0.8,
+          duration: 3000,
           useNativeDriver: true,
         }),
       ])
     );
 
-    // Continuous rotation
     const rotationAnimation = Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 2,
-        duration: 15000,
+      Animated.timing(sunRotationAnim, {
+        toValue: 1,
+        duration: 20000,
         useNativeDriver: true,
       })
     );
 
-    entranceAnimation.start(() => {
-      floatingAnimation.start();
-      rotationAnimation.start();
-    });
+    glowAnimation.start();
+    rotationAnimation.start();
 
     return () => {
-      floatingAnimation.stop();
+      glowAnimation.stop();
       rotationAnimation.stop();
     };
   }, []);
 
-  const translateY = floatAnim.interpolate({
+  const sunRotation = sunRotationAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -30],
+    outputRange: ['0deg', '360deg'],
   });
 
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1, 2],
-    outputRange: ['0deg', '180deg', '360deg'],
+  const sunPlanet = getPlanetType(SPLASH_SOLAR_SYSTEM.sun.value);
+
+  return (
+    <View style={{
+      position: 'absolute',
+      left: SPLASH_SOLAR_SYSTEM.sun.x - SPLASH_SOLAR_SYSTEM.sun.size / 2,
+      top: SPLASH_SOLAR_SYSTEM.sun.y - SPLASH_SOLAR_SYSTEM.sun.size / 2,
+    }}>
+      {/* Corona effects */}
+      <Animated.View style={{
+        position: 'absolute',
+        width: SPLASH_SOLAR_SYSTEM.sun.size + 20,
+        height: SPLASH_SOLAR_SYSTEM.sun.size + 20,
+        borderRadius: (SPLASH_SOLAR_SYSTEM.sun.size + 20) / 2,
+        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+        left: -10,
+        top: -10,
+        opacity: sunGlowAnim,
+      }} />
+      
+      {/* Main sun body */}
+      <Animated.View
+        style={{
+          position: 'absolute',
+          width: SPLASH_SOLAR_SYSTEM.sun.size,
+          height: SPLASH_SOLAR_SYSTEM.sun.size,
+          borderRadius: SPLASH_SOLAR_SYSTEM.sun.size / 2,
+          backgroundColor: sunPlanet.primary,
+          shadowColor: sunPlanet.primary,
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: sunGlowAnim,
+          shadowRadius: 15,
+          elevation: 15,
+          transform: [{ rotate: sunRotation }],
+        }}
+      >
+        {/* Sun surface details */}
+        <View style={{
+          position: 'absolute',
+          width: SPLASH_SOLAR_SYSTEM.sun.size * 0.4,
+          height: SPLASH_SOLAR_SYSTEM.sun.size * 0.4,
+          borderRadius: SPLASH_SOLAR_SYSTEM.sun.size * 0.2,
+          backgroundColor: 'rgba(255, 255, 255, 0.5)',
+          top: SPLASH_SOLAR_SYSTEM.sun.size * 0.1,
+          left: SPLASH_SOLAR_SYSTEM.sun.size * 0.1,
+        }} />
+      </Animated.View>
+    </View>
+  );
+};
+
+// Solar System Planet Component
+const SplashPlanet = ({ config }) => {
+  const orbitAnim = useRef(new Animated.Value(0)).current;
+  const rotationAnim = useRef(new Animated.Value(0)).current;
+  
+  useEffect(() => {
+    const orbitAnimation = Animated.loop(
+      Animated.timing(orbitAnim, {
+        toValue: 1,
+        duration: config.orbitSpeed,
+        useNativeDriver: true,
+      })
+    );
+
+    const rotationAnimation = Animated.loop(
+      Animated.timing(rotationAnim, {
+        toValue: 1,
+        duration: config.orbitSpeed / 10,
+        useNativeDriver: true,
+      })
+    );
+
+    orbitAnim.setValue(config.initialAngle / 360);
+    
+    orbitAnimation.start();
+    rotationAnimation.start();
+
+    return () => {
+      orbitAnimation.stop();
+      rotationAnimation.stop();
+    };
+  }, []);
+
+  const orbitRotation = orbitAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [`${config.initialAngle}deg`, `${config.initialAngle + 360}deg`],
+  });
+
+  const planetRotation = rotationAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const planet = getPlanetType(config.value);
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        width: config.orbitRadius * 2,
+        height: config.orbitRadius * 2,
+        left: SPLASH_SOLAR_SYSTEM.sun.x - config.orbitRadius,
+        top: SPLASH_SOLAR_SYSTEM.sun.y - config.orbitRadius,
+        transform: [{ rotate: orbitRotation }],
+      }}
+    >
+      {/* Atmospheric glow */}
+      {config.hasAtmosphere && (
+        <View style={{
+          position: 'absolute',
+          width: config.size * 1.4,
+          height: config.size * 1.4,
+          borderRadius: config.size * 0.7,
+          backgroundColor: config.atmosphereColor,
+          left: config.orbitRadius - config.size * 0.7,
+          top: -config.size * 0.7,
+        }} />
+      )}
+      
+      {/* Main planet body */}
+      <Animated.View
+        style={{
+          position: 'absolute',
+          width: config.size,
+          height: config.size,
+          borderRadius: config.size / 2,
+          backgroundColor: planet.primary,
+          left: config.orbitRadius - config.size / 2,
+          top: -config.size / 2,
+          borderWidth: 0.5,
+          borderColor: planet.accent || planet.primary,
+          shadowColor: planet.glow ? planet.primary : '#000',
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: planet.glow ? 0.6 : 0.3,
+          shadowRadius: planet.glow ? 8 : 4,
+          elevation: planet.glow ? 8 : 4,
+          transform: [{ rotate: planetRotation }],
+        }}
+      >
+        {/* Planet surface details */}
+        <View style={{
+          position: 'absolute',
+          width: config.size * 0.3,
+          height: config.size * 0.3,
+          borderRadius: config.size * 0.15,
+          backgroundColor: 'rgba(255, 255, 255, 0.3)',
+          top: config.size * 0.1,
+          left: config.size * 0.1,
+        }} />
+        
+        {/* Saturn rings */}
+        {config.hasRings && (
+          <>
+            <View style={{
+              position: 'absolute',
+              width: config.size * 1.6,
+              height: config.size * 1.6,
+              borderRadius: config.size * 0.8,
+              borderWidth: 1,
+              borderColor: 'rgba(218, 165, 32, 0.8)',
+              left: -config.size * 0.3,
+              top: -config.size * 0.3,
+            }} />
+            <View style={{
+              position: 'absolute',
+              width: config.size * 1.3,
+              height: config.size * 1.3,
+              borderRadius: config.size * 0.65,
+              borderWidth: 1,
+              borderColor: 'rgba(255, 215, 0, 0.6)',
+              left: -config.size * 0.15,
+              top: -config.size * 0.15,
+            }} />
+          </>
+        )}
+      </Animated.View>
+      
+      {/* Planetary moons */}
+      {config.moons && config.moons.map((moon, moonIndex) => (
+        <SplashMoon
+          key={`moon-${moonIndex}`}
+          moon={moon}
+          planetPosition={{
+            x: config.orbitRadius,
+            y: 0,
+          }}
+        />
+      ))}
+    </Animated.View>
+  );
+};
+
+// Moon component for planets
+const SplashMoon = ({ moon, planetPosition }) => {
+  const moonOrbitAnim = useRef(new Animated.Value(0)).current;
+  
+  useEffect(() => {
+    const moonAnimation = Animated.loop(
+      Animated.timing(moonOrbitAnim, {
+        toValue: 1,
+        duration: moon.speed,
+        useNativeDriver: true,
+      })
+    );
+    
+    moonAnimation.start();
+    return () => moonAnimation.stop();
+  }, []);
+
+  const moonRotation = moonOrbitAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
   });
 
   return (
     <Animated.View
-      style={[
-        styles.planetContainer,
-        {
-          width: size,
-          height: size,
-          left: initialX - size / 2,
-          top: initialY - size / 2,
-          transform: [
-            { translateY },
-            { rotate },
-            { scale: scaleAnim },
-          ],
-        },
-      ]}
+      style={{
+        position: 'absolute',
+        width: moon.distance * 2,
+        height: moon.distance * 2,
+        left: planetPosition.x - moon.distance,
+        top: planetPosition.y - moon.distance,
+        transform: [{ rotate: moonRotation }],
+      }}
     >
-      <LinearGradient
-        colors={colors}
-        style={[styles.planet, { width: size, height: size }]}
-        start={{ x: 0.3, y: 0.3 }}
-        end={{ x: 0.8, y: 0.8 }}
+      <View
+        style={{
+          position: 'absolute',
+          width: moon.size,
+          height: moon.size,
+          borderRadius: moon.size / 2,
+          backgroundColor: moon.color,
+          left: moon.distance - moon.size / 2,
+          top: -moon.size / 2,
+          borderWidth: 0.5,
+          borderColor: 'rgba(255, 255, 255, 0.3)',
+        }}
       />
     </Animated.View>
   );
 };
 
-// Moving star component
+// Orbital paths visualization
+const OrbitalPaths = () => {
+  return (
+    <>
+      {SPLASH_SOLAR_SYSTEM.planets.map((planet, index) => (
+        <View
+          key={`orbit-${index}`}
+          style={{
+            position: 'absolute',
+            width: planet.orbitRadius * 2,
+            height: planet.orbitRadius * 2,
+            borderRadius: planet.orbitRadius,
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.08)',
+            left: SPLASH_SOLAR_SYSTEM.sun.x - planet.orbitRadius,
+            top: SPLASH_SOLAR_SYSTEM.sun.y - planet.orbitRadius,
+          }}
+        />
+      ))}
+    </>
+  );
+};
+
+// Moving stars component
 const MovingStars = ({ count = 20 }) => {
   const stars = useRef([]);
   const animatedValues = useRef([]);
@@ -113,7 +388,7 @@ const MovingStars = ({ count = 20 }) => {
         id: i,
         x: Math.random() * width,
         y: Math.random() * height,
-        size: 1 + Math.random() * 3,
+        size: 1 + Math.random() * 2,
         opacity: 0.3 + Math.random() * 0.7,
         duration: 3000 + Math.random() * 4000,
       };
@@ -216,6 +491,7 @@ export const SplashScreen = ({ onComplete }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const titleScaleAnim = useRef(new Animated.Value(0.5)).current;
   const subtitleOpacity = useRef(new Animated.Value(0)).current;
+  const solarSystemOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const splashSequence = Animated.sequence([
@@ -223,6 +499,12 @@ export const SplashScreen = ({ onComplete }) => {
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 500,
+        useNativeDriver: true,
+      }),
+      // Solar system entrance
+      Animated.timing(solarSystemOpacity, {
+        toValue: 1,
+        duration: 1000,
         useNativeDriver: true,
       }),
       // Title entrance
@@ -237,8 +519,8 @@ export const SplashScreen = ({ onComplete }) => {
         duration: 600,
         useNativeDriver: true,
       }),
-      // Hold for 2 seconds
-      Animated.delay(2000),
+      // Hold for 2.5 seconds to enjoy the solar system
+      Animated.delay(2500),
       // Fade out
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -256,7 +538,7 @@ export const SplashScreen = ({ onComplete }) => {
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      {/* Deep space background using LinearGradient */}
+      {/* Deep space background */}
       <LinearGradient
         colors={['#16213e', '#1a0a2e', '#0a0a1a']}
         style={styles.spaceBackground}
@@ -267,39 +549,19 @@ export const SplashScreen = ({ onComplete }) => {
       {/* Moving stars */}
       <MovingStars count={30} />
       
-      {/* Floating planets with gradient colors */}
-      <FloatingPlanet 
-        size={80} 
-        colors={['#FF6B35', '#CD5C5C', '#8B0000']} // Mars
-        initialX={width * 0.15} 
-        initialY={height * 0.3} 
-        duration={4000} 
-        delay={500} 
-      />
-      <FloatingPlanet 
-        size={120} 
-        colors={['#87CEEB', '#4169E1', '#228B22', '#006400']} // Earth
-        initialX={width * 0.5} 
-        initialY={height * 0.4} 
-        duration={5000} 
-        delay={800} 
-      />
-      <FloatingPlanet 
-        size={60} 
-        colors={['#FFD700', '#FFA500', '#FF8C00']} // Venus
-        initialX={width * 0.85} 
-        initialY={height * 0.25} 
-        duration={3500} 
-        delay={300} 
-      />
-      <FloatingPlanet 
-        size={90} 
-        colors={['#F5F5DC', '#C0C0C0', '#808080']} // Moon
-        initialX={width * 0.2} 
-        initialY={height * 0.7} 
-        duration={4500} 
-        delay={1000} 
-      />
+      {/* Solar System View */}
+      <Animated.View style={[styles.solarSystemContainer, { opacity: solarSystemOpacity }]}>
+        {/* Orbital paths */}
+        <OrbitalPaths />
+        
+        {/* Central Sun */}
+        <SplashSun />
+        
+        {/* Orbiting Planets */}
+        {SPLASH_SOLAR_SYSTEM.planets.map((planetConfig, index) => (
+          <SplashPlanet key={`planet-${index}`} config={planetConfig} />
+        ))}
+      </Animated.View>
       
       {/* Title */}
       <View style={styles.titleContainer}>
@@ -331,7 +593,7 @@ export const SplashScreen = ({ onComplete }) => {
             }
           ]}
         >
-          Explore the Universe
+          Explore the Solar System
         </Animated.Text>
       </View>
     </Animated.View>
@@ -352,6 +614,12 @@ const styles = StyleSheet.create({
     height: '100%',
   },
 
+  solarSystemContainer: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
+
   starsContainer: {
     position: 'absolute',
     width: '100%',
@@ -362,19 +630,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     backgroundColor: '#FFFFFF',
     borderRadius: 50,
-  },
-
-  planetContainer: {
-    position: 'absolute',
-  },
-
-  planet: {
-    borderRadius: 1000,
-    shadowColor: '#FFFFFF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 15,
   },
 
   titleContainer: {

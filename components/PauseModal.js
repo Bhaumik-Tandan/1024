@@ -77,31 +77,35 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
           
           {/* Action Buttons */}
           <View style={styles.buttonContainer}>
+            {/* Large Resume Button */}
             <Pressable
               style={[styles.button, styles.primaryButton]}
               onPress={() => handleButtonPress(onResume)}
             >
               <View style={styles.buttonGlow} />
-              <Ionicons name="play" size={20} color="#FFFFFF" style={styles.buttonIcon} />
+              <Ionicons name="play" size={28} color="#FFFFFF" style={styles.buttonIcon} />
               <Text style={styles.primaryButtonText}>Resume Journey</Text>
             </Pressable>
             
-            <Pressable
-              style={[styles.button, styles.secondaryButton]}
-              onPress={() => handleButtonPress(onRestart)}
-            >
-              <View style={styles.secondaryButtonGlow} />
-              <MaterialCommunityIcons name="restart" size={20} color="#FFFFFF" style={styles.buttonIcon} />
-              <Text style={styles.secondaryButtonText}>Restart Mission</Text>
-            </Pressable>
-            
-            <Pressable
-              style={[styles.button, styles.tertiaryButton]}
-              onPress={() => handleButtonPress(onHome)}
-            >
-              <Ionicons name="home" size={20} color="#B0C4DE" style={styles.buttonIcon} />
-              <Text style={styles.tertiaryButtonText}>Return to Base</Text>
-            </Pressable>
+            {/* Small Secondary Buttons Container */}
+            <View style={styles.smallButtonsContainer}>
+              <Pressable
+                style={[styles.button, styles.secondaryButton, styles.smallButton]}
+                onPress={() => handleButtonPress(onRestart)}
+              >
+                <View style={styles.secondaryButtonGlow} />
+                <MaterialCommunityIcons name="restart" size={16} color="#FFFFFF" style={styles.buttonIcon} />
+                <Text style={styles.smallButtonText}>Restart</Text>
+              </Pressable>
+              
+              <Pressable
+                style={[styles.button, styles.tertiaryButton, styles.smallButton]}
+                onPress={() => handleButtonPress(onHome)}
+              >
+                <Ionicons name="home" size={16} color="#B0C4DE" style={styles.buttonIcon} />
+                <Text style={styles.smallButtonText}>Home</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </View>
@@ -256,7 +260,7 @@ const styles = StyleSheet.create({
   },
   
   buttonContainer: {
-    gap: 12,
+    gap: 8,
   },
   
   button: {
@@ -271,14 +275,17 @@ const styles = StyleSheet.create({
   },
   
   primaryButton: {
-    backgroundColor: 'rgba(74, 144, 226, 0.2)',
-    borderWidth: 2,
-    borderColor: 'rgba(74, 144, 226, 0.6)',
+    backgroundColor: 'rgba(74, 144, 226, 0.3)',
+    borderWidth: 3,
+    borderColor: 'rgba(74, 144, 226, 0.8)',
     shadowColor: '#4A90E2',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    elevation: 12,
+    paddingVertical: 20,
+    paddingHorizontal: 30,
+    marginBottom: 20,
   },
   
   secondaryButton: {
@@ -323,13 +330,13 @@ const styles = StyleSheet.create({
   },
   
   primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 20,
+    fontWeight: '800',
     color: '#FFFFFF',
-    letterSpacing: 1,
-    textShadowColor: 'rgba(74, 144, 226, 0.6)',
+    letterSpacing: 1.5,
+    textShadowColor: 'rgba(74, 144, 226, 0.8)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 4,
+    textShadowRadius: 6,
   },
   
   secondaryButtonText: {
@@ -347,6 +354,25 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#B0C4DE',
     letterSpacing: 1,
+  },
+
+  smallButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+
+  smallButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+
+  smallButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#B0C4DE',
+    letterSpacing: 0.5,
   },
 });
 

@@ -133,16 +133,16 @@ export const useAnimationManager = () => {
     const baseId = `elements-collision-${Date.now()}-${animationCounter}`;
     const createdAt = Date.now(); // Add timestamp for tracking
     
-    // ENHANCED: Smart timing system based on merge complexity
+    // ENHANCED: Smart timing system based on merge complexity (slower for better visual impact)
     const calculateSmartTiming = (mergeType, tileCount, isChainReaction) => {
-      const baseDuration = isChainReaction ? 150 : 220; // Increased base duration for better feel
+      const baseDuration = isChainReaction ? 200 : 300; // Increased base duration for slower, more satisfying animations
       const complexityMultiplier = Math.min(tileCount * 0.2, 1.5);
       const typeMultiplier = mergeType === 'horizontal' ? 1.2 : mergeType === 'vertical' ? 1.1 : 1.0;
       
       return {
-        attraction: baseDuration * 0.35 * complexityMultiplier * typeMultiplier, // Increased attraction time
-        collision: baseDuration * 0.25 * complexityMultiplier, // Increased collision time
-        formation: baseDuration * 0.35 * complexityMultiplier, // Balanced formation time
+        attraction: baseDuration * 0.4 * complexityMultiplier * typeMultiplier, // Increased attraction time for better movement visibility
+        collision: baseDuration * 0.3 * complexityMultiplier, // Increased collision time for more dramatic impact
+        formation: baseDuration * 0.25 * complexityMultiplier, // Balanced formation time
         cleanup: baseDuration * 0.05 // Minimal cleanup time
       };
     };
@@ -186,8 +186,8 @@ export const useAnimationManager = () => {
         Math.pow(endPos.col - startPos.col, 2) + Math.pow(endPos.row - startPos.row, 2)
       );
       
-      // Base movement distance with value-based scaling
-      const baseDistance = CELL_SIZE * 0.7; // Increased from 0.6
+      // Base movement distance with value-based scaling (increased for slower animations)
+      const baseDistance = CELL_SIZE * 0.8; // Increased from 0.7 for more visible movement
       const valueMultiplier = Math.min(value / 1000, 2.0); // Larger planets move further
       const moveDistance = baseDistance * valueMultiplier;
       
@@ -326,9 +326,9 @@ export const useAnimationManager = () => {
           duration: timing.attraction,
           useNativeDriver: false,
         }),
-        // ENHANCED: Scale up with value-based scaling
+        // ENHANCED: Scale up with value-based scaling (more pronounced for slower animations)
         Animated.timing(anim.scale, {
-          toValue: 1.1 + (anim.value / 10000) * 0.2, // Larger planets scale more
+          toValue: 1.15 + (anim.value / 10000) * 0.25, // Larger planets scale more with slower timing
           duration: timing.attraction,
           useNativeDriver: false,
         }),
@@ -341,13 +341,13 @@ export const useAnimationManager = () => {
       ...mergingAnimations.map(anim => 
         Animated.parallel([
           Animated.timing(anim.scale, {
-            toValue: 0.3, // ENHANCED: Less aggressive shrinking
+            toValue: 0.25, // ENHANCED: More dramatic shrinking for slower animations
             duration: timing.collision,
             useNativeDriver: false,
           }),
           // ENHANCED: Better opacity handling
           Animated.timing(anim.opacity, {
-            toValue: 0.5, // ENHANCED: Keep more visibility
+            toValue: 0.4, // ENHANCED: More dramatic fade for slower animations
             duration: timing.collision,
             useNativeDriver: false,
           }),
@@ -410,15 +410,15 @@ export const useAnimationManager = () => {
     // ENHANCED: PHASE 3 - STELLAR FORMATION with bounce effect
     const formationPhase = [
       Animated.parallel([
-        // ENHANCED: Scale up with bounce effect
+        // ENHANCED: Scale up with bounce effect (more dramatic for slower animations)
         Animated.sequence([
           Animated.timing(resultScaleAnim, {
-            toValue: 1.5, // ENHANCED: Larger overshoot
+            toValue: 1.6, // ENHANCED: Larger overshoot for slower animations
             duration: timing.formation * 0.4,
             useNativeDriver: false,
           }),
           Animated.timing(resultScaleAnim, {
-            toValue: 0.8, // ENHANCED: More pronounced bounce
+            toValue: 0.75, // ENHANCED: More pronounced bounce for slower animations
             duration: timing.formation * 0.3,
             useNativeDriver: false,
           }),

@@ -276,13 +276,8 @@ const GameGrid = React.memo(({
               { 
                 scale: anim.scale || 1
               },
-              // ENHANCED: Handle rotation animation (using JS driver)
-              ...(anim.rotation ? [{ 
-                rotate: anim.rotation.interpolate({
-                  inputRange: [0, 1, 2],
-                  outputRange: ['0deg', '360deg', '720deg']
-                })
-              }] : []),
+              // ENHANCED: No rotation - planets sink into each other
+              // Rotation removed for cleaner sinking animation
               // ENHANCED: Handle bounce effect for result planets
               ...(anim.bounce ? [{ 
                 translateY: anim.bounce.interpolate({

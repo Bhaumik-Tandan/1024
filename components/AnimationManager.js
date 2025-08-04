@@ -314,12 +314,6 @@ export const useAnimationManager = () => {
           duration: timing.attraction,
           useNativeDriver: false,
         }),
-        // ENHANCED: Add rotation during movement (using JS driver for consistency)
-        Animated.timing(anim.rotation, {
-          toValue: 1,
-          duration: timing.attraction,
-          useNativeDriver: false,
-        }),
         // Build up energy glow with value-based intensity
         Animated.timing(anim.glow, {
           toValue: Math.min(anim.value / 1000, 1.0),
@@ -348,12 +342,6 @@ export const useAnimationManager = () => {
           // ENHANCED: Better opacity handling
           Animated.timing(anim.opacity, {
             toValue: 0.4, // ENHANCED: More dramatic fade for slower animations
-            duration: timing.collision,
-            useNativeDriver: false,
-          }),
-          // ENHANCED: Add rotation during collision (using JS driver for consistency)
-          Animated.timing(anim.rotation, {
-            toValue: 2, // Faster rotation during collision
             duration: timing.collision,
             useNativeDriver: false,
           }),
@@ -460,12 +448,8 @@ export const useAnimationManager = () => {
             useNativeDriver: false,
           }),
         ]),
-        // Rotation effect
-        Animated.timing(resultRotateAnim, {
-          toValue: 1,
-          duration: timing.formation,
-          useNativeDriver: false,
-        }),
+        // ENHANCED: No rotation, just smooth formation
+        // Rotation effect removed for cleaner sinking animation
       ]),
     ];
     

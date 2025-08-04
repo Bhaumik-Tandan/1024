@@ -2,7 +2,7 @@
   "expo": {
     "name": "Drop from Space",
     "slug": "1024-game",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "default",
     "icon": "./assets/icons/icon.png",
     "userInterfaceStyle": "dark",

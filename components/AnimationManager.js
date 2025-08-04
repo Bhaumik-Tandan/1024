@@ -123,183 +123,244 @@ export const useAnimationManager = () => {
 
   // PERFORMANCE OPTIMIZED COLLISION ANIMATION SYSTEM
   const showMergeResultAnimation = (row, col, value, mergingTilesPositions = [], isChainReaction = false, onComplete = null) => {
-    // PERFORMANCE: Skip complex animations for large chain reactions to improve responsiveness
-    if (isChainReaction && mergingTilesPositions.length >= GAME_CONFIG.TIMING.LARGE_CHAIN_THRESHOLD) {
-      // Use ultra-simple animation for large chain reactions
-      createMergeAnimation(row, col, value, mergingTilesPositions.length, 'up');
-      if (onComplete) {
-        // Very short delay for large chain reactions to prevent conflicts
-        setTimeout(onComplete, 80); // Reduced from 150ms to 80ms
-      }
-      return;
-    }
 
-    // Debounce to prevent useInsertionEffect conflicts during rapid chain reactions
-    if (animationTimeoutRef.current) {
-      clearTimeout(animationTimeoutRef.current);
-    }
-    
     // Clear any existing animations first to prevent conflicts
     clearMergeAnimations();
     
-    // Use setTimeout to defer state updates and prevent useInsertionEffect conflicts
-    animationTimeoutRef.current = setTimeout(() => {
-      // Generate unique IDs using counter
-      setAnimationCounter(prev => prev + 1);
-      const baseId = `elements-collision-${Date.now()}-${animationCounter}`;
-      const createdAt = Date.now(); // Add timestamp for tracking
+    // Generate unique IDs using counter
+    setAnimationCounter(prev => prev + 1);
+    const baseId = `elements-collision-${Date.now()}-${animationCounter}`;
+    const createdAt = Date.now(); // Add timestamp for tracking
+    
+    // Create collision animations for merging planets with movement toward center
+    const mergingAnimations = mergingTilesPositions.map((pos, index) => {
+      const scaleAnim = new Animated.Value(1);
+      const opacityAnim = new Animated.Value(1);
+      const moveXAnim = new Animated.Value(0);
+      const moveYAnim = new Animated.Value(0);
+      const glowAnim = new Animated.Value(0);
       
-      // PERFORMANCE: Simplified collision animations for merging planets
-      const mergingAnimations = mergingTilesPositions.slice(0, 3).map((pos, index) => { // Limit to 3 tiles max
-        const scaleAnim = new Animated.Value(1);
-        const opacityAnim = new Animated.Value(1);
-        const glowAnim = new Animated.Value(0);
-        
-        return {
-          id: `${baseId}-planet-${index}`,
-          row: pos.row,
-          col: pos.col,
-          value: pos.value,
-          scale: scaleAnim,
-          opacity: opacityAnim,
-          glow: glowAnim,
-          targetRow: row,
-          targetCol: col,
-          createdAt, // Add timestamp
-        };
-      });
-      
-      // PERFORMANCE: Simplified result planet animation
-      const resultScaleAnim = new Animated.Value(0);
-      const resultOpacityAnim = new Animated.Value(0);
-      const resultGlowAnim = new Animated.Value(0);
-      
-      const resultAnimation = {
-        id: `${baseId}-result`,
-        row,
-        col,
-        value,
-        scale: resultScaleAnim,
-        opacity: resultOpacityAnim,
-        glow: resultGlowAnim,
+      return {
+        id: `${baseId}-planet-${index}`,
+        row: pos.row,
+        col: pos.col,
+        value: pos.value,
+        scale: scaleAnim,
+        opacity: opacityAnim,
+        moveX: moveXAnim,
+        moveY: moveYAnim,
+        glow: glowAnim,
+        targetRow: row,
+        targetCol: col,
         createdAt, // Add timestamp
       };
+    });
+    
+    // Create result planet animation with spectacular entrance
+    const resultScaleAnim = new Animated.Value(0);
+    const resultOpacityAnim = new Animated.Value(0);
+    const resultGlowAnim = new Animated.Value(0);
+    const resultRotateAnim = new Animated.Value(0);
+    
+    const resultAnimation = {
+      id: `${baseId}-result`,
+      row,
+      col,
+      value,
+      scale: resultScaleAnim,
+      opacity: resultOpacityAnim,
+      glow: resultGlowAnim,
+      rotate: resultRotateAnim,
+      createdAt, // Add timestamp
+    };
+    
+    // Create collision effects for visual impact
+    const collisionEffect = {
+      id: `${baseId}-collision`,
+      row,
+      col,
+      shockwave: new Animated.Value(0),
+      sparks: new Animated.Value(0),
+      flash: new Animated.Value(0),
+      energyRing: new Animated.Value(0),
+      opacity: new Animated.Value(1),
+    };
+    
+    // Set animations
+    setMergeAnimations([...mergingAnimations, resultAnimation]);
+    setCollisionEffects([collisionEffect]);
+    
+    // Animation timing - Restored to old system's responsive timing
+    // Use the original 120ms timing for chain reactions like the old createMergeAnimation
+    const duration = isChainReaction ? 120 : 180; // Back to original 120ms for chains!
+    const moveDuration = duration * 0.25;  // 30ms for chain, 45ms for normal - much faster
+    const collisionDuration = duration * 0.15; // 18ms for chain, 27ms for normal  
+    const birthDuration = duration * 0.6; // 72ms for chain, 108ms for normal
+    
+    // PHASE 1: GRAVITATIONAL ATTRACTION - Planets move toward collision center
+    const attractionPhase = mergingAnimations.map(anim => {
+      // Calculate movement toward collision center
+      const deltaX = (anim.targetCol - anim.col) * (CELL_SIZE * 0.4);
+      const deltaY = (anim.targetRow - anim.row) * (CELL_SIZE * 0.4);
       
-      // PERFORMANCE: Simplified collision effects
-      const collisionEffect = {
-        id: `${baseId}-collision`,
-        row,
-        col,
-        shockwave: new Animated.Value(0),
-        flash: new Animated.Value(0),
-        opacity: new Animated.Value(1),
-      };
-      
-      // Set animations with debounced state updates
-      setMergeAnimations([...mergingAnimations, resultAnimation]);
-      setCollisionEffects([collisionEffect]);
-      
-      // PERFORMANCE: Optimized animation timing for better responsiveness
-      const duration = isChainReaction ? 80 : 140; // Even faster for chains (reduced from 100ms)
-      const moveDuration = duration * 0.2;  // 16ms for chain, 28ms for normal
-      const collisionDuration = duration * 0.15; // 12ms for chain, 21ms for normal  
-      const birthDuration = duration * 0.65; // 52ms for chain, 91ms for normal
-      
-      // PERFORMANCE: Simplified collision sequence - no complex attraction phase for chains
-      const collisionPhase = [
-        // Planets rapidly shrink
-        ...mergingAnimations.map(anim => 
-          Animated.parallel([
-            Animated.timing(anim.scale, {
-              toValue: 0.1,
-              duration: collisionDuration,
-              useNativeDriver: true, // PERFORMANCE: Use native driver
-            }),
-            Animated.timing(anim.opacity, {
-              toValue: 0.2,
-              duration: collisionDuration,
-              useNativeDriver: true, // PERFORMANCE: Use native driver
-            }),
-          ])
-        ),
-        // Simple flash effect
+      return Animated.parallel([
+        // Move toward center
+        Animated.timing(anim.moveX, {
+          toValue: deltaX,
+          duration: moveDuration,
+          useNativeDriver: false,
+        }),
+        Animated.timing(anim.moveY, {
+          toValue: deltaY,
+          duration: moveDuration,
+          useNativeDriver: false,
+        }),
+        // Build up energy glow
+        Animated.timing(anim.glow, {
+          toValue: 1,
+          duration: moveDuration,
+          useNativeDriver: false,
+        }),
+        // Slight scale up from gravitational forces
+        Animated.timing(anim.scale, {
+          toValue: 1.15,
+          duration: moveDuration,
+          useNativeDriver: false,
+        }),
+      ]);
+    });
+    
+    // PHASE 2: COLLISION MOMENT - Dramatic impact with effects
+    const collisionPhase = [
+      // Planets rapidly shrink (but don't fade out completely to avoid brightness drops)
+      ...mergingAnimations.map(anim => 
+        Animated.parallel([
+          Animated.timing(anim.scale, {
+            toValue: 0.2,
+            duration: collisionDuration,
+            useNativeDriver: false,
+          }),
+          // Reduced opacity fade instead of complete disappearance
+          Animated.timing(anim.opacity, {
+            toValue: 0.3, // Keep some visibility to prevent brightness drops
+            duration: collisionDuration,
+            useNativeDriver: false,
+          }),
+        ])
+      ),
+      // Collision visual effects
+      Animated.parallel([
+        // Bright flash at moment of impact
         Animated.sequence([
           Animated.timing(collisionEffect.flash, {
             toValue: 1,
-            duration: collisionDuration * 0.4,
-            useNativeDriver: true, // PERFORMANCE: Use native driver
+            duration: collisionDuration * 0.3,
+            useNativeDriver: false,
           }),
           Animated.timing(collisionEffect.flash, {
             toValue: 0,
-            duration: collisionDuration * 0.6,
-            useNativeDriver: true, // PERFORMANCE: Use native driver
+            duration: collisionDuration * 0.7,
+            useNativeDriver: false,
           }),
         ]),
-        // Simple shockwave
+        // Expanding shockwave
         Animated.timing(collisionEffect.shockwave, {
           toValue: 1,
-          duration: collisionDuration * 1.2,
-          useNativeDriver: true, // PERFORMANCE: Use native driver
+          duration: collisionDuration * 1.5,
+          useNativeDriver: false,
         }),
-      ];
-      
-      // PERFORMANCE: Simplified formation - faster planet emergence
-      const formationPhase = [
-        Animated.parallel([
-          // Simple scale up
+        // Energy sparks bursting outward
+        Animated.timing(collisionEffect.sparks, {
+          toValue: 1,
+          duration: collisionDuration,
+          useNativeDriver: false,
+        }),
+        // Energy ring expansion
+        Animated.timing(collisionEffect.energyRing, {
+          toValue: 1,
+          duration: collisionDuration * 1.2,
+          useNativeDriver: false,
+        }),
+      ]),
+    ];
+    
+    // PHASE 3: STELLAR FORMATION - New planet emerges dramatically
+    const formationPhase = [
+      // Result planet dramatic entrance
+      Animated.parallel([
+        // Scale up with overshoot and settle
+        Animated.sequence([
+          Animated.timing(resultScaleAnim, {
+            toValue: 1.4,
+            duration: birthDuration * 0.4,
+            useNativeDriver: false,
+          }),
+          Animated.timing(resultScaleAnim, {
+            toValue: 0.9,
+            duration: birthDuration * 0.3,
+            useNativeDriver: false,
+          }),
           Animated.timing(resultScaleAnim, {
             toValue: 1,
-            duration: birthDuration,
-            useNativeDriver: true, // PERFORMANCE: Use native driver
+            duration: birthDuration * 0.3,
+            useNativeDriver: false,
           }),
-          // Simple opacity fade in
-          Animated.timing(resultOpacityAnim, {
-            toValue: 1,
-            duration: birthDuration * 0.7,
-            useNativeDriver: true, // PERFORMANCE: Use native driver
-          }),
-          // Simple glow effect
-          Animated.sequence([
-            Animated.timing(resultGlowAnim, {
-              toValue: 1,
-              duration: birthDuration * 0.4,
-              useNativeDriver: true, // PERFORMANCE: Use native driver
-            }),
-            Animated.timing(resultGlowAnim, {
-              toValue: 0.1,
-              duration: birthDuration * 0.6,
-              useNativeDriver: true, // PERFORMANCE: Use native driver
-            }),
-          ]),
         ]),
-      ];
-      
-      // PERFORMANCE: Faster cleanup
-      const cleanupPhase = [
-        Animated.timing(collisionEffect.opacity, {
-          toValue: 0,
-          duration: isChainReaction ? 30 : 60, // Very fast cleanup for chains (reduced from 40ms)
-          useNativeDriver: true, // PERFORMANCE: Use native driver
+        // Opacity fade in
+        Animated.timing(resultOpacityAnim, {
+          toValue: 1,
+          duration: birthDuration * 0.6,
+          useNativeDriver: false,
         }),
-      ];
+        // Glow effect
+        Animated.sequence([
+          Animated.timing(resultGlowAnim, {
+            toValue: 1,
+            duration: birthDuration * 0.4,
+            useNativeDriver: false,
+          }),
+          Animated.timing(resultGlowAnim, {
+            toValue: 0.1,
+            duration: birthDuration * 0.6,
+            useNativeDriver: false,
+          }),
+        ]),
+        // Rotation effect
+        Animated.timing(resultRotateAnim, {
+          toValue: 1,
+          duration: birthDuration,
+          useNativeDriver: false,
+        }),
+      ]),
+    ];
+    
+    // PHASE 4: CLEANUP - Fast fade out like the old system
+    const cleanupPhase = [
+      Animated.timing(collisionEffect.opacity, {
+        toValue: 0,
+        duration: isChainReaction ? 60 : 120, // Much faster cleanup for chains
+        useNativeDriver: false,
+      }),
+    ];
+    
+    // Execute the enhanced collision sequence
+    Animated.sequence([
+      Animated.parallel(attractionPhase),
+      Animated.parallel(collisionPhase),
+      Animated.parallel(formationPhase),
+      Animated.parallel(cleanupPhase),
+    ]).start(() => {
+      // Immediate cleanup like the old createMergeAnimation system
+      // No extra delays for responsive chain merge timing
+      setMergeAnimations(prev => prev.filter(anim => !anim.id.startsWith(baseId)));
+      setCollisionEffects([]);
+      setEnergyBursts([]);
       
-      // Execute the optimized collision sequence
-      Animated.sequence([
-        Animated.parallel(collisionPhase),
-        Animated.parallel(formationPhase),
-        Animated.parallel(cleanupPhase),
-      ]).start(() => {
-        // Immediate cleanup for responsive timing
-        setMergeAnimations(prev => prev.filter(anim => !anim.id.startsWith(baseId)));
-        setCollisionEffects([]);
-        setEnergyBursts([]);
-        
-        // Immediate callback
-        if (onComplete) {
-          onComplete();
-        }
-      });
-    }, isChainReaction ? 3 : 1); // Very small delay for chain reactions (reduced from 5ms)
+      // Immediate callback like the old system
+      if (onComplete) {
+        onComplete();
+      }
+    });
   };
 
   const clearMergeAnimations = () => {

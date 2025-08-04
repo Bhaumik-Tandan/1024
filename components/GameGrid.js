@@ -292,29 +292,82 @@ const GameGrid = React.memo(({
         </Animated.View>
       ))}
 
-      {/* Render collision effects - Cosmic energy bursts */}
-      {collisionEffects.map((effect) => (
-        <Animated.View
-          key={effect.id}
-          style={{
-            position: 'absolute',
-            left: getCellLeft(effect.col || 0),
-            top: getCellTop(effect.row || 0),
-            width: CELL_SIZE,
-            height: CELL_SIZE,
-            transform: [
-              { 
-                scale: effect.scale || 1
-              },
-              { 
-                rotate: typeof effect.rotate === 'string' ? effect.rotate : `${effect.rotate || 0}deg`
-              }
-            ],
-            zIndex: 3000,
-          }}
-        >
-          <View style={[styles.collisionEffect, { backgroundColor: effect.color }]} />
-        </Animated.View>
+      {/* ELEMENTS-STYLE COLLISION EFFECTS */}
+      {collisionEffects && collisionEffects.map((effect) => (
+        <View key={effect.id} style={{ position: 'absolute', left: getCellLeft(effect.col || 0), top: getCellTop(effect.row || 0), zIndex: 3000 }}>
+          {/* Bright impact flash */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              left: -CELL_SIZE * 0.5,
+              top: -CELL_SIZE * 0.5,
+              width: CELL_SIZE * 2,
+              height: CELL_SIZE * 2,
+              borderRadius: CELL_SIZE,
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              opacity: Animated.multiply(effect.opacity, effect.flash || 0),
+              transform: [{ scale: Animated.add(1, Animated.multiply(effect.flash || 0, 0.5)) }],
+            }}
+          />
+          
+          {/* Expanding shockwave */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              left: -CELL_SIZE * 1.5,
+              top: -CELL_SIZE * 1.5,
+              width: CELL_SIZE * 4,
+              height: CELL_SIZE * 4,
+              borderRadius: CELL_SIZE * 2,
+              borderWidth: 3,
+              borderColor: '#FF6B35',
+              opacity: Animated.multiply(effect.opacity, Animated.subtract(1, effect.shockwave || 0)),
+              transform: [{ scale: Animated.add(0.3, Animated.multiply(effect.shockwave || 0, 2)) }],
+            }}
+          />
+          
+          {/* Energy ring explosion */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              left: -CELL_SIZE,
+              top: -CELL_SIZE,
+              width: CELL_SIZE * 3,
+              height: CELL_SIZE * 3,
+              borderRadius: CELL_SIZE * 1.5,
+              borderWidth: 2,
+              borderColor: '#FFD700',
+              opacity: Animated.multiply(effect.opacity, Animated.subtract(1, effect.energyRing || 0)),
+              transform: [{ scale: Animated.add(0.2, Animated.multiply(effect.energyRing || 0, 2.5)) }],
+            }}
+          />
+          
+          {/* Collision sparks */}
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, index) => (
+            <Animated.View
+              key={index}
+              style={{
+                position: 'absolute',
+                left: -2,
+                top: -2,
+                width: 4,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: '#FFD700',
+                opacity: Animated.multiply(effect.opacity, Animated.subtract(1, effect.sparks || 0)),
+                transform: [
+                  { 
+                    translateX: Animated.multiply(effect.sparks || 0, Math.cos(angle * Math.PI / 180) * CELL_SIZE * 1.5)
+                  },
+                  { 
+                    translateY: Animated.multiply(effect.sparks || 0, Math.sin(angle * Math.PI / 180) * CELL_SIZE * 1.5)
+                  },
+                  { scale: Animated.subtract(1, Animated.multiply(effect.sparks || 0, 0.5)) }
+                ],
+              }}
+            />
+          ))}
+        </View>
       ))}
 
       {/* Render energy bursts - Stellar explosions */}

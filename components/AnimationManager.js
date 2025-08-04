@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { Animated } from 'react-native';
 import { ROWS, COLS, CELL_SIZE } from './constants';
 import { GAME_CONFIG } from './GameRules';
+import * as Haptics from 'expo-haptics';
 
 export const useAnimationManager = () => {
   const [falling, setFalling] = useState(null);
@@ -132,13 +133,108 @@ export const useAnimationManager = () => {
     const baseId = `elements-collision-${Date.now()}-${animationCounter}`;
     const createdAt = Date.now(); // Add timestamp for tracking
     
-    // Create collision animations for merging planets with movement toward center
+    // ENHANCED: Smart timing system based on merge complexity
+    const calculateSmartTiming = (mergeType, tileCount, isChainReaction) => {
+      const baseDuration = isChainReaction ? 150 : 220; // Increased base duration for better feel
+      const complexityMultiplier = Math.min(tileCount * 0.2, 1.5);
+      const typeMultiplier = mergeType === 'horizontal' ? 1.2 : mergeType === 'vertical' ? 1.1 : 1.0;
+      
+      return {
+        attraction: baseDuration * 0.35 * complexityMultiplier * typeMultiplier, // Increased attraction time
+        collision: baseDuration * 0.25 * complexityMultiplier, // Increased collision time
+        formation: baseDuration * 0.35 * complexityMultiplier, // Balanced formation time
+        cleanup: baseDuration * 0.05 // Minimal cleanup time
+      };
+    };
+    
+    // ENHANCED: Analyze merge pattern for better direction calculation
+    const analyzeMergePattern = (mergingTiles, resultPosition) => {
+      if (mergingTiles.length === 0) return { type: 'unknown', direction: { horizontal: 0, vertical: 0 } };
+      
+      const isHorizontal = mergingTiles.every(tile => tile.row === mergingTiles[0].row);
+      const isVertical = mergingTiles.every(tile => tile.col === mergingTiles[0].col);
+      const isDiagonal = !isHorizontal && !isVertical;
+      
+      // Find the center of all merging tiles
+      const avgRow = mergingTiles.reduce((sum, pos) => sum + pos.row, 0) / mergingTiles.length;
+      const avgCol = mergingTiles.reduce((sum, pos) => sum + pos.col, 0) / mergingTiles.length;
+      
+      // Calculate direction from center to result position
+      const horizontalDirection = resultPosition.row - avgRow;
+      const verticalDirection = resultPosition.col - avgCol;
+      
+      // Normalize the direction (make it a unit vector)
+      const magnitude = Math.sqrt(horizontalDirection * horizontalDirection + verticalDirection * verticalDirection);
+      
+      if (magnitude === 0) return { 
+        type: isHorizontal ? 'horizontal' : isVertical ? 'vertical' : 'diagonal',
+        direction: { horizontal: 0, vertical: 0 } 
+      };
+      
+      return {
+        type: isHorizontal ? 'horizontal' : isVertical ? 'vertical' : 'diagonal',
+        direction: {
+          horizontal: horizontalDirection / magnitude,
+          vertical: verticalDirection / magnitude
+        }
+      };
+    };
+    
+    // ENHANCED: Physics-based movement calculation
+    const calculatePhysicsMovement = (startPos, endPos, mergeType, value) => {
+      const distance = Math.sqrt(
+        Math.pow(endPos.col - startPos.col, 2) + Math.pow(endPos.row - startPos.row, 2)
+      );
+      
+      // Base movement distance with value-based scaling
+      const baseDistance = CELL_SIZE * 0.7; // Increased from 0.6
+      const valueMultiplier = Math.min(value / 1000, 2.0); // Larger planets move further
+      const moveDistance = baseDistance * valueMultiplier;
+      
+      // Physics parameters based on merge type
+      const physics = {
+        horizontal: {
+          bounceFactor: 0.1,
+          overshoot: 0.15,
+          acceleration: 0.8
+        },
+        vertical: {
+          bounceFactor: 0.15,
+          overshoot: 0.2,
+          acceleration: 0.9
+        },
+        diagonal: {
+          bounceFactor: 0.12,
+          overshoot: 0.18,
+          acceleration: 0.85
+        }
+      };
+      
+      const typePhysics = physics[mergeType] || physics.diagonal;
+      
+      return {
+        distance: moveDistance,
+        bounceFactor: typePhysics.bounceFactor,
+        overshoot: typePhysics.overshoot,
+        acceleration: typePhysics.acceleration
+      };
+    };
+    
+    // Calculate merge pattern and timing
+    const mergePattern = analyzeMergePattern(mergingTilesPositions, { row, col });
+    const timing = calculateSmartTiming(mergePattern.type, mergingTilesPositions.length, isChainReaction);
+    
+    // Create collision animations for merging planets with enhanced physics
     const mergingAnimations = mergingTilesPositions.map((pos, index) => {
       const scaleAnim = new Animated.Value(1);
       const opacityAnim = new Animated.Value(1);
       const moveXAnim = new Animated.Value(0);
       const moveYAnim = new Animated.Value(0);
       const glowAnim = new Animated.Value(0);
+      const rotationAnim = new Animated.Value(0); // ENHANCED: Add rotation for planets
+      
+      // Calculate physics-based movement
+      const physics = calculatePhysicsMovement(pos, { row, col }, mergePattern.type, pos.value);
       
       return {
         id: `${baseId}-planet-${index}`,
@@ -150,17 +246,21 @@ export const useAnimationManager = () => {
         moveX: moveXAnim,
         moveY: moveYAnim,
         glow: glowAnim,
+        rotation: rotationAnim, // ENHANCED: Add rotation
         targetRow: row,
         targetCol: col,
-        createdAt, // Add timestamp
+        mergeDirection: mergePattern.direction,
+        physics: physics, // ENHANCED: Add physics data
+        createdAt,
       };
     });
     
-    // Create result planet animation with spectacular entrance
+    // Create result planet animation with enhanced entrance
     const resultScaleAnim = new Animated.Value(0);
     const resultOpacityAnim = new Animated.Value(0);
     const resultGlowAnim = new Animated.Value(0);
     const resultRotateAnim = new Animated.Value(0);
+    const resultBounceAnim = new Animated.Value(0); // ENHANCED: Add bounce effect
     
     const resultAnimation = {
       id: `${baseId}-result`,
@@ -171,10 +271,11 @@ export const useAnimationManager = () => {
       opacity: resultOpacityAnim,
       glow: resultGlowAnim,
       rotate: resultRotateAnim,
-      createdAt, // Add timestamp
+      bounce: resultBounceAnim, // ENHANCED: Add bounce
+      createdAt,
     };
     
-    // Create collision effects for visual impact
+    // Create enhanced collision effects for visual impact
     const collisionEffect = {
       id: `${baseId}-collision`,
       row,
@@ -184,179 +285,240 @@ export const useAnimationManager = () => {
       flash: new Animated.Value(0),
       energyRing: new Animated.Value(0),
       opacity: new Animated.Value(1),
+      // ENHANCED: Add secondary effects
+      secondaryShockwave: new Animated.Value(0),
+      gravitationalDistortion: new Animated.Value(0),
     };
     
     // Set animations
     setMergeAnimations([...mergingAnimations, resultAnimation]);
     setCollisionEffects([collisionEffect]);
     
-    // Animation timing - Restored to old system's responsive timing
-    // Use the original 120ms timing for chain reactions like the old createMergeAnimation
-    const duration = isChainReaction ? 120 : 180; // Back to original 120ms for chains!
-    const moveDuration = duration * 0.25;  // 30ms for chain, 45ms for normal - much faster
-    const collisionDuration = duration * 0.15; // 18ms for chain, 27ms for normal  
-    const birthDuration = duration * 0.6; // 72ms for chain, 108ms for normal
-    
-    // PHASE 1: GRAVITATIONAL ATTRACTION - Planets move toward collision center
+    // ENHANCED: PHASE 1 - GRAVITATIONAL ATTRACTION with physics
     const attractionPhase = mergingAnimations.map(anim => {
-      // Calculate movement toward collision center
-      const deltaX = (anim.targetCol - anim.col) * (CELL_SIZE * 0.4);
-      const deltaY = (anim.targetRow - anim.row) * (CELL_SIZE * 0.4);
+      const { distance, acceleration } = anim.physics;
+      
+      // Calculate movement towards merge direction with physics
+      const deltaX = anim.mergeDirection.vertical * distance;
+      const deltaY = anim.mergeDirection.horizontal * distance;
       
       return Animated.parallel([
-        // Move toward center
+        // Move toward merge direction with easing
         Animated.timing(anim.moveX, {
           toValue: deltaX,
-          duration: moveDuration,
+          duration: timing.attraction,
           useNativeDriver: false,
         }),
         Animated.timing(anim.moveY, {
           toValue: deltaY,
-          duration: moveDuration,
+          duration: timing.attraction,
           useNativeDriver: false,
         }),
-        // Build up energy glow
-        Animated.timing(anim.glow, {
+        // ENHANCED: Add rotation during movement (using JS driver for consistency)
+        Animated.timing(anim.rotation, {
           toValue: 1,
-          duration: moveDuration,
+          duration: timing.attraction,
           useNativeDriver: false,
         }),
-        // Slight scale up from gravitational forces
+        // Build up energy glow with value-based intensity
+        Animated.timing(anim.glow, {
+          toValue: Math.min(anim.value / 1000, 1.0),
+          duration: timing.attraction,
+          useNativeDriver: false,
+        }),
+        // ENHANCED: Scale up with value-based scaling
         Animated.timing(anim.scale, {
-          toValue: 1.15,
-          duration: moveDuration,
+          toValue: 1.1 + (anim.value / 10000) * 0.2, // Larger planets scale more
+          duration: timing.attraction,
           useNativeDriver: false,
         }),
       ]);
     });
     
-    // PHASE 2: COLLISION MOMENT - Dramatic impact with effects
+    // ENHANCED: PHASE 2 - COLLISION MOMENT with improved effects
     const collisionPhase = [
-      // Planets rapidly shrink (but don't fade out completely to avoid brightness drops)
+      // Planets with improved shrinking and fading
       ...mergingAnimations.map(anim => 
         Animated.parallel([
           Animated.timing(anim.scale, {
-            toValue: 0.2,
-            duration: collisionDuration,
+            toValue: 0.3, // ENHANCED: Less aggressive shrinking
+            duration: timing.collision,
             useNativeDriver: false,
           }),
-          // Reduced opacity fade instead of complete disappearance
+          // ENHANCED: Better opacity handling
           Animated.timing(anim.opacity, {
-            toValue: 0.3, // Keep some visibility to prevent brightness drops
-            duration: collisionDuration,
+            toValue: 0.5, // ENHANCED: Keep more visibility
+            duration: timing.collision,
+            useNativeDriver: false,
+          }),
+          // ENHANCED: Add rotation during collision (using JS driver for consistency)
+          Animated.timing(anim.rotation, {
+            toValue: 2, // Faster rotation during collision
+            duration: timing.collision,
             useNativeDriver: false,
           }),
         ])
       ),
-      // Collision visual effects
+      // ENHANCED: Multi-layered collision effects
       Animated.parallel([
-        // Bright flash at moment of impact
+        // Primary flash
         Animated.sequence([
           Animated.timing(collisionEffect.flash, {
             toValue: 1,
-            duration: collisionDuration * 0.3,
+            duration: timing.collision * 0.3,
             useNativeDriver: false,
           }),
           Animated.timing(collisionEffect.flash, {
             toValue: 0,
-            duration: collisionDuration * 0.7,
+            duration: timing.collision * 0.7,
             useNativeDriver: false,
           }),
         ]),
+        // ENHANCED: Secondary shockwave
+        Animated.timing(collisionEffect.secondaryShockwave, {
+          toValue: 1,
+          duration: timing.collision * 1.2,
+          useNativeDriver: false,
+        }),
         // Expanding shockwave
         Animated.timing(collisionEffect.shockwave, {
           toValue: 1,
-          duration: collisionDuration * 1.5,
+          duration: timing.collision * 1.5,
           useNativeDriver: false,
         }),
-        // Energy sparks bursting outward
+        // Energy sparks
         Animated.timing(collisionEffect.sparks, {
           toValue: 1,
-          duration: collisionDuration,
+          duration: timing.collision,
           useNativeDriver: false,
         }),
         // Energy ring expansion
         Animated.timing(collisionEffect.energyRing, {
           toValue: 1,
-          duration: collisionDuration * 1.2,
+          duration: timing.collision * 1.2,
+          useNativeDriver: false,
+        }),
+        // ENHANCED: Gravitational distortion
+        Animated.timing(collisionEffect.gravitationalDistortion, {
+          toValue: 1,
+          duration: timing.collision * 0.8,
           useNativeDriver: false,
         }),
       ]),
     ];
     
-    // PHASE 3: STELLAR FORMATION - New planet emerges dramatically
+    // ENHANCED: PHASE 3 - STELLAR FORMATION with bounce effect
     const formationPhase = [
-      // Result planet dramatic entrance
       Animated.parallel([
-        // Scale up with overshoot and settle
+        // ENHANCED: Scale up with bounce effect
         Animated.sequence([
           Animated.timing(resultScaleAnim, {
-            toValue: 1.4,
-            duration: birthDuration * 0.4,
+            toValue: 1.5, // ENHANCED: Larger overshoot
+            duration: timing.formation * 0.4,
             useNativeDriver: false,
           }),
           Animated.timing(resultScaleAnim, {
-            toValue: 0.9,
-            duration: birthDuration * 0.3,
+            toValue: 0.8, // ENHANCED: More pronounced bounce
+            duration: timing.formation * 0.3,
             useNativeDriver: false,
           }),
           Animated.timing(resultScaleAnim, {
+            toValue: 1.0,
+            duration: timing.formation * 0.3,
+            useNativeDriver: false,
+          }),
+        ]),
+        // ENHANCED: Bounce effect
+        Animated.sequence([
+          Animated.timing(resultBounceAnim, {
             toValue: 1,
-            duration: birthDuration * 0.3,
+            duration: timing.formation * 0.6,
+            useNativeDriver: false,
+          }),
+          Animated.timing(resultBounceAnim, {
+            toValue: 0,
+            duration: timing.formation * 0.4,
             useNativeDriver: false,
           }),
         ]),
         // Opacity fade in
         Animated.timing(resultOpacityAnim, {
           toValue: 1,
-          duration: birthDuration * 0.6,
+          duration: timing.formation * 0.6,
           useNativeDriver: false,
         }),
-        // Glow effect
+        // ENHANCED: Glow effect with value-based intensity
         Animated.sequence([
           Animated.timing(resultGlowAnim, {
-            toValue: 1,
-            duration: birthDuration * 0.4,
+            toValue: Math.min(value / 10000, 1.0),
+            duration: timing.formation * 0.4,
             useNativeDriver: false,
           }),
           Animated.timing(resultGlowAnim, {
             toValue: 0.1,
-            duration: birthDuration * 0.6,
+            duration: timing.formation * 0.6,
             useNativeDriver: false,
           }),
         ]),
         // Rotation effect
         Animated.timing(resultRotateAnim, {
           toValue: 1,
-          duration: birthDuration,
+          duration: timing.formation,
           useNativeDriver: false,
         }),
       ]),
     ];
     
-    // PHASE 4: CLEANUP - Fast fade out like the old system
+    // PHASE 4: CLEANUP - Fast fade out
     const cleanupPhase = [
       Animated.timing(collisionEffect.opacity, {
         toValue: 0,
-        duration: isChainReaction ? 60 : 120, // Much faster cleanup for chains
+        duration: timing.cleanup,
         useNativeDriver: false,
       }),
     ];
     
+    // ENHANCED: Haptic feedback for merge animation
+    const triggerMergeHaptics = async (mergeType, value, tileCount) => {
+      try {
+        const intensity = Math.min(value / 1000, 1.0);
+        
+        if (mergeType === 'chain') {
+          // Chain reaction haptics
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          if (tileCount >= 4) {
+            setTimeout(() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+            }, 50);
+          }
+        } else {
+          // Regular merge haptics
+          if (value >= 1000) {
+            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          } else {
+            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+        }
+      } catch (error) {
+        console.warn('Haptic feedback not available:', error);
+      }
+    };
+
     // Execute the enhanced collision sequence
     Animated.sequence([
       Animated.parallel(attractionPhase),
       Animated.parallel(collisionPhase),
       Animated.parallel(formationPhase),
       Animated.parallel(cleanupPhase),
-    ]).start(() => {
-      // Immediate cleanup like the old createMergeAnimation system
-      // No extra delays for responsive chain merge timing
+    ]).start(async () => {
+      // ENHANCED: Trigger haptic feedback
+      await triggerMergeHaptics(mergePattern.type, value, mergingTilesPositions.length);
+      
+      // Immediate cleanup
       setMergeAnimations(prev => prev.filter(anim => !anim.id.startsWith(baseId)));
       setCollisionEffects([]);
       setEnergyBursts([]);
       
-      // Immediate callback like the old system
       if (onComplete) {
         onComplete();
       }
@@ -382,6 +544,23 @@ export const useAnimationManager = () => {
         if (anim.glow && anim.glow.stopAnimation) {
           anim.glow.stopAnimation();
         }
+        // ENHANCED: Stop rotation animations
+        if (anim.rotation && anim.rotation.stopAnimation) {
+          anim.rotation.stopAnimation();
+        }
+        if (anim.moveX && anim.moveX.stopAnimation) {
+          anim.moveX.stopAnimation();
+        }
+        if (anim.moveY && anim.moveY.stopAnimation) {
+          anim.moveY.stopAnimation();
+        }
+        // ENHANCED: Stop result animations
+        if (anim.bounce && anim.bounce.stopAnimation) {
+          anim.bounce.stopAnimation();
+        }
+        if (anim.rotate && anim.rotate.stopAnimation) {
+          anim.rotate.stopAnimation();
+        }
       });
       
       // Clear collision effects
@@ -394,6 +573,19 @@ export const useAnimationManager = () => {
         }
         if (effect.opacity && effect.opacity.stopAnimation) {
           effect.opacity.stopAnimation();
+        }
+        // ENHANCED: Stop new collision effects
+        if (effect.secondaryShockwave && effect.secondaryShockwave.stopAnimation) {
+          effect.secondaryShockwave.stopAnimation();
+        }
+        if (effect.gravitationalDistortion && effect.gravitationalDistortion.stopAnimation) {
+          effect.gravitationalDistortion.stopAnimation();
+        }
+        if (effect.sparks && effect.sparks.stopAnimation) {
+          effect.sparks.stopAnimation();
+        }
+        if (effect.energyRing && effect.energyRing.stopAnimation) {
+          effect.energyRing.stopAnimation();
         }
       });
       

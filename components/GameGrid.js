@@ -276,8 +276,19 @@ const GameGrid = React.memo(({
               { 
                 scale: anim.scale || 1
               },
-              ...(anim.rotate ? [{ 
-                rotate: typeof anim.rotate === 'string' ? anim.rotate : `${anim.rotate}deg`
+              // ENHANCED: Handle rotation animation (using JS driver)
+              ...(anim.rotation ? [{ 
+                rotate: anim.rotation.interpolate({
+                  inputRange: [0, 1, 2],
+                  outputRange: ['0deg', '360deg', '720deg']
+                })
+              }] : []),
+              // ENHANCED: Handle bounce effect for result planets
+              ...(anim.bounce ? [{ 
+                translateY: anim.bounce.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -CELL_SIZE * 0.1]
+                })
               }] : [])
             ],
             zIndex: 2000,
@@ -310,7 +321,7 @@ const GameGrid = React.memo(({
             }}
           />
           
-          {/* Expanding shockwave */}
+          {/* ENHANCED: Primary expanding shockwave */}
           <Animated.View
             style={{
               position: 'absolute',
@@ -323,6 +334,47 @@ const GameGrid = React.memo(({
               borderColor: '#FF6B35',
               opacity: Animated.multiply(effect.opacity, Animated.subtract(1, effect.shockwave || 0)),
               transform: [{ scale: Animated.add(0.3, Animated.multiply(effect.shockwave || 0, 2)) }],
+            }}
+          />
+          
+          {/* ENHANCED: Secondary shockwave */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              left: -CELL_SIZE * 2,
+              top: -CELL_SIZE * 2,
+              width: CELL_SIZE * 5,
+              height: CELL_SIZE * 5,
+              borderRadius: CELL_SIZE * 2.5,
+              borderWidth: 2,
+              borderColor: '#FF8C42',
+              opacity: Animated.multiply(effect.opacity, Animated.subtract(1, effect.secondaryShockwave || 0)),
+              transform: [{ scale: Animated.add(0.2, Animated.multiply(effect.secondaryShockwave || 0, 2.5)) }],
+            }}
+          />
+          
+          {/* ENHANCED: Gravitational distortion effect */}
+          <Animated.View
+            style={{
+              position: 'absolute',
+              left: -CELL_SIZE * 0.5,
+              top: -CELL_SIZE * 0.5,
+              width: CELL_SIZE * 2,
+              height: CELL_SIZE * 2,
+              borderRadius: CELL_SIZE,
+              backgroundColor: 'rgba(255, 255, 255, 0.3)',
+              opacity: Animated.multiply(effect.opacity, effect.gravitationalDistortion || 0),
+              transform: [
+                { 
+                  scale: Animated.add(1, Animated.multiply(effect.gravitationalDistortion || 0, 0.3))
+                },
+                {
+                  rotate: Animated.multiply(effect.gravitationalDistortion || 0, 180).interpolate({
+                    inputRange: [0, 180],
+                    outputRange: ['0deg', '180deg']
+                  })
+                }
+              ],
             }}
           />
           

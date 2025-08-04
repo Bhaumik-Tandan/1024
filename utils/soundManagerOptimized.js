@@ -23,7 +23,7 @@ if (Platform.OS !== 'web') {
   setAudioModeAsync = audio.setAudioModeAsync;
 }
 
-class SoundManager {
+class OptimizedSoundManager {
   constructor() {
     this.mergePlayer = null;
     this.intermediateMergePlayer = null;
@@ -50,9 +50,9 @@ class SoundManager {
     
     // OPTIMIZATION 1: Reduced intervals for better responsiveness
     this.soundIntervals = {
-      merge: 100,           // Reduced from 150ms for more responsive merges
-      intermediateMerge: 60, // Reduced from 80ms for chain reactions
-      drop: 30,             // Reduced from 60ms for more responsive drops
+      merge: 150,           // Reduced from 180ms
+      intermediateMerge: 80, // Reduced from 120ms for chain reactions
+      drop: 60,             // Reduced from 80ms
       gameOver: 3000,       // Unchanged
       pauseResume: 100      // Reduced from 150ms
     };
@@ -76,8 +76,11 @@ class SoundManager {
   }
 
   async initialize() {
+    console.log('🔧 OptimizedSoundManager: Starting initialization...');
+    
     if (this.isWebPlatform) {
       this.isInitialized = true;
+      console.log('✅ OptimizedSoundManager: Initialized for web platform (audio disabled)');
       return;
     }
 
@@ -92,8 +95,9 @@ class SoundManager {
       
       this.createAudioPlayers();
       this.isInitialized = true;
+      console.log('✅ OptimizedSoundManager: Audio initialization completed');
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to initialize audio system:', error);
+      console.warn('❌ OptimizedSoundManager: Failed to initialize audio system:', error);
       this.isInitialized = false;
     }
   }
@@ -108,6 +112,7 @@ class SoundManager {
     if (soundType === 'drop') {
       const now = Date.now();
       if (now - this.lastDropTime < 100) { // 100ms threshold for rapid drops
+        console.log('🔄 Cancelling previous drop sound due to rapid interaction');
         this.cancelPreviousSounds('drop');
       }
       this.lastDropTime = now;
@@ -124,28 +129,8 @@ class SoundManager {
     const lastTime = this.lastSoundTimes[soundType] || 0;
     const interval = this.soundIntervals[soundType] || 100;
     
-    // SPECIAL CASE: For drop sounds, be more lenient to ensure important drops are heard
-    if (soundType === 'drop' && now - lastTime < interval) {
-      // Only skip if it's been less than 15ms (very rapid drops)
-      if (now - lastTime < 15) {
-        return;
-      }
-    } 
-    // SPECIAL CASE: For merge sounds, be more lenient to ensure important merges are heard
-    else if (soundType === 'merge' && now - lastTime < interval) {
-      // Only skip if it's been less than 30ms (very rapid merges)
-      if (now - lastTime < 30) {
-        return;
-      }
-    }
-    // SPECIAL CASE: For intermediate merge sounds, be more lenient for chain reactions
-    else if (soundType === 'intermediateMerge' && now - lastTime < interval) {
-      // Only skip if it's been less than 20ms (very rapid intermediate merges)
-      if (now - lastTime < 20) {
-        return;
-      }
-    }
-    else if (now - lastTime < interval) {
+    if (now - lastTime < interval) {
+      console.log(`⏰ ${soundType} sound SKIPPED - Too soon since last sound`);
       return;
     }
 
@@ -180,6 +165,8 @@ class SoundManager {
       clearTimeout(timeout);
       this.soundTimeouts.delete(soundType);
     }
+    
+    console.log(`🚫 Cancelled previous ${soundType} sounds`);
   }
 
   // OPTIMIZATION 4: Enhanced sound completion waiting with timeout
@@ -209,6 +196,7 @@ class SoundManager {
     if (isChainReaction) {
       // For chain reactions, don't wait for intermediate sounds to complete
       // This prevents delays in chain reaction processing
+      console.log('⚡ Chain reaction detected - skipping sound completion wait');
       return;
     }
     
@@ -318,8 +306,6 @@ class SoundManager {
         default:
           throw new Error(`Unknown sound type: ${soundType}`);
       }
-    } catch (error) {
-      throw error;
     } finally {
       // Clean up after sound completes
       setTimeout(() => {
@@ -360,8 +346,10 @@ class SoundManager {
       
       const { soundVolume } = useGameStore.getState();
       this.updateVolumeLevels(soundVolume);
+      
+      console.log('✅ OptimizedSoundManager: Audio players created successfully');
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to create audio players:', error);
+      console.warn('❌ OptimizedSoundManager: Failed to create audio players:', error);
     }
   }
 
@@ -443,33 +431,15 @@ class SoundManager {
 
   // Public API methods with chain reaction support
   async playMergeSound(isChainReaction = false) {
-    if (!this.isInitialized || this.isWebPlatform) {
-      return;
-    }
-    
     await this.queueSound('merge', this.soundPriorities.merge, isChainReaction);
   }
 
   async playIntermediateMergeSound(isChainReaction = true) {
-    if (!this.isInitialized || this.isWebPlatform) {
-      return;
-    }
-    
     await this.queueSound('intermediateMerge', this.soundPriorities.intermediateMerge, isChainReaction);
   }
 
-  async playDropSound(forcePlay = false) {
-    if (!this.isInitialized || this.isWebPlatform) {
-      return;
-    }
-    
-    if (forcePlay) {
-      // Force play drop sound even if interval hasn't passed
-      await this.playSoundDirectly('drop');
-      this.lastSoundTimes['drop'] = Date.now();
-    } else {
-      await this.queueSound('drop', this.soundPriorities.drop, false);
-    }
+  async playDropSound() {
+    await this.queueSound('drop', this.soundPriorities.drop, false);
   }
 
   async playGameOverSound() {
@@ -614,61 +584,7 @@ class SoundManager {
       lastSoundTimes: this.lastSoundTimes,
     };
   }
-
-  // Legacy methods to maintain compatibility
-  async loadMergeSound() {
-    // No longer needed with expo-audio, players are created in initialize
-  }
-
-  async loadIntermediateMergeSound() {
-    // No longer needed with expo-audio, players are created in initialize
-  }
-
-  async loadDropSound() {
-    // No longer needed with expo-audio, players are created in initialize
-  }
-
-  playSoundIfEnabled(soundType) {
-    if (this.checkSoundEnabled()) {
-      this.queueSound(soundType);
-    }
-  }
-
-  logStatus() {
-    console.log('OptimizedSoundManager Status:', this.getStatus());
-  }
-
-  // Test if sound system is working properly
-  async testSoundSystem() {
-    const status = this.getStatus();
-    console.log('🔍 OptimizedSoundManager Test Results:', status);
-    
-    if (!status.isInitialized) {
-      console.warn('❌ OptimizedSoundManager: Not initialized');
-      return false;
-    }
-    
-    if (status.isWebPlatform) {
-      console.log('✅ OptimizedSoundManager: Web platform - audio disabled');
-      return true; // Not an error on web
-    }
-    
-    // Test if all players are created
-    const allPlayersExist = Object.values(status.hasPlayers).every(exists => exists);
-    if (!allPlayersExist) {
-      console.warn('❌ OptimizedSoundManager: Some audio players are missing');
-      return false;
-    }
-    
-    // Test if sound is enabled
-    if (!status.soundEnabled) {
-      console.log('🔇 OptimizedSoundManager: Sound is disabled in settings');
-      return true; // Not an error, just disabled
-    }
-    
-    return true;
-  }
 }
 
-const soundManager = new SoundManager();
-export default soundManager; 
+const optimizedSoundManager = new OptimizedSoundManager();
+export default optimizedSoundManager; 

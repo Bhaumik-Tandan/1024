@@ -22,6 +22,7 @@
         "backgroundColor": "#0A0A1A"
       },
       "bundleIdentifier": "com.space.drop",
+      "buildNumber": "2",
       "infoPlist": {
         "UIBackgroundModes": ["audio"]
       }

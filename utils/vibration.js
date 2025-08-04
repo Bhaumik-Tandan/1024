@@ -9,7 +9,7 @@ if (Platform.OS !== 'web') {
 }
 
 // Vibration and sound for final merge or single merge
-export const vibrateOnMerge = async () => {
+export const vibrateOnMerge = async (isChainReaction = false) => {
   const { vibrationEnabled, soundEnabled } = useGameStore.getState();
   
   if (vibrationEnabled && Platform.OS !== 'web' && Vibration) {
@@ -20,7 +20,7 @@ export const vibrateOnMerge = async () => {
   // Only play final merge sound if sound is enabled
   if (soundEnabled) {
     try {
-      await soundManager.playMergeSound();
+      await soundManager.playMergeSound(isChainReaction);
     } catch (error) {
       console.warn('Failed to play merge sound:', error);
     }
@@ -28,7 +28,7 @@ export const vibrateOnMerge = async () => {
 };
 
 // Vibration and sound for intermediate merge in chain
-export const vibrateOnIntermediateMerge = async () => {
+export const vibrateOnIntermediateMerge = async (isChainReaction = true) => {
   const { vibrationEnabled, soundEnabled } = useGameStore.getState();
   
   if (vibrationEnabled && Platform.OS !== 'web' && Vibration) {
@@ -39,7 +39,7 @@ export const vibrateOnIntermediateMerge = async () => {
   // Only play intermediate merge sound if sound is enabled
   if (soundEnabled) {
     try {
-      await soundManager.playIntermediateMergeSound();
+      await soundManager.playIntermediateMergeSound(isChainReaction);
     } catch (error) {
       console.warn('Failed to play intermediate merge sound:', error);
     }
@@ -57,27 +57,17 @@ export const vibrateOnly = () => {
 };
 
 // Sound only for drops/touches (no vibration)
-export const vibrateOnTouch = async () => {
+export const vibrateOnTouch = async (forcePlay = false) => {
   const { soundEnabled } = useGameStore.getState();
-  
-  console.log('🔊 vibrateOnTouch called - Debug Info:', {
-    soundEnabled,
-    timestamp: Date.now(),
-    callStack: new Error().stack?.split('\n').slice(1, 4).join(' -> ')
-  });
   
   // Only play drop/touch sound if sound is enabled
   // NO VIBRATION for drops to reduce excessive feedback
   if (soundEnabled) {
     try {
-      console.log('🎵 Playing drop sound...');
-      await soundManager.playDropSound();
-      console.log('✅ Drop sound played successfully');
+      await soundManager.playDropSound(forcePlay);
     } catch (error) {
-      console.warn('❌ Failed to play drop sound:', error);
+      console.warn('Failed to play drop sound:', error);
     }
-  } else {
-    console.log('🔇 Drop sound SKIPPED - sound disabled in settings');
   }
 };
 

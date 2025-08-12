@@ -22,7 +22,7 @@
         "backgroundColor": "#0A0A1A"
       },
       "bundleIdentifier": "com.space.drop",
-      "buildNumber": "3",
+      "buildNumber": "4",
       "infoPlist": {
         "UIBackgroundModes": []
       }

@@ -24,7 +24,9 @@
       "bundleIdentifier": "com.space.drop",
       "buildNumber": "2",
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
@@ -46,7 +48,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "f24f5cb5-20a6-4366-8cb3-5cad10095bcb"
+        "projectId": "f555f51b-9c4f-488e-af91-af4b831d67b2"
       }
     }
   }

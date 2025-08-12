@@ -22,11 +22,9 @@
         "backgroundColor": "#0A0A1A"
       },
       "bundleIdentifier": "com.space.drop",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
-        "UIBackgroundModes": [
-          "audio"
-        ]
+        "UIBackgroundModes": []
       }
     },
     "android": {

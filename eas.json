@@ -3,6 +3,7 @@
       "version": ">= 5.2.0",
       "promptToConfigurePushNotifications": false
   },
+  "owner": "1024-game",
   "build": {
       "development": {
           "releaseChannel": "staging",

@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Drop from Space",
-    "slug": "drop-from-space",
+    "slug": "1024-game",
     "version": "1.0.1",
     "orientation": "default",
     "icon": "./assets/icons/icon.png",
@@ -48,6 +48,7 @@
       "eas": {
         "projectId": "f555f51b-9c4f-488e-af91-af4b831d67b2"
       }
-    }
+    },
+    "owner": "1024-game"
   }
 }

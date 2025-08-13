@@ -22,7 +22,7 @@ export const vibrateOnMerge = async (isChainReaction = false) => {
     try {
       await soundManager.playMergeSound(isChainReaction);
     } catch (error) {
-      console.warn('Failed to play merge sound:', error);
+      // Failed to play merge sound silently
     }
   }
 };

@@ -14,6 +14,8 @@ const createGameStore = () => {
     currentScore: 0,
     highestBlock: null,
     
+
+    
     // Saved game state
     savedGame: null,
     hasSavedGame: false,
@@ -22,6 +24,8 @@ const createGameStore = () => {
     toggleVibration: () => storeData.vibrationEnabled = !storeData.vibrationEnabled,
     toggleSound: () => storeData.soundEnabled = !storeData.soundEnabled,
     setSoundVolume: (volume) => storeData.soundVolume = Math.max(0, Math.min(1, volume || 0.7)),
+    
+
     
     updateScore: (score) => {
       const currentHighScore = storeData.highScore || 0;
@@ -50,6 +54,7 @@ const createGameStore = () => {
           nextBlock: gameState.nextBlock || 2,
           previewBlock: gameState.previewBlock || 2,
           gameStats: gameState.gameStats || {},
+
           timestamp: Date.now(),
         };
         storeData.savedGame = savedGameData;
@@ -74,11 +79,17 @@ const createGameStore = () => {
         if (Platform.OS === 'web') {
           try {
             const saved = localStorage.getItem('game-state');
-            return saved ? JSON.parse(saved) : null;
+            if (saved) {
+              const parsed = JSON.parse(saved);
+
+              return parsed;
+            }
+            return null;
           } catch (e) {
             return null;
           }
         }
+
         return storeData.savedGame || null;
       } catch (error) {
         return null;
@@ -127,14 +138,16 @@ if (Platform.OS === 'web') {
   // Simple store for web
   const gameStore = createGameStore();
   useGameStore = () => gameStore;
+
 } else {
   // Full zustand store with persist for native
-  const { persist, createJSONStorage } = require('zustand/middleware');
-  const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-  
-  useGameStore = create(
-    persist(
-      (set, get) => ({
+  try {
+    const { persist, createJSONStorage } = require('zustand/middleware');
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    
+    useGameStore = create(
+      persist(
+        (set, get) => ({
         // Game settings with explicit defaults
         vibrationEnabled: true,
         soundEnabled: true,
@@ -144,6 +157,8 @@ if (Platform.OS === 'web') {
         highScore: null,
         currentScore: 0,
         highestBlock: null,
+        
+
         
         // Saved game state
         savedGame: null,
@@ -194,7 +209,7 @@ if (Platform.OS === 'web') {
               hasSavedGame: true 
             });
           } catch (error) {
-            console.warn('Failed to save game:', error);
+            // Failed to save game silently
           }
         },
         
@@ -203,7 +218,6 @@ if (Platform.OS === 'web') {
             const { savedGame } = get();
             return savedGame || null;
           } catch (error) {
-            console.warn('Failed to load saved game:', error);
             return null;
           }
         },
@@ -215,9 +229,11 @@ if (Platform.OS === 'web') {
               hasSavedGame: false 
             });
           } catch (error) {
-            console.warn('Failed to clear saved game:', error);
+            // Failed to clear saved game silently
           }
         },
+        
+
         
         resetGame: () => set({ currentScore: 0 }),
         
@@ -238,6 +254,12 @@ if (Platform.OS === 'web') {
       }
     )
   );
+
+  } catch (error) {
+    // Fallback to web store if native store fails
+    const gameStore = createGameStore();
+    useGameStore = () => gameStore;
+  }
 }
 
 export default useGameStore; 

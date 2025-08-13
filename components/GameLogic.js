@@ -480,18 +480,9 @@ export const processTileDrop = async (board, value, column, showMergeResultAnima
   // Play drop sound AFTER tile has settled (not when placed)
   // This ensures visual and audio alignment
   if (finalRow !== -1) {
-    console.log('🎯 Drop sound trigger - Tile settled at:', {
-      column,
-      finalRow,
-      value,
-      boardState: newBoard.map(row => row.slice())
-    });
-    
     vibrateOnTouch(true).catch(err => {
-      console.warn('❌ Drop sound error in GameLogic:', err);
+      // Drop sound error silently handled
     });
-  } else {
-    console.log('🔇 Drop sound SKIPPED - No tile found after gravity');
   }
   
   // STEP 4: Initial merge check for the landed tile
@@ -567,7 +558,6 @@ export const processTileDrop = async (board, value, column, showMergeResultAnima
  * @returns {Object} - Result containing updated board and score
  */
 export const processFullColumnDrop = async (board, value, column, showMergeResultAnimation = null) => {
-  console.log('🎯 processFullColumnDrop called:', { value, column, bottomValue: board[ROWS - 1][column] });
   
   // Validate inputs
   if (!board || !Array.isArray(board) || board.length === 0) {
@@ -595,10 +585,9 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
     }
   }
   
-  console.log('🔍 Column full check:', { columnFull, column });
+
   
   if (!columnFull) {
-    console.log('🔄 Column not full, using regular drop logic');
     // Column is not full, use regular drop logic
     return await processTileDrop(board, value, column, showMergeResultAnimation);
   }
@@ -607,21 +596,11 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
   const bottomRow = ROWS - 1;
   const bottomValue = newBoard[bottomRow][column];
   
-  console.log('🔍 Bottom tile check:', { bottomValue, value, canMerge: bottomValue === value });
-  
   // Case 1: Direct merge with bottom tile
   if (bottomValue === value) {
-    console.log('✅ Direct merge with bottom tile - performing immediate merge');
-    
     // Play drop sound when tile is placed
-    console.log('🎯 Drop sound trigger (full column) - Tile placed at:', {
-      column,
-      bottomRow,
-      value
-    });
-    
     vibrateOnTouch(true).catch(err => {
-      console.warn('❌ Drop sound error in full column drop:', err);
+      // Drop sound error silently handled
     });
     
     // Use the proper merge animation system
@@ -647,7 +626,7 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
     
     totalScore += newValue;
     
-    console.log('✅ Immediate merge completed:', { newValue, totalScore });
+
     
     // Apply upward gravity to settle everything
     for (let c = 0; c < COLS; c++) {
@@ -667,17 +646,20 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
     };
   }
   
-  // Case 2: Check for adjacent merges
+  // Case 2: Check for adjacent merges ONLY (no flood fill for full columns)
   const adjacentPositions = [
-    { row: bottomRow - 1, col: column }, // up from bottom
-    { row: bottomRow, col: column - 1 }, // left of bottom
-    { row: bottomRow, col: column + 1 }  // right of bottom
+    { row: bottomRow - 1, col: column - 1 }, // diagonal left
+    { row: bottomRow - 1, col: column + 1 }, // diagonal right
+    { row: bottomRow, col: column - 1 },     // left of bottom
+    { row: bottomRow, col: column + 1 }      // right of bottom
   ];
   
   for (const pos of adjacentPositions) {
     if (pos.row >= 0 && pos.row < ROWS && 
         pos.col >= 0 && pos.col < COLS && 
         newBoard[pos.row][pos.col] === value) {
+      
+
       
       // Play drop sound when tile is placed
       vibrateOnTouch(true).catch(err => {
@@ -729,12 +711,12 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
     }
   }
   
-  // No merge possible
+  // No merge possible - this is the key fix!
   return {
     board: newBoard,
     score: 0,
     success: false,
-    error: 'Column is full and no merge possible'
+    error: 'Column is full and no merge possible - drop blocked to prevent unwanted merges'
   };
 };
 
@@ -976,22 +958,28 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
   newBoard[row][col] = value;
   
   // Play drop sound when tile is placed
-  console.log('🎯 Drop sound trigger (block landing) - Tile placed at:', {
-    row,
-    col,
-    value
-  });
-  
   vibrateOnTouch(true).catch(err => {
-    console.warn('❌ Drop sound error in block landing:', err);
+    // Drop sound error silently handled
   });
   
-  // STEP 2: Apply physics - upward gravity affects all columns
+  // STEP 2: Check if this is a full column drop that should only merge with specific tiles
+  const isFullColumnDrop = (() => {
+    // Check if the column was full before the drop
+    let emptyCells = 0;
+    for (let r = 0; r < ROWS; r++) {
+      if (r !== row && board[r][col] === 0) {
+        emptyCells++;
+      }
+    }
+    return emptyCells === 0; // Column was completely full
+  })();
+  
+  // STEP 3: Apply physics - upward gravity affects all columns
   for (let c = 0; c < COLS; c++) {
     applyUpwardGravity(newBoard, c);
   }
   
-  // STEP 3: Find where the tile settled after upward gravity
+  // STEP 4: Find where the tile settled after upward gravity
   // Since we applied upward gravity, find the topmost non-empty cell in the column
   let finalRow = -1;
   for (let r = 0; r < ROWS; r++) {
@@ -1001,9 +989,50 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
     }
   }
   
-  // STEP 4: Initial merge check for the landed tile (merge at the settled position)
+  // STEP 5: Initial merge check for the landed tile (merge at the settled position)
   let currentMergePosition = null;
   if (finalRow !== -1) {
+    // SPECIAL LOGIC FOR FULL COLUMN DROPS: Only allow merges with bottom tile or adjacent tiles
+    if (isFullColumnDrop) {
+      // Only check for merges with the bottom tile or adjacent tiles, not flood fill
+      const bottomRow = ROWS - 1;
+      const bottomValue = newBoard[bottomRow][col];
+      
+      // Check if we can merge with the bottom tile
+      if (bottomValue === value) {
+        // Allow this merge to proceed normally
+      } else {
+        // Check adjacent positions for merge opportunities
+        const adjacentPositions = [
+          { row: bottomRow - 1, col: col - 1 }, // diagonal left
+          { row: bottomRow - 1, col: col + 1 }, // diagonal right
+          { row: bottomRow, col: col - 1 },     // left of bottom
+          { row: bottomRow, col: col + 1 }      // right of bottom
+        ];
+        
+        let hasAdjacentMerge = false;
+        for (const pos of adjacentPositions) {
+          if (pos.row >= 0 && pos.row < ROWS && 
+              pos.col >= 0 && pos.col < COLS && 
+              newBoard[pos.row][pos.col] === value) {
+            hasAdjacentMerge = true;
+            break;
+          }
+        }
+        
+        if (!hasAdjacentMerge) {
+          // Skip the merge check for full column drops without valid merge targets
+          return {
+            newBoard: newBoard,
+            totalScore: 0,
+            success: true,
+            chainReactions: 0,
+            iterations: 0
+          };
+        }
+      }
+    }
+    
     // For 2-tile merges, prefer the dropped tile position
     // For 3+ tile merges, let the natural position logic handle it
     const connectedTiles = findConnectedTiles(newBoard, finalRow, col);
@@ -1066,7 +1095,7 @@ export const handleBlockLanding = async (board, row, col, value, showMergeResult
     }
   }
   
-  // STEP 5: Chain reaction loop - continue until no more merges possible
+  // STEP 6: Chain reaction loop - continue until no more merges possible
   // Each chain reaction checks around the merged result for new adjacent tiles
   let chainReactionActive = true;
   let iterations = 0;

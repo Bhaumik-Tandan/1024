@@ -76,7 +76,6 @@ export const useAnimationManager = () => {
       }
       setFalling(null);
     } catch (error) {
-      console.warn('Error clearing falling animation:', error);
       setFalling(null);
     }
   };
@@ -484,7 +483,7 @@ export const useAnimationManager = () => {
           }
         }
       } catch (error) {
-        console.warn('Haptic feedback not available:', error);
+        // Haptic feedback not available silently
       }
     };
 
@@ -588,7 +587,6 @@ export const useAnimationManager = () => {
       setEnergyBursts([]);
       setAnimationCounter(0);
     } catch (error) {
-      console.warn('Error clearing merge animations:', error);
       // Force clear even if there's an error
       if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);

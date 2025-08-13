@@ -76,11 +76,8 @@ class OptimizedSoundManager {
   }
 
   async initialize() {
-    console.log('🔧 OptimizedSoundManager: Starting initialization...');
-    
     if (this.isWebPlatform) {
       this.isInitialized = true;
-      console.log('✅ OptimizedSoundManager: Initialized for web platform (audio disabled)');
       return;
     }
 
@@ -95,9 +92,7 @@ class OptimizedSoundManager {
       
       this.createAudioPlayers();
       this.isInitialized = true;
-      console.log('✅ OptimizedSoundManager: Audio initialization completed');
     } catch (error) {
-      console.warn('❌ OptimizedSoundManager: Failed to initialize audio system:', error);
       this.isInitialized = false;
     }
   }
@@ -112,7 +107,6 @@ class OptimizedSoundManager {
     if (soundType === 'drop') {
       const now = Date.now();
       if (now - this.lastDropTime < 100) { // 100ms threshold for rapid drops
-        console.log('🔄 Cancelling previous drop sound due to rapid interaction');
         this.cancelPreviousSounds('drop');
       }
       this.lastDropTime = now;
@@ -130,7 +124,6 @@ class OptimizedSoundManager {
     const interval = this.soundIntervals[soundType] || 100;
     
     if (now - lastTime < interval) {
-      console.log(`⏰ ${soundType} sound SKIPPED - Too soon since last sound`);
       return;
     }
 
@@ -166,7 +159,7 @@ class OptimizedSoundManager {
       this.soundTimeouts.delete(soundType);
     }
     
-    console.log(`🚫 Cancelled previous ${soundType} sounds`);
+
   }
 
   // OPTIMIZATION 4: Enhanced sound completion waiting with timeout
@@ -196,7 +189,6 @@ class OptimizedSoundManager {
     if (isChainReaction) {
       // For chain reactions, don't wait for intermediate sounds to complete
       // This prevents delays in chain reaction processing
-      console.log('⚡ Chain reaction detected - skipping sound completion wait');
       return;
     }
     
@@ -219,7 +211,6 @@ class OptimizedSoundManager {
             )
           ]);
         } catch (error) {
-          console.warn('⏰ All sounds completion timeout:', error.message);
           // Clean up hanging promises
           this.activeSounds.clear();
           this.soundCompletionPromises.clear();
@@ -264,7 +255,7 @@ class OptimizedSoundManager {
       try {
         await this.playSoundDirectly(soundRequest.type);
       } catch (error) {
-        console.warn(`❌ Failed to play queued ${soundRequest.type} sound:`, error);
+        // Failed to play queued sound silently
       }
       
       // OPTIMIZATION 7: Reduced delay between sounds for chain reactions
@@ -347,9 +338,9 @@ class OptimizedSoundManager {
       const { soundVolume } = useGameStore.getState();
       this.updateVolumeLevels(soundVolume);
       
-      console.log('✅ OptimizedSoundManager: Audio players created successfully');
+
     } catch (error) {
-      console.warn('❌ OptimizedSoundManager: Failed to create audio players:', error);
+      // Failed to create audio players silently
     }
   }
 
@@ -364,7 +355,7 @@ class OptimizedSoundManager {
       if (this.dropPlayer) this.dropPlayer.volume = baseVolume * 0.9;
       if (this.gameOverPlayer) this.gameOverPlayer.volume = baseVolume * 0.8;
     } catch (error) {
-      console.warn('❌ OptimizedSoundManager: Failed to update volume levels:', error);
+      // Failed to update volume levels silently
     }
   }
 
@@ -388,7 +379,6 @@ class OptimizedSoundManager {
       this.intermediateMergePlayer.seekTo(0);
       await this.intermediateMergePlayer.play();
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to play intermediate merge sound:', error);
       throw error;
     }
   }
@@ -400,7 +390,6 @@ class OptimizedSoundManager {
       this.dropPlayer.seekTo(0);
       await this.dropPlayer.play();
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to play drop sound:', error);
       throw error;
     }
   }
@@ -412,7 +401,6 @@ class OptimizedSoundManager {
       this.gameOverPlayer.seekTo(0);
       await this.gameOverPlayer.play();
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to play game over sound:', error);
       throw error;
     }
   }
@@ -424,7 +412,6 @@ class OptimizedSoundManager {
       this.dropPlayer.seekTo(0);
       await this.dropPlayer.play();
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to play pause/resume sound:', error);
       throw error;
     }
   }
@@ -481,7 +468,7 @@ class OptimizedSoundManager {
         pauseResume: 0
       };
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to stop sounds:', error);
+      // Failed to stop sounds silently
     }
   }
 
@@ -506,7 +493,7 @@ class OptimizedSoundManager {
         this.gameOverPlayer = null;
       }
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to unload sounds:', error);
+      // Failed to unload sounds silently
     }
   }
 
@@ -516,7 +503,7 @@ class OptimizedSoundManager {
     try {
       this.updateVolumeLevels(volume);
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to set volume:', error);
+      // Failed to set volume silently
     }
   }
 

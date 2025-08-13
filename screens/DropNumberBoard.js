@@ -25,6 +25,7 @@ import soundManager from '../utils/soundManager';
 import GameHeader from '../components/GameHeader';
 import GameGrid from '../components/GameGrid';
 import PauseModal from '../components/PauseModal';
+
 import { EnhancedSpaceBackground } from '../components/EnhancedSpaceBackground';
 import PlanetTile from '../components/PlanetTile';
 import { useAnimationManager } from '../components/AnimationManager';
@@ -53,8 +54,9 @@ import {
   screenWidth, // Import screenWidth for iPad detection
   getCurrentGridConfig
 } from '../components/constants';
-import useGameStore from '../store/gameStore';
 import { vibrateOnTouch } from '../utils/vibration';
+
+
 
 // PERFORMANCE: Determine device capability and adjust background intensity
 const getDevicePerformanceLevel = () => {
@@ -149,8 +151,8 @@ const DropNumberBoard = ({ navigation, route }) => {
   const boardRef = useRef(null);
   const [boardLeft, setBoardLeft] = useState(0);
   
-  // Zustand store
-  const { updateScore, updateHighestBlock, saveGame, loadSavedGame, clearSavedGame, highScore } = useGameStore();
+  // Game state variables
+  const highScore = 0; // Default high score
   
   // Handle orientation changes and dynamic grid resizing
   useEffect(() => {
@@ -216,83 +218,17 @@ const DropNumberBoard = ({ navigation, route }) => {
     })
   ).current;
 
-  // Track score and highest block for Zustand updates
+  // Track score and highest block for local state updates
   const [lastScore, setLastScore] = useState(0);
   const [lastHighestBlock, setLastHighestBlock] = useState(0);
 
-  // Load saved game if resuming
-  useEffect(() => {
-    if (route.params?.resume) {
-      const savedGame = loadSavedGame();
-      if (savedGame) {
-        // Loading saved game state
-        
-        // Clear falling state first
-        clearFalling();
-        clearMergeAnimations();
-        
-        // Set all values immediately
-        setBoard(savedGame.board);
-        setScore(savedGame.score);
-        setGameOver(false);
-        setGameStats(savedGame.gameStats);
-        setNextBlock(savedGame.nextBlock);
-        setPreviewBlock(savedGame.previewBlock);
-        
-        // Update tracking variables for store sync
-        setLastScore(savedGame.score);
-        setLastHighestBlock(savedGame.gameStats?.highestTile || 0);
-        
-        // Update store after loading - defer to avoid render cycle issues
-        setTimeout(() => {
-          updateScore(savedGame.score);
-          if (savedGame.gameStats?.highestTile) {
-            updateHighestBlock(savedGame.gameStats.highestTile);
-          }
-        }, 0);
-        
-        // Force the falling tile to be null so game loop recreates it
-        setFalling(null);
-      }
-    }
-  }, [route.params?.resume, loadSavedGame]);
+  // Load saved game functionality removed - using local state only
 
-  // PERFORMANCE: Increased auto-save interval for better performance
-  useEffect(() => {
-    if (!gameOver && !isPaused) {
-      const autoSaveInterval = setInterval(() => {
-        const gameState = {
-          board,
-          score,
-          nextBlock,
-          previewBlock,
-          gameStats,
-        };
-        saveGame(gameState);
-      }, 15000); // Save every 15 seconds instead of 10 for better performance
 
-      return () => clearInterval(autoSaveInterval);
-    }
-  }, [board, score, nextBlock, previewBlock, gameStats, gameOver, isPaused, saveGame]);
 
-  // Save game state when screen loses focus
-  useFocusEffect(
-    React.useCallback(() => {
-      return () => {
-        // Save game state when leaving the screen
-        if (!gameOver) {
-          const currentGameState = {
-            board,
-            score,
-            nextBlock,
-            previewBlock,
-            gameStats,
-          };
-          saveGame(currentGameState);
-        }
-      };
-    }, [board, score, nextBlock, previewBlock, gameStats, gameOver, saveGame])
-  );
+  // Auto-save functionality removed - using local state only
+
+  // Save game state functionality removed - using local state only
 
   // Pause modal handlers
   const handlePause = () => {
@@ -306,19 +242,11 @@ const DropNumberBoard = ({ navigation, route }) => {
   };
   
   const handleRestart = () => {
-    resetGame(); // Use the full reset function instead of partial reset
+    resetGame(); // Use the local reset function for comprehensive game reset
   }
 
   const handleHome = () => {
-    // Save current game state before going to main menu
-    const currentGameState = {
-      board,
-      score,
-      nextBlock,
-      previewBlock,
-      gameStats,
-    };
-    saveGame(currentGameState);
+    // Save game state functionality removed - using local state only
     
     setIsPaused(false);
     navigation.navigate('Home');
@@ -327,6 +255,8 @@ const DropNumberBoard = ({ navigation, route }) => {
   const handleClosePause = () => {
     setIsPaused(false);
   };
+
+
 
   /**
    * Game loop: Spawn new tiles automatically
@@ -445,15 +375,18 @@ const DropNumberBoard = ({ navigation, route }) => {
     // If no empty cell found, check if we can merge in the full column
     let canMergeInFull = null;
     if (landingRow === -1) {
-      console.log('🔍 Column is full, checking for merge possibility...');
       canMergeInFull = canMergeInFullColumn(board, landingCol, falling.value);
       if (!canMergeInFull) {
-        console.log('❌ Column is full and no merge possible - dropping blocked');
+        // IMPORTANT: Return early to prevent any animation or tile landing
         return; // Column is full and no merge possible
       }
-      console.log('✅ Full column merge detected:', canMergeInFull);
       // Set landing row to the bottom for the merge case
       landingRow = canMergeInFull.mergeRow;
+    }
+    
+    // DOUBLE CHECK: If we somehow got here with a full column and no merge, block it
+    if (landingRow === -1) {
+      return;
     }
     
     // Remove drop sound from tap - it will play when tile reaches landing position
@@ -477,7 +410,7 @@ const DropNumberBoard = ({ navigation, route }) => {
     // Capture the current nextBlock value before updating it
     const tileValueToDrop = nextBlock;
     
-    // Update next block immediately when user taps
+    // Update next block immediately when user taps (ONLY after validation passes)
     setNextBlock(previewBlock);
     setPreviewBlock(getRandomBlockValue());
     
@@ -508,13 +441,10 @@ const DropNumberBoard = ({ navigation, route }) => {
     
     // Handle landing after animation completes
     setTimeout(async () => {
-      console.log('🎯 Tile landing handler called:', { canMergeInFull, landingRow, landingCol, tileValueToDrop });
       if (canMergeInFull) {
-        console.log('🔄 Using full column merge handler');
         // Special handling for full column merge
         await handleFullColumnTileLanded(landingRow, landingCol, tileValueToDrop);
       } else {
-        console.log('🔄 Using normal tile landing handler');
         // Normal tile landing
         handleTileLanded(landingRow, landingCol, tileValueToDrop);
       }
@@ -552,32 +482,28 @@ const DropNumberBoard = ({ navigation, route }) => {
    * @returns {Object|null} - { canMerge: boolean, mergeRow: number } or null
    */
   const canMergeInFullColumn = (board, col, value) => {
-    console.log('🔍 canMergeInFullColumn called:', { col, value, bottomTile: board[ROWS - 1][col] });
-    
     // Check if the bottom tile in the column matches the dropping tile
     const bottomRow = ROWS - 1;
     if (board[bottomRow][col] === value) {
-      console.log('✅ Direct merge possible with bottom tile');
       return { canMerge: true, mergeRow: bottomRow };
     }
     
-    // Check if any adjacent tiles to the bottom can merge
+    // Check if any TRULY adjacent tiles to the bottom can merge (no same-column merges)
     const adjacentPositions = [
-      { row: bottomRow - 1, col }, // up from bottom
-      { row: bottomRow, col: col - 1 }, // left of bottom
-      { row: bottomRow, col: col + 1 }  // right of bottom
+      { row: bottomRow - 1, col: col - 1 }, // diagonal left
+      { row: bottomRow - 1, col: col + 1 }, // diagonal right
+      { row: bottomRow, col: col - 1 },     // left of bottom
+      { row: bottomRow, col: col + 1 }      // right of bottom
     ];
     
     for (const pos of adjacentPositions) {
       if (pos.row >= 0 && pos.row < ROWS && 
           pos.col >= 0 && pos.col < COLS && 
           board[pos.row][pos.col] === value) {
-        console.log('✅ Adjacent merge possible at:', pos);
         return { canMerge: true, mergeRow: bottomRow };
       }
     }
     
-    console.log('❌ No merge possible in full column');
     return null;
   };
 
@@ -626,15 +552,13 @@ const DropNumberBoard = ({ navigation, route }) => {
           setScore(newScore);
         }
         
-        // Update store after all state updates - defer to avoid render cycle issues
+        // Update local state after all state updates
         setTimeout(() => {
           if (newHighestTile > lastHighestBlock) {
-            updateHighestBlock(newHighestTile);
             setLastHighestBlock(newHighestTile);
           }
           
           if (totalScore > 0) {
-            updateScore(newScore);
             setLastScore(newScore);
           }
         }, 0);
@@ -704,15 +628,13 @@ const DropNumberBoard = ({ navigation, route }) => {
           setScore(newScore);
         }
         
-        // Update store after all state updates - defer to avoid render cycle issues
+        // Update local state after all state updates
         setTimeout(() => {
           if (newHighestTile > lastHighestBlock) {
-            updateHighestBlock(newHighestTile);
             setLastHighestBlock(newHighestTile);
           }
           
           if (totalScore > 0) {
-            updateScore(newScore);
             setLastScore(newScore);
           }
         }, 0);
@@ -758,8 +680,7 @@ const DropNumberBoard = ({ navigation, route }) => {
     setFloorLevel(1);
     setMaxTileAchieved(0);
     
-    // Clear saved game
-    clearSavedGame();
+    // Clear saved game functionality removed - using local state only
     
     // Enable touch
     setIsTouchEnabled(true);
@@ -861,6 +782,8 @@ const DropNumberBoard = ({ navigation, route }) => {
         onClose={handleClosePause}
         onRestart={handleRestart}
       />
+
+
     </View>
   );
 };
@@ -955,6 +878,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
+
   
   // Enhanced tile styles
   starsContainer: {

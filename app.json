@@ -49,6 +49,16 @@
         "projectId": "f555f51b-9c4f-488e-af91-af4b831d67b2"
       }
     },
-    "owner": "1024-game"
+    "owner": "1024-game",
+    "plugins": [
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "1024-hp",
+          "organization": "amigo-o4"
+        }
+      ]
+    ]
   }
 }

@@ -11,7 +11,7 @@ const Stack = createNativeStackNavigator();
 
 const RootNavigator = () => (
     <NavigationContainer>
-        <Stack.Navigator initialRouteName={PAGES.HOME}>
+        <Stack.Navigator initialRouteName={PAGES.DROP_NUMBER_BOARD}>
             <Stack.Group>
                 <Stack.Screen
                     name={PAGES.HOME}

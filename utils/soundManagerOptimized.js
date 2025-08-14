@@ -84,7 +84,7 @@ class OptimizedSoundManager {
     try {
       await setAudioModeAsync({
         allowsRecording: false,
-        shouldPlayInBackground: false,
+        shouldPlayInBackground: true,
         playsInSilentMode: true,
         shouldDuckAndroid: true,
         shouldRouteThroughEarpiece: false,

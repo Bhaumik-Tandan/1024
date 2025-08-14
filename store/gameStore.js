@@ -8,6 +8,8 @@ const createGameStore = () => {
     vibrationEnabled: true,
     soundEnabled: true,
     soundVolume: 0.7,
+    backgroundMusicEnabled: true,
+    backgroundMusicVolume: 0.7,
     
     // Game state - don't show 0 as default
     highScore: null,
@@ -24,6 +26,8 @@ const createGameStore = () => {
     toggleVibration: () => storeData.vibrationEnabled = !storeData.vibrationEnabled,
     toggleSound: () => storeData.soundEnabled = !storeData.soundEnabled,
     setSoundVolume: (volume) => storeData.soundVolume = Math.max(0, Math.min(1, volume || 0.7)),
+    toggleBackgroundMusic: () => storeData.backgroundMusicEnabled = !storeData.backgroundMusicEnabled,
+    setBackgroundMusicVolume: (volume) => storeData.backgroundMusicVolume = Math.max(0, Math.min(1, volume || 0.7)),
     
 
     
@@ -120,6 +124,8 @@ const createGameStore = () => {
       storeData.vibrationEnabled = true;
       storeData.soundEnabled = true;
       storeData.soundVolume = 0.7;
+      storeData.backgroundMusicEnabled = true;
+      storeData.backgroundMusicVolume = 0.7;
       storeData.highScore = null;
       storeData.currentScore = 0;
       storeData.highestBlock = null;
@@ -152,6 +158,8 @@ if (Platform.OS === 'web') {
         vibrationEnabled: true,
         soundEnabled: true,
         soundVolume: 0.7,
+        backgroundMusicEnabled: true,
+        backgroundMusicVolume: 0.7,
         
         // Game state
         highScore: null,
@@ -173,6 +181,12 @@ if (Platform.OS === 'web') {
         })),
         setSoundVolume: (volume) => set({ 
           soundVolume: Math.max(0, Math.min(1, volume || 0.7)) 
+        }),
+        toggleBackgroundMusic: () => set((state) => ({ 
+          backgroundMusicEnabled: !(state.backgroundMusicEnabled ?? true) 
+        })),
+        setBackgroundMusicVolume: (volume) => set({ 
+          backgroundMusicVolume: Math.max(0, Math.min(1, volume || 0.7)) 
         }),
         
         updateScore: (score) => {
@@ -241,6 +255,8 @@ if (Platform.OS === 'web') {
           vibrationEnabled: true,
           soundEnabled: true,
           soundVolume: 0.7,
+          backgroundMusicEnabled: true,
+          backgroundMusicVolume: 0.7,
           highScore: null,
           currentScore: 0,
           highestBlock: null,

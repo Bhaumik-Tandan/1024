@@ -14,6 +14,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import PlanetTile from '../components/PlanetTile';
 import { getPlanetType, CELL_SIZE } from '../components/constants';
+import { formatPlanetValue } from '../utils/helpers';
 
 const { width, height } = Dimensions.get('window');
 
@@ -21,7 +22,7 @@ const { width, height } = Dimensions.get('window');
 const PLANET_CATEGORIES = {
   'Solar System': [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024],
   'Deep Space': [2048, 4096, 8192],
-  'Cosmic Wonders': [16384, 32768, 65536, 131072, 262144, 1048576]
+      'Cosmic Wonders': [16384, 32768, 65536, 131072, 262144, '∞']
 };
 
 const GameTilesPreviewScreen = ({ navigation }) => {
@@ -91,10 +92,10 @@ const GameTilesPreviewScreen = ({ navigation }) => {
       activeOpacity={0.7}
     >
       <View style={styles.planetItemContent}>
-        <PlanetTile value={item.value} size={CELL_SIZE * 0.6} />
+        <PlanetTile value={item.value} size={CELL_SIZE} />
         <View style={styles.planetItemInfo}>
           <Text style={styles.planetName}>{item.name}</Text>
-          <Text style={styles.planetValue}>Value: {item.value.toLocaleString()}</Text>
+          <Text style={styles.planetValue}>Value: {formatPlanetValue(item.value)}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -183,13 +184,13 @@ const GameTilesPreviewScreen = ({ navigation }) => {
             
             <View style={styles.planetDetailsContent}>
               <View style={styles.planetPreview}>
-                <PlanetTile value={selectedPlanet.value} size={CELL_SIZE * 1.2} />
+                <PlanetTile value={selectedPlanet.value} size={CELL_SIZE} />
               </View>
               
               <View style={styles.planetInfo}>
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>Value:</Text>
-                  <Text style={styles.infoValue}>{selectedPlanet.value.toLocaleString()}</Text>
+                  <Text style={styles.infoValue}>{formatPlanetValue(selectedPlanet.value)}</Text>
                 </View>
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>Type:</Text>
@@ -288,9 +289,10 @@ const styles = StyleSheet.create({
     margin: 8,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 16,
-    padding: 16,
+    padding: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
+    minHeight: CELL_SIZE + 80, // Ensure enough height for full-size planet
   },
   planetItemContent: {
     alignItems: 'center',

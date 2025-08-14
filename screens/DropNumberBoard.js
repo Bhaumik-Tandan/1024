@@ -158,8 +158,7 @@ const DropNumberBoard = ({ navigation, route }) => {
   const [boardLeft, setBoardLeft] = useState(0);
   
   // Game state variables
-  const { saveGame, loadSavedGame, updateScore, updateHighestBlock } = useGameStore();
-  const highScore = 0; // Default high score
+  const { saveGame, loadSavedGame, updateScore, updateHighestBlock, highScore } = useGameStore();
   
   // Handle orientation changes and dynamic grid resizing
   useEffect(() => {

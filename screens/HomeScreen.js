@@ -13,6 +13,8 @@ import {
 import useGameStore from '../store/gameStore';
 import ContinuousStarfield from '../components/MovingStarfield';
 import SolarSystemView from '../components/SolarSystemView';
+import { formatPlanetValue } from '../utils/helpers';
+import { getPlanetType } from '../components/constants';
 
 const getDimensions = () => {
   if (Platform.OS === 'web') {
@@ -161,8 +163,9 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const formatBlock = (block) => {
-    if (block === null || block === 0) return '0';
-    return block.toLocaleString();
+    if (block === null || block === 0) return 'None';
+    const planet = getPlanetType(block);
+    return `${planet.name} (${formatPlanetValue(block)})`;
   };
 
   const titleShimmerOpacity = titleShimmerAnim.interpolate({

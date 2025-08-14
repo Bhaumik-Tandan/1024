@@ -159,6 +159,11 @@ export const SocialSystem = ({
   };
 
   const getPlanetName = (value) => {
+    // Handle infinity case
+    if (value === '∞' || value === Infinity) {
+      return 'Black Hole';
+    }
+    
     const planets = {
       2: 'Mercury', 4: 'Mars', 8: 'Venus', 16: 'Earth',
       32: 'Jupiter', 64: 'Saturn', 128: 'Uranus', 256: 'Neptune',

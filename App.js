@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Navigator from './navigator';
 import soundManager from './utils/soundManager';
+import backgroundMusicManager from './utils/backgroundMusicManager';
 import * as Sentry from '@sentry/react-native';
 const getEnvVars = require('./env.config');
 
@@ -69,6 +70,12 @@ const AppComponent = function App() {
         // Initialize sound manager (handles audio mode configuration internally)
         await soundManager.initialize();
         
+        // Initialize background music manager
+        await backgroundMusicManager.initialize();
+        
+        // Start background music
+        await backgroundMusicManager.play();
+        
         // Test sound system after initialization
         setTimeout(() => {
           soundManager.testSoundSystem();
@@ -83,6 +90,7 @@ const AppComponent = function App() {
     // Cleanup sound manager when app is unmounted
     return () => {
       soundManager.unloadAllSounds();
+      backgroundMusicManager.cleanup();
     };
   }, []);
 

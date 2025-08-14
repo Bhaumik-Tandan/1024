@@ -158,6 +158,7 @@ export const PLANET_TYPES = {
     type: 'pluto',
     name: 'Pluto',
     diameter: '2,377 km',
+    mass: '1.31 × 10²² kg',
     description: 'The famous dwarf planet in our outer solar system, reclassified in 2006 but still beloved by many.',
     facts: [
       'Dwarf planet in the Kuiper Belt',
@@ -171,6 +172,7 @@ export const PLANET_TYPES = {
     type: 'moon',
     name: 'Moon',
     diameter: '3,474 km',
+    mass: '7.35 × 10²² kg',
     description: 'Earth\'s only natural satellite, the fifth largest moon in the Solar System and crucial for life on Earth.',
     facts: [
       'Responsible for Earth\'s tides',
@@ -185,6 +187,7 @@ export const PLANET_TYPES = {
     type: 'mercury',
     name: 'Mercury',
     diameter: '4,880 km',
+    mass: '3.30 × 10²³ kg',
     description: 'The smallest planet in our solar system and closest to the Sun, with extreme temperature variations.',
     facts: [
       'Closest planet to the Sun',
@@ -198,6 +201,7 @@ export const PLANET_TYPES = {
     type: 'mars',
     name: 'Mars',
     diameter: '6,779 km',
+    mass: '6.42 × 10²³ kg',
     description: 'The Red Planet, our neighbor that may have once harbored life and is the target of future human missions.',
     facts: [
       'Known as the Red Planet',
@@ -211,6 +215,7 @@ export const PLANET_TYPES = {
     type: 'venus',
     name: 'Venus',
     diameter: '12,104 km',
+    mass: '4.87 × 10²⁴ kg',
     description: 'Earth\'s twin in size but with a hellish greenhouse atmosphere, the hottest planet in our solar system.',
     facts: [
       'Hottest planet: 462°C surface temperature',
@@ -224,6 +229,7 @@ export const PLANET_TYPES = {
     type: 'earth',
     name: 'Earth',
     diameter: '12,742 km',
+    mass: '5.97 × 10²⁴ kg',
     description: 'Our home planet, the only known world with life, featuring liquid water and a protective atmosphere.',
     facts: [
       'Only known planet with life',
@@ -237,6 +243,7 @@ export const PLANET_TYPES = {
     type: 'neptune',
     name: 'Neptune',
     diameter: '49,244 km',
+    mass: '1.02 × 10²⁶ kg',
     description: 'The windiest planet with supersonic winds, this ice giant is the outermost planet in our solar system.',
     facts: [
       'Windiest planet: winds up to 2,100 km/h',
@@ -250,6 +257,7 @@ export const PLANET_TYPES = {
     type: 'uranus',
     name: 'Uranus',
     diameter: '50,724 km',
+    mass: '8.68 × 10²⁵ kg',
     description: 'The tilted ice giant that rotates on its side, with faint rings and 27 known moons.',
     facts: [
       'Rotates on its side (98° tilt)',
@@ -263,6 +271,7 @@ export const PLANET_TYPES = {
     type: 'saturn',
     name: 'Saturn',
     diameter: '116,460 km',
+    mass: '5.68 × 10²⁶ kg',
     description: 'The ringed planet, famous for its spectacular ring system and 146 known moons including Titan.',
     facts: [
       'Most spectacular ring system',
@@ -276,6 +285,7 @@ export const PLANET_TYPES = {
     type: 'jupiter',
     name: 'Jupiter',
     diameter: '139,820 km',
+    mass: '1.90 × 10²⁷ kg',
     description: 'The king of planets, largest in our solar system with the famous Great Red Spot storm.',
     facts: [
       'Largest planet in our solar system',
@@ -290,6 +300,7 @@ export const PLANET_TYPES = {
     type: 'polaris',
     name: 'Polaris',
     diameter: '~6.4 million km',
+    mass: '~6.4 × 10³⁰ kg',
     description: 'The North Star, the brightest star in Ursa Minor and a reliable guide for navigation throughout history.',
     facts: [
       'Known as the North Star',
@@ -306,6 +317,7 @@ export const PLANET_TYPES = {
     type: 'sun',
     name: 'Sun',
     diameter: '1.392 million km',
+    mass: '1.99 × 10³⁰ kg',
     description: 'Our home star, a yellow dwarf that provides energy for life on Earth and dominates our solar system.',
     facts: [
       'Our home star',
@@ -322,6 +334,7 @@ export const PLANET_TYPES = {
     type: 'sirius',
     name: 'Sirius',
     diameter: '~2.38 million km',
+    mass: '~4.0 × 10³⁰ kg',
     description: 'The brightest star in our night sky, also known as the Dog Star, visible from almost anywhere on Earth.',
     facts: [
       'Brightest star in night sky',
@@ -338,6 +351,7 @@ export const PLANET_TYPES = {
     type: 'orion_nebula',
     name: 'Orion Nebula',
     diameter: '~24 light-years',
+    mass: '~2,000 × 10³⁰ kg',
     description: 'One of the brightest nebulae visible to the naked eye, a stellar nursery where new stars are born.',
     facts: [
       'Visible to naked eye',
@@ -351,25 +365,27 @@ export const PLANET_TYPES = {
   },
   
   32768: {
-    type: 'pleiades',
-    name: 'Pleiades',
-    diameter: '~8 light-years',
-    description: 'The Seven Sisters, a beautiful star cluster visible to the naked eye, featured in many cultures and myths.',
+    type: 'vega',
+    name: 'Vega',
+    diameter: '~3.2 solar diameters',
+    mass: '~2.1 × 10³⁰ kg',
+    description: 'The brightest star in the Lyra constellation, a blue-white main sequence star that is one of the most luminous stars visible from Earth.',
     facts: [
-      'Also called Seven Sisters',
-      'Visible to naked eye',
-      'Featured in many cultures',
-      '444 light-years away'
+      'Brightest star in Lyra',
+      'Blue-white main sequence star',
+      '25 light-years from Earth',
+      '5th brightest star in night sky'
     ],
     glow: true,
     primary: '#87CEEB',
-    accent: '#00BFFF'
+    accent: '#4169E1'
   },
   
   65536: {
     type: 'milky_way',
     name: 'Milky Way',
     diameter: '~105,000 light-years',
+    mass: '~1.5 × 10⁴² kg',
     description: 'Our home galaxy, containing 200-400 billion stars and the solar system we call home.',
     facts: [
       'Our home galaxy',
@@ -378,30 +394,32 @@ export const PLANET_TYPES = {
       'Diameter 105,000 light-years'
     ],
     glow: true,
-    primary: '#483D8B',
-    accent: '#6A5ACD'
+    primary: '#E6E6FA', // Lavender white - silvery tone
+    accent: '#F0F8FF'  // Alice blue - bright silvery white
   },
   
   131072: {
-    type: 'quasar',
-    name: 'Quasar',
-    diameter: '~1 billion km',
-    description: 'The brightest objects in the universe, powered by supermassive black holes at the center of galaxies.',
+    type: 'pulsar',
+    name: 'Pulsar',
+    diameter: '~20 km',
+    mass: '~2 × 10³⁰ kg',
+    description: 'A rapidly rotating neutron star that emits regular pulses of radiation, like a cosmic lighthouse.',
     facts: [
-      'Brightest objects in universe',
-      'Powered by black holes',
-      'Found in distant galaxies',
-      'Emits massive energy'
+      'Rotates hundreds of times per second',
+      'Emits regular radio pulses',
+      'Remnant of supernova explosion',
+      'Most accurate cosmic clocks'
     ],
     glow: true,
-    primary: '#FF1493', // Deep pink for quasar
-    accent: '#FF69B4'   // Hot pink accent
+    primary: '#00CED1', // Bright cyan for pulsar
+    accent: '#20B2AA'   // Sea green accent
   },
   
   262144: {
     type: 'supernova',
     name: 'Supernova',
     diameter: '~100 million km',
+    mass: '~20 × 10³⁰ kg',
     description: 'The explosive death of a massive star, one of the most powerful events in the universe.',
     facts: [
       'Explosive star death',
@@ -415,10 +433,11 @@ export const PLANET_TYPES = {
   },
   
   // 🕳️ Ultimate Black Hole (Final Form)
-  1048576: {
+  '∞': {
     type: 'ultimate_black_hole',
     name: 'Black Hole',
     diameter: '∞',
+    mass: '∞',
     description: 'The ultimate cosmic entity - a black hole of infinite density that consumes everything and represents the end of all things.',
     facts: [
       'Infinite density and gravity',
@@ -446,9 +465,14 @@ export const getPlanetType = (value) => {
     return PLANET_TYPES[numericValue];
   }
   
+  // Special handling for infinity symbol
+  if (value === '∞' && PLANET_TYPES['∞']) {
+    return PLANET_TYPES['∞'];
+  }
+  
   // For values beyond our defined types, create progressive variations
-  if (numericValue > 1048576) {
-    // Beyond ultimate black hole - create cosmic variations
+  if (numericValue > 262144) {
+    // Beyond the last numeric planet - create cosmic variations
     const cosmicTypes = [
       { primary: '#FF1493', accent: '#FF69B4', name: 'Cosmic Anomaly', type: 'cosmic_anomaly' },
       { primary: '#00CED1', accent: '#20B2AA', name: 'Quantum Singularity', type: 'quantum_singularity' },
@@ -457,11 +481,12 @@ export const getPlanetType = (value) => {
       { primary: '#FFD700', accent: '#FFA500', name: 'Stellar Core', type: 'stellar_core' }
     ];
     
-    const index = (numericValue - 1048577) % cosmicTypes.length;
+    const index = (numericValue - 262145) % cosmicTypes.length;
     return {
       ...cosmicTypes[index],
       glow: true,
       diameter: 'Beyond measurement',
+      mass: 'Beyond measurement',
       description: 'A mysterious cosmic entity beyond our understanding.',
       facts: ['Beyond current physics', 'Unknown properties', 'Cosmic mystery', 'Infinite possibilities'],
       special: 'cosmic_mystery'
@@ -479,6 +504,7 @@ export const getPlanetType = (value) => {
     moons: 0,
     glow: false,
     diameter: 'Unknown',
+    mass: 'Unknown',
     description: 'This celestial body is beyond our current knowledge.',
     facts: 'Keep exploring to discover more about the universe!',
     special: 'mysterious'

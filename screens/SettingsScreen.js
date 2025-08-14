@@ -18,15 +18,21 @@ import useGameStore from '../store/gameStore';
 import { EnhancedSpaceBackground } from '../components/EnhancedSpaceBackground';
 import { getPlanetType } from '../components/constants';
 import soundManager from '../utils/soundManager';
+import backgroundMusicManager from '../utils/backgroundMusicManager';
+import { formatPlanetValue } from '../utils/helpers';
 
 const SettingsScreen = ({ navigation }) => {
   const {
     vibrationEnabled,
     soundEnabled,
+    backgroundMusicEnabled,
+    backgroundMusicVolume,
     highScore,
     highestBlock,
     toggleVibration,
     toggleSound,
+    toggleBackgroundMusic,
+    setBackgroundMusicVolume,
     clearAllData,
     resetOnboarding,
   } = useGameStore();
@@ -48,6 +54,14 @@ const SettingsScreen = ({ navigation }) => {
       }),
     ]).start();
   }, []);
+
+  useEffect(() => {
+    backgroundMusicManager.setVolume(backgroundMusicVolume);
+  }, [backgroundMusicVolume]);
+
+  useEffect(() => {
+    backgroundMusicManager.updateSettings();
+  }, [backgroundMusicEnabled]);
 
   const handleClearData = () => {
     Alert.alert(
@@ -165,7 +179,74 @@ const SettingsScreen = ({ navigation }) => {
                 />
               </View>
 
+              {/* Background Music Toggle */}
+              <View style={styles.settingItem}>
+                <View style={styles.settingLeft}>
+                  <View style={styles.settingIconContainer}>
+                    <Ionicons 
+                      name={backgroundMusicEnabled ? "musical-notes" : "musical-notes-outline"} 
+                      size={22} 
+                      color={backgroundMusicEnabled ? "#4A90E2" : "#666"} 
+                    />
+                  </View>
+                  <View style={styles.settingTextContainer}>
+                    <Text style={styles.settingTitle}>Background Music</Text>
+                    <Text style={styles.settingSubtitle}>
+                      Cosmic ambient soundtrack
+                    </Text>
+                  </View>
+                </View>
+                <Switch
+                  value={backgroundMusicEnabled}
+                  onValueChange={toggleBackgroundMusic}
+                  trackColor={{ false: "#767577", true: "rgba(74, 144, 226, 0.3)" }}
+                  thumbColor={backgroundMusicEnabled ? "#4A90E2" : "#f4f3f4"}
+                  ios_backgroundColor="#3e3e3e"
+                />
+              </View>
 
+              {/* Background Music Volume Control */}
+              {backgroundMusicEnabled && (
+                <View style={styles.settingItem}>
+                  <View style={styles.settingLeft}>
+                    <View style={styles.settingIconContainer}>
+                      <Ionicons 
+                        name="volume-medium" 
+                        size={22} 
+                        color="#4A90E2" 
+                      />
+                    </View>
+                    <View style={styles.settingTextContainer}>
+                      <Text style={styles.settingTitle}>Music Volume</Text>
+                      <Text style={styles.settingSubtitle}>
+                        Adjust ambient soundtrack level
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.volumeContainer}>
+                    <TouchableOpacity
+                      style={styles.volumeButton}
+                      onPress={() => setBackgroundMusicVolume(Math.max(0, backgroundMusicVolume - 0.1))}
+                    >
+                      <Ionicons name="remove" size={16} color="#4A90E2" />
+                    </TouchableOpacity>
+                    <View style={styles.volumeBar}>
+                      <View 
+                        style={[
+                          styles.volumeFill, 
+                          { width: `${backgroundMusicVolume * 100}%` }
+                        ]} 
+                      />
+                    </View>
+                    <TouchableOpacity
+                      style={styles.volumeButton}
+                      onPress={() => setBackgroundMusicVolume(Math.min(1, backgroundMusicVolume + 0.1))}
+                    >
+                      <Ionicons name="add" size={16} color="#4A90E2" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
 
               {/* Vibration Toggle */}
               <View style={styles.settingItem}>
@@ -418,10 +499,32 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
+  volumeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 10,
+    paddingHorizontal: 10,
+  },
 
+  volumeButton: {
+    padding: 10,
+  },
 
+  volumeBar: {
+    flex: 1,
+    height: 8,
+    backgroundColor: '#4A90E2',
+    borderRadius: 4,
+    marginHorizontal: 10,
+  },
 
-  
+  volumeFill: {
+    height: '100%',
+    backgroundColor: '#4A90E2',
+    borderRadius: 4,
+  },
+
 
 });
 

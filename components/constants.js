@@ -298,8 +298,8 @@ export const PLANET_TYPES = {
       'Located 433 light-years away'
     ],
     glow: true,
-    primary: '#FFD700',
-    accent: '#FFA500'
+    primary: '#87CEEB', // Light blue for North Star
+    accent: '#4169E1'   // Royal blue accent
   },
   
   4096: {
@@ -314,8 +314,8 @@ export const PLANET_TYPES = {
       'Powers all life on Earth'
     ],
     glow: true,
-    primary: '#FFD700',
-    accent: '#FFA500'
+    primary: '#FFD700', // Bright golden yellow
+    accent: '#FF8C00'   // Dark orange for better contrast
   },
   
   8192: {
@@ -394,8 +394,8 @@ export const PLANET_TYPES = {
       'Emits massive energy'
     ],
     glow: true,
-    primary: '#FF4500',
-    accent: '#FF6347'
+    primary: '#FF1493', // Deep pink for quasar
+    accent: '#FF69B4'   // Hot pink accent
   },
   
   262144: {
@@ -410,8 +410,8 @@ export const PLANET_TYPES = {
       'Most powerful cosmic event'
     ],
     glow: true,
-    primary: '#FFD700',
-    accent: '#FFA500'
+    primary: '#FF4500', // Bright red-orange for supernova
+    accent: '#FF6347'   // Tomato red accent
   },
   
   // 🕳️ Ultimate Black Hole (Final Form)
@@ -438,7 +438,38 @@ export const PLANET_TYPES = {
  * Get real planet properties - only planets from our solar system
  */
 export const getPlanetType = (value) => {
-  return PLANET_TYPES[value] || {
+  // Convert value to number to ensure proper key matching
+  const numericValue = parseInt(value, 10);
+  
+  // Check if we have a defined planet type for this value
+  if (PLANET_TYPES[numericValue]) {
+    return PLANET_TYPES[numericValue];
+  }
+  
+  // For values beyond our defined types, create progressive variations
+  if (numericValue > 1048576) {
+    // Beyond ultimate black hole - create cosmic variations
+    const cosmicTypes = [
+      { primary: '#FF1493', accent: '#FF69B4', name: 'Cosmic Anomaly', type: 'cosmic_anomaly' },
+      { primary: '#00CED1', accent: '#20B2AA', name: 'Quantum Singularity', type: 'quantum_singularity' },
+      { primary: '#FF4500', accent: '#FF6347', name: 'Nova Remnant', type: 'nova_remnant' },
+      { primary: '#9370DB', accent: '#8A2BE2', name: 'Dark Matter Cluster', type: 'dark_matter' },
+      { primary: '#FFD700', accent: '#FFA500', name: 'Stellar Core', type: 'stellar_core' }
+    ];
+    
+    const index = (numericValue - 1048577) % cosmicTypes.length;
+    return {
+      ...cosmicTypes[index],
+      glow: true,
+      diameter: 'Beyond measurement',
+      description: 'A mysterious cosmic entity beyond our understanding.',
+      facts: ['Beyond current physics', 'Unknown properties', 'Cosmic mystery', 'Infinite possibilities'],
+      special: 'cosmic_mystery'
+    };
+  }
+  
+  // Fallback for unknown values
+  return {
     type: 'unknown',
     name: 'Unknown Celestial Body',
     primary: '#666666',
@@ -482,6 +513,8 @@ Object.keys(PLANET_TYPES).forEach(value => {
   COLORS[value] = planet.primary;
   TILE_GRADIENTS[value] = [planet.primary, planet.accent];
 });
+
+
 
 /**
  * Enhanced planet styling with cosmic effects

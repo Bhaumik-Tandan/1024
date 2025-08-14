@@ -13,31 +13,49 @@ import { LinearGradient } from 'expo-linear-gradient';
 import PlanetTile from '../components/PlanetTile';
 import { getPlanetType, CELL_SIZE } from '../components/constants';
 
+// Debug import
+console.log('Import debug - getPlanetType:', typeof getPlanetType);
+
 const { width, height } = Dimensions.get('window');
 
-// Game tiles data - all tiles from 2 to black hole/infinity
-const GAME_TILES = [
-  { value: 2, name: '2', type: 'pluto' },
-  { value: 4, name: '4', type: 'moon' },
-  { value: 8, name: '8', type: 'mercury' },
-  { value: 16, name: '16', type: 'mars' },
-  { value: 32, name: '32', type: 'venus' },
-  { value: 64, name: '64', type: 'earth' },
-  { value: 128, name: '128', type: 'neptune' },
-  { value: 256, name: '256', type: 'uranus' },
-  { value: 512, name: '512', type: 'saturn' },
-  { value: 1024, name: '1024', type: 'jupiter' },
-  { value: 2048, name: '2048', type: 'polaris' },
-  { value: 4096, name: '4096', type: 'sun' },
-  { value: 8192, name: '8192', type: 'sirius' },
-  { value: 16384, name: '16384', type: 'orion_nebula' },
-  { value: 32768, name: '32768', type: 'pleiades' },
-  { value: 65536, name: '65536', type: 'milky_way' },
-  { value: 131072, name: '131072', type: 'quasar' },
-  { value: 262144, name: '262144', type: 'supernova' },
-  { value: 1048576, name: '1048576', type: 'ultimate_black_hole' },
-  { value: 8388608, name: '∞', type: 'infinity' },
-];
+// Dynamically generate game tiles using getPlanetType - ensures consistency with game
+// Any changes to planet types in constants.js will automatically update this preview
+const generateGameTiles = () => {
+  try {
+    const tiles = [];
+    
+    // Define the values we want to show (all the planet values from the game)
+    const planetValues = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 1048576];
+    
+    // Generate tiles using getPlanetType for each value
+    planetValues.forEach(value => {
+      try {
+        const planet = getPlanetType(value);
+        if (planet && planet.name && planet.type) {
+          tiles.push({
+            value: value,
+            name: planet.name,
+            type: planet.type
+          });
+        }
+      } catch (error) {
+        console.log(`Error getting planet type for ${value}:`, error);
+      }
+    });
+    
+    // Sort by value to show progression
+    tiles.sort((a, b) => a.value - b.value);
+    console.log('Successfully generated tiles using getPlanetType:', tiles.length);
+    
+    return tiles;
+  } catch (error) {
+    console.log('Error generating tiles:', error);
+    return [];
+  }
+};
+
+// Move tile generation inside component to ensure imports are resolved
+let GAME_TILES = [];
 
 const GameTilesPreviewScreen = ({ navigation }) => {
   const [selectedTile, setSelectedTile] = useState(null);
@@ -47,8 +65,40 @@ const GameTilesPreviewScreen = ({ navigation }) => {
   const rotationAnimations = useRef({});
   const pulseAnimations = useRef({});
 
-  // Initialize animations for each tile
+  // Initialize tiles and animations
   useEffect(() => {
+    // Generate tiles from constants
+    const tiles = generateGameTiles();
+    if (tiles && tiles.length > 0) {
+      GAME_TILES = tiles;
+      console.log('Generated tiles:', GAME_TILES);
+    } else {
+      // Fallback to ensure we have tiles to display
+      console.log('Falling back to hardcoded tiles');
+      GAME_TILES = [
+        { value: 2, name: 'Pluto', type: 'pluto' },
+        { value: 4, name: 'Moon', type: 'moon' },
+        { value: 8, name: 'Mercury', type: 'mercury' },
+        { value: 16, name: 'Mars', type: 'mars' },
+        { value: 32, name: 'Venus', type: 'venus' },
+        { value: 64, name: 'Earth', type: 'earth' },
+        { value: 128, name: 'Neptune', type: 'neptune' },
+        { value: 256, name: 'Uranus', type: 'uranus' },
+        { value: 512, name: 'Saturn', type: 'saturn' },
+        { value: 1024, name: 'Jupiter', type: 'jupiter' },
+        { value: 2048, name: 'Polaris', type: 'polaris' },
+        { value: 4096, name: 'Sun', type: 'sun' },
+        { value: 8192, name: 'Sirius', type: 'sirius' },
+        { value: 16384, name: 'Orion Nebula', type: 'orion_nebula' },
+        { value: 32768, name: 'Pleiades', type: 'pleiades' },
+        { value: 65536, name: 'Milky Way', type: 'milky_way' },
+        { value: 131072, name: 'Quasar', type: 'quasar' },
+        { value: 262144, name: 'Supernova', type: 'supernova' },
+        { value: 1048576, name: 'Black Hole', type: 'ultimate_black_hole' }
+      ];
+    }
+    
+    // Initialize animations for each tile
     GAME_TILES.forEach((tile) => {
       rotationAnimations.current[tile.value] = new Animated.Value(0);
       pulseAnimations.current[tile.value] = new Animated.Value(1);
@@ -199,8 +249,8 @@ const GameTilesPreviewScreen = ({ navigation }) => {
 
         {/* Title */}
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>Game Tiles Preview</Text>
-          <Text style={styles.subtitle}>All tiles from 2 to Infinity</Text>
+          <Text style={styles.title}>Solar System Preview</Text>
+          <Text style={styles.subtitle}>All celestial bodies from {GAME_TILES[0]?.value || 2} to {GAME_TILES[GAME_TILES.length - 1]?.value || '∞'}</Text>
         </View>
 
         {/* Game Tiles Grid */}
@@ -264,14 +314,18 @@ const GameTilesPreviewScreen = ({ navigation }) => {
 
         {/* Legend */}
         <View style={styles.legend}>
-          <Text style={styles.legendTitle}>Tile Types</Text>
+          <Text style={styles.legendTitle}>Celestial Types</Text>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: '#8C7853' }]} />
             <Text style={styles.legendText}>Planets</Text>
           </View>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: '#FFD700' }]} />
+            <View style={[styles.legendDot, { backgroundColor: '#87CEEB' }]} />
             <Text style={styles.legendText}>Stars</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: '#9370DB' }]} />
+            <Text style={styles.legendText}>Nebulae</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: '#483D8B' }]} />

@@ -367,14 +367,35 @@ const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = fa
             shadowOpacity: 0.9
           }
         };
-      default:
+      case 'polaris':
         return {
-          colors: ['#C0C0C0', '#808080', '#404040'],
+          colors: [planet.primary, planet.accent, '#87CEEB80'],
           style: { 
-            borderWidth: 1, 
-            borderColor: '#696969',
-            shadowColor: '#808080',
-            shadowOpacity: 0.5
+            borderWidth: 2, 
+            borderColor: planet.accent,
+            shadowColor: planet.primary,
+            shadowOpacity: 0.9
+          }
+        };
+      case 'sun':
+        return {
+          colors: [planet.primary, planet.accent, '#FFD70080'],
+          style: { 
+            borderWidth: 2, 
+            borderColor: planet.accent,
+            shadowColor: planet.primary,
+            shadowOpacity: 0.9
+          }
+        };
+      default:
+        // Use actual planet colors from getPlanetType instead of generic gray
+        return {
+          colors: [planet.primary, planet.accent, planet.primary + '80'],
+          style: { 
+            borderWidth: planet.rings ? 3 : 1, 
+            borderColor: planet.accent,
+            shadowColor: planet.glow ? planet.primary : '#808080',
+            shadowOpacity: planet.glow ? 0.8 : 0.5
           }
         };
     }

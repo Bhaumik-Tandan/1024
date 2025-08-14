@@ -278,6 +278,17 @@ const HomeScreen = ({ navigation }) => {
           >
             <Text style={styles.tertiaryButtonText}>SETTINGS</Text>
           </TouchableOpacity>
+          
+          {/* Only show in development mode */}
+          {__DEV__ && (
+            <TouchableOpacity 
+              style={[styles.button, styles.quaternaryButton]} 
+              onPress={() => navigation.navigate('Solar System Preview')}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.quaternaryButtonText}>GAME TILES</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </Animated.View>
     </SafeAreaView>
@@ -513,6 +524,27 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#B0C4DE',
     letterSpacing: 1,
+  },
+  
+  quaternaryButton: {
+    backgroundColor: 'rgba(255, 193, 7, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 193, 7, 0.6)',
+    shadowColor: '#FFC107',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  
+  quaternaryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFD700',
+    letterSpacing: 1,
+    textShadowColor: '#FFC107',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
   },
 });
 

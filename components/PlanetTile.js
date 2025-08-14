@@ -387,6 +387,40 @@ const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = fa
             shadowOpacity: 0.9
           }
         };
+      case 'ultimate_black_hole':
+        return {
+          colors: ['#000000', '#000000', '#000000'], // Pure black void
+          style: { 
+            borderWidth: 0, // No border - it's a void
+            borderColor: 'transparent',
+            shadowColor: '#9932CC', // Purple glow around the void
+            shadowOpacity: 0.8,
+            shadowRadius: 20,
+            elevation: 15
+          }
+        };
+      case 'orion_nebula':
+        return {
+          colors: ['#9370DB', '#8A2BE2', '#6A5ACD'], // Purple nebula colors
+          style: { 
+            borderWidth: 0, // No border - nebulae are gas clouds
+            borderColor: 'transparent',
+            shadowColor: '#9370DB',
+            shadowOpacity: 0.7,
+            shadowRadius: 15
+          }
+        };
+      case 'milky_way':
+        return {
+          colors: ['#483D8B', '#6A5ACD', '#9370DB'], // Galaxy colors
+          style: { 
+            borderWidth: 0, // No border - galaxies are star systems
+            borderColor: 'transparent',
+            shadowColor: '#6A5ACD',
+            shadowOpacity: 0.8,
+            shadowRadius: 18
+          }
+        };
       default:
         // Use actual planet colors from getPlanetType instead of generic gray
         return {
@@ -402,6 +436,195 @@ const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = fa
   };
 
   const gradient = getRealisticPlanetStyle();
+
+  // Special rendering for nebula - it's a gas cloud, not a planet
+  if (planet.type === 'orion_nebula') {
+    return (
+      <View style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: 'transparent', // Transparent background for gas cloud
+        position: 'relative',
+        overflow: 'hidden',
+        ...gradient.style,
+      }}>
+        
+        {/* Main nebula gas cloud - swirling purple */}
+        <View style={{
+          position: 'absolute',
+          top: size * 0.1,
+          left: size * 0.1,
+          width: size * 0.8,
+          height: size * 0.8,
+          borderRadius: size / 2,
+          backgroundColor: '#9370DB',
+          opacity: 0.8,
+        }} />
+        
+        {/* Swirling gas patterns */}
+        <View style={{
+          position: 'absolute',
+          top: size * 0.2,
+          left: size * 0.3,
+          width: size * 0.4,
+          height: size * 0.3,
+          borderRadius: size * 0.2,
+          backgroundColor: '#8A2BE2',
+          opacity: 0.9,
+          transform: [{ rotate: '45deg' }],
+        }} />
+        
+        {/* Gas filaments */}
+        <View style={{
+          position: 'absolute',
+          top: size * 0.4,
+          right: size * 0.2,
+          width: size * 0.25,
+          height: size * 0.4,
+          borderRadius: size * 0.125,
+          backgroundColor: '#6A5ACD',
+          opacity: 0.7,
+        }} />
+        
+        {/* Central bright region */}
+        <View style={{
+          position: 'absolute',
+          top: size * 0.35,
+          left: size * 0.35,
+          width: size * 0.3,
+          height: size * 0.3,
+          borderRadius: size * 0.15,
+          backgroundColor: '#E6E6FA',
+          opacity: 0.9,
+        }} />
+      </View>
+    );
+  }
+
+  // Special rendering for Milky Way - it's a spiral galaxy, not a planet
+  if (planet.type === 'milky_way') {
+    return (
+      <View style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: 'transparent', // Transparent background for galaxy
+        position: 'relative',
+        overflow: 'hidden',
+        ...gradient.style,
+      }}>
+        
+        {/* Galaxy core - bright center */}
+        <View style={{
+          position: 'absolute',
+          top: size * 0.35,
+          left: size * 0.35,
+          width: size * 0.3,
+          height: size * 0.3,
+          borderRadius: size * 0.15,
+          backgroundColor: '#E6E6FA',
+          opacity: 0.9,
+        }} />
+        
+        {/* Spiral arm 1 */}
+        <View style={{
+          position: 'absolute',
+          top: size * 0.1,
+          left: size * 0.2,
+          width: size * 0.6,
+          height: size * 0.15,
+          borderRadius: size * 0.075,
+          backgroundColor: '#6A5ACD',
+          opacity: 0.8,
+          transform: [{ rotate: '45deg' }],
+        }} />
+        
+        {/* Spiral arm 2 */}
+        <View style={{
+          position: 'absolute',
+          top: size * 0.6,
+          right: size * 0.15,
+          width: size * 0.5,
+          height: size * 0.12,
+          borderRadius: size * 0.06,
+          backgroundColor: '#9370DB',
+          opacity: 0.7,
+          transform: [{ rotate: '-30deg' }],
+        }} />
+        
+        {/* Outer galaxy glow */}
+        <View style={{
+          position: 'absolute',
+          top: -size * 0.1,
+          left: -size * 0.1,
+          width: size * 1.2,
+          height: size * 1.2,
+          borderRadius: size * 0.6,
+          borderWidth: 2,
+          borderColor: '#483D8B',
+          backgroundColor: 'transparent',
+          opacity: 0.5,
+        }} />
+      </View>
+    );
+  }
+
+  // Special rendering for black hole - it's a void, not a planet
+  if (planet.type === 'ultimate_black_hole') {
+    return (
+      <View style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: '#000000', // Pure black void
+        position: 'relative',
+        overflow: 'hidden',
+        ...gradient.style,
+        shadowOffset: { width: 0, height: 0 },
+        shadowRadius: 20,
+        elevation: 15,
+      }}>
+        
+        {/* Black hole event horizon - pure void */}
+        <View style={{
+          position: 'absolute',
+          top: size * 0.1,
+          left: size * 0.1,
+          width: size * 0.8,
+          height: size * 0.8,
+          borderRadius: size / 2,
+          backgroundColor: '#000000',
+          borderWidth: 0,
+        }} />
+        
+        {/* Purple accretion disk glow around the void */}
+        <View style={{
+          position: 'absolute',
+          top: -size * 0.1,
+          left: -size * 0.1,
+          width: size * 1.2,
+          height: size * 1.2,
+          borderRadius: size * 0.6,
+          borderWidth: 3,
+          borderColor: '#9932CC',
+          backgroundColor: 'transparent',
+          opacity: 0.6,
+        }} />
+        
+        {/* Inner void - completely black center */}
+        <View style={{
+          position: 'absolute',
+          top: size * 0.25,
+          left: size * 0.25,
+          width: size * 0.5,
+          height: size * 0.5,
+          borderRadius: size * 0.25,
+          backgroundColor: '#000000',
+        }} />
+      </View>
+    );
+  }
 
   // Normal planet rendering
   return (
@@ -546,6 +769,221 @@ const AuthenticPlanetFeatures = ({ planet, size, value }) => {
             borderRadius: size * 0.075,
             top: size * 0.3,
             right: size * 0.1,
+          }} />
+        </>
+      );
+    
+    case 'jupiter':
+      return (
+        <>
+          {/* Main atmospheric bands - realistic Jupiter appearance */}
+          {/* Equatorial band - dark orange */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.95,
+            height: size * 0.18,
+            backgroundColor: '#D2691E',
+            top: size * 0.35,
+            left: size * 0.025,
+            borderRadius: size * 0.09,
+          }} />
+          
+          {/* North temperate belt - light cream */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.9,
+            height: size * 0.12,
+            backgroundColor: '#F5DEB3',
+            top: size * 0.15,
+            left: size * 0.05,
+            borderRadius: size * 0.06,
+          }} />
+          
+          {/* South temperate belt - light cream */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.88,
+            height: size * 0.11,
+            backgroundColor: '#F5DEB3',
+            top: size * 0.6,
+            left: size * 0.06,
+            borderRadius: size * 0.055,
+          }} />
+          
+          {/* North tropical zone - reddish-brown */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.92,
+            height: size * 0.14,
+            backgroundColor: '#CD853F',
+            top: size * 0.25,
+            left: size * 0.04,
+            borderRadius: size * 0.07,
+          }} />
+          
+          {/* South tropical zone - reddish-brown */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.9,
+            height: size * 0.13,
+            backgroundColor: '#CD853F',
+            top: size * 0.5,
+            left: size * 0.05,
+            borderRadius: size * 0.065,
+          }} />
+          
+          {/* Great Red Spot - iconic storm system */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.25,
+            height: size * 0.12,
+            backgroundColor: '#DC143C',
+            top: size * 0.45,
+            right: size * 0.15,
+            borderRadius: size * 0.06,
+            transform: [{ rotate: '15deg' }],
+          }} />
+          
+          {/* Red Spot Jr. - smaller storm */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.15,
+            height: size * 0.08,
+            backgroundColor: '#B22222',
+            top: size * 0.58,
+            right: size * 0.25,
+            borderRadius: size * 0.04,
+          }} />
+          
+          {/* White ovals - storm systems */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.2,
+            height: size * 0.1,
+            backgroundColor: '#F8F8FF',
+            top: size * 0.2,
+            left: size * 0.2,
+            borderRadius: size * 0.05,
+          }} />
+          
+          {/* Brown barge - dark atmospheric feature */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.3,
+            height: size * 0.08,
+            backgroundColor: '#8B4513',
+            top: size * 0.3,
+            left: size * 0.1,
+            borderRadius: size * 0.04,
+          }} />
+          
+          {/* Hot spots - dark atmospheric regions */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.18,
+            height: size * 0.06,
+            backgroundColor: '#654321',
+            top: size * 0.1,
+            left: size * 0.15,
+            borderRadius: size * 0.03,
+          }} />
+          <View style={{
+            position: 'absolute',
+            width: size * 0.16,
+            height: size * 0.07,
+            backgroundColor: '#654321',
+            top: size * 0.08,
+            right: size * 0.2,
+            borderRadius: size * 0.035,
+          }} />
+        </>
+      );
+    
+    case 'ultimate_black_hole':
+      return (
+        <>
+          {/* Cosmic void effects - no surface features, just emptiness */}
+          {/* Event horizon ring */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.9,
+            height: size * 0.9,
+            borderRadius: size * 0.45,
+            borderWidth: 2,
+            borderColor: '#9932CC',
+            backgroundColor: 'transparent',
+            opacity: 0.4,
+          }} />
+          
+          {/* Inner void - completely empty center */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.6,
+            height: size * 0.6,
+            borderRadius: size * 0.3,
+            backgroundColor: '#000000',
+            top: size * 0.2,
+            left: size * 0.2,
+          }} />
+        </>
+      );
+    
+    case 'orion_nebula':
+      return (
+        <>
+          {/* Gas cloud details - no solid surface */}
+          {/* Bright star-forming regions */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.15,
+            height: size * 0.15,
+            borderRadius: size * 0.075,
+            backgroundColor: '#E6E6FA',
+            top: size * 0.25,
+            left: size * 0.2,
+            opacity: 0.9,
+          }} />
+          
+          {/* Dark dust lanes */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.2,
+            height: size * 0.08,
+            borderRadius: size * 0.04,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            top: size * 0.45,
+            left: size * 0.3,
+            opacity: 0.7,
+          }} />
+        </>
+      );
+    
+    case 'milky_way':
+      return (
+        <>
+          {/* Galaxy details - no solid surface */}
+          {/* Star clusters */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.12,
+            height: size * 0.12,
+            borderRadius: size * 0.06,
+            backgroundColor: '#E6E6FA',
+            top: size * 0.15,
+            right: size * 0.2,
+            opacity: 0.8,
+          }} />
+          
+          {/* Dust clouds */}
+          <View style={{
+            position: 'absolute',
+            width: size * 0.18,
+            height: size * 0.1,
+            borderRadius: size * 0.05,
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            bottom: size * 0.2,
+            left: size * 0.25,
+            opacity: 0.6,
           }} />
         </>
       );

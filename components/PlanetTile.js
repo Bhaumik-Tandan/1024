@@ -215,6 +215,31 @@ const PlanetTile = ({ value, isOrbiting = true, orbitSpeed = 1, size, isCollidin
         </Text>
         </View>
       </View>
+      
+      {/* Infinity Symbol Overlay for Ultimate Black Hole */}
+      {value === 8388608 && (
+        <View style={{
+          position: 'absolute',
+          top: -planetSize * 0.3,
+          left: 0,
+          right: 0,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <Text style={{
+            color: '#FFD700',
+            fontSize: planetSize * 0.4,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            textShadowColor: 'rgba(0,0,0,0.9)',
+            textShadowOffset: { width: 2, height: 2 },
+            textShadowRadius: 4,
+            elevation: 10,
+          }}>
+            ∞
+          </Text>
+        </View>
+      )}
     </View>
   );
 };

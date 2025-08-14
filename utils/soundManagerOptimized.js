@@ -175,7 +175,6 @@ class OptimizedSoundManager {
             )
           ]);
         } catch (error) {
-          console.warn(`⏰ Sound completion timeout for ${soundType}:`, error.message);
           // Clean up the hanging promise
           this.activeSounds.delete(soundType);
           this.soundCompletionPromises.delete(soundType);
@@ -367,7 +366,6 @@ class OptimizedSoundManager {
       this.mergePlayer.seekTo(0);
       await this.mergePlayer.play();
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to play merge sound:', error);
       throw error;
     }
   }

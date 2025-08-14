@@ -18,6 +18,7 @@ import {
   Dimensions,
   Platform,
   Easing, // Add Easing import
+  AppState,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import soundManager from '../utils/soundManager';
@@ -55,6 +56,7 @@ import {
   getCurrentGridConfig
 } from '../components/constants';
 import { vibrateOnTouch } from '../utils/vibration';
+import useGameStore from '../store/gameStore';
 
 
 
@@ -129,6 +131,7 @@ const DropNumberBoard = ({ navigation, route }) => {
   const [gameOver, setGameOver] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
+
   
   // Touch sensitivity control
   const [isTouchEnabled, setIsTouchEnabled] = useState(true);
@@ -148,45 +151,62 @@ const DropNumberBoard = ({ navigation, route }) => {
   const [floorLevel, setFloorLevel] = useState(1);
   const [maxTileAchieved, setMaxTileAchieved] = useState(0);
 
+  // Add mounted state tracking to prevent state updates after unmount
+  const [isMounted, setIsMounted] = useState(true);
+
   const boardRef = useRef(null);
   const [boardLeft, setBoardLeft] = useState(0);
   
   // Game state variables
+  const { saveGame, loadSavedGame, updateScore, updateHighestBlock } = useGameStore();
   const highScore = 0; // Default high score
   
   // Handle orientation changes and dynamic grid resizing
   useEffect(() => {
-    const subscription = Dimensions.addEventListener('change', ({ window }) => {
-      const newGridConfig = getCurrentGridConfig();
-      
-      // Only update if grid configuration actually changed
-      if (newGridConfig.ROWS !== gridConfig.ROWS || newGridConfig.COLS !== gridConfig.COLS) {
-        setGridConfig(newGridConfig);
-        
-        // Update board size, preserving existing tiles where possible
-        setBoard(prevBoard => {
-          const newBoard = Array.from({ length: newGridConfig.ROWS }, () => 
-            Array(newGridConfig.COLS).fill(0)
-          );
+    try {
+      const subscription = Dimensions.addEventListener('change', ({ window }) => {
+        try {
+          const newGridConfig = getCurrentGridConfig();
           
-          // Copy existing tiles to new board (top-left aligned)
-          for (let row = 0; row < Math.min(prevBoard.length, newGridConfig.ROWS); row++) {
-            for (let col = 0; col < Math.min(prevBoard[row].length, newGridConfig.COLS); col++) {
-              newBoard[row][col] = prevBoard[row][col];
-            }
+          // Only update if grid configuration actually changed
+          if (newGridConfig.ROWS !== gridConfig.ROWS || newGridConfig.COLS !== gridConfig.COLS) {
+            setGridConfig(newGridConfig);
+            
+            // Update board size, preserving existing tiles where possible
+            setBoard(prevBoard => {
+              try {
+                const newBoard = Array.from({ length: newGridConfig.ROWS }, () => 
+                  Array(newGridConfig.COLS).fill(0)
+                );
+                
+                // Copy existing tiles to new board (top-left aligned)
+                for (let row = 0; row < Math.min(prevBoard.length, newGridConfig.ROWS); row++) {
+                  for (let col = 0; col < Math.min(prevBoard[row].length, newGridConfig.COLS); col++) {
+                    newBoard[row][col] = prevBoard[row][col];
+                  }
+                }
+                
+                return newBoard;
+              } catch (error) {
+                console.warn('Board resize error:', error);
+                return Array.from({ length: newGridConfig.ROWS }, () => Array(newGridConfig.COLS).fill(0));
+              }
+            });
+            
+            // Clear any falling animations that might be out of bounds
+            clearFallingRef.current();
+            clearMergeAnimationsRef.current();
           }
-          
-          return newBoard;
-        });
-        
-        // Clear any falling animations that might be out of bounds
-        clearFalling();
-        clearMergeAnimations();
-      }
-    });
+        } catch (error) {
+          console.warn('Orientation change error:', error);
+        }
+      });
 
-    return () => subscription?.remove();
-  }, [gridConfig, clearFalling, clearMergeAnimations]);
+      return () => subscription?.remove();
+    } catch (error) {
+      console.warn('Orientation effect setup error:', error);
+    }
+  }, [gridConfig]); // Removed function dependencies to prevent infinite loops
 
   // Use the animation manager
   const {
@@ -206,6 +226,20 @@ const DropNumberBoard = ({ navigation, route }) => {
     clearMergeAnimations,
   } = useAnimationManager();
 
+  // Store function references in refs to avoid dependency issues
+  const clearFallingRef = useRef(clearFalling);
+  const clearMergeAnimationsRef = useRef(clearMergeAnimations);
+  
+  // Update refs when functions change - with safeguards to prevent infinite loops
+  useEffect(() => {
+    if (clearFalling && typeof clearFalling === 'function') {
+      clearFallingRef.current = clearFalling;
+    }
+    if (clearMergeAnimations && typeof clearMergeAnimations === 'function') {
+      clearMergeAnimationsRef.current = clearMergeAnimations;
+    }
+  }, [clearFalling, clearMergeAnimations]);
+
   // PanResponder for drag-to-move (disabled for row-based tapping)
   const panResponder = useRef(
     PanResponder.create({
@@ -222,38 +256,211 @@ const DropNumberBoard = ({ navigation, route }) => {
   const [lastScore, setLastScore] = useState(0);
   const [lastHighestBlock, setLastHighestBlock] = useState(0);
 
-  // Load saved game functionality removed - using local state only
+  // Load saved game functionality - restore game state on mount
+  useEffect(() => {
+    const loadGame = async () => {
+      try {
+        const savedGame = loadSavedGame();
+        if (savedGame && savedGame.board && savedGame.board.length > 0) {
+          // Restore game state
+          setBoard(savedGame.board);
+          setScore(savedGame.score || 0);
+          setNextBlock(savedGame.nextBlock || getRandomBlockValue());
+          setPreviewBlock(savedGame.previewBlock || getRandomBlockValue());
+          setGameStats(savedGame.gameStats || {
+            tilesPlaced: 0,
+            mergesPerformed: 0,
+            chainReactions: 0,
+            highestTile: 0,
+            startTime: Date.now(),
+          });
+          setMaxTileAchieved(savedGame.maxTileAchieved || 0);
+          setFloorLevel(savedGame.floorLevel || 1);
+          setCurrentMinSpawn(savedGame.currentMinSpawn || 2);
+          
+          // Check if game was over
+          if (GameValidator.isGameOver(savedGame.board)) {
+            setGameOver(true);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load saved game:', error);
+      }
+    };
+    
+    loadGame();
+  }, [loadSavedGame]);
+
+  // Save game when user leaves the screen
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        // Save game state when leaving the screen
+        if (isMounted && !gameOver) {
+          const gameState = {
+            board,
+            score,
+            nextBlock,
+            previewBlock,
+            gameStats,
+            maxTileAchieved,
+            floorLevel,
+            currentMinSpawn,
+            timestamp: Date.now()
+          };
+          
+          try {
+            saveGame(gameState);
+          } catch (error) {
+            console.warn('Failed to save game on screen leave:', error);
+          }
+        }
+      };
+    }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame])
+  );
+
+  // Save game when app goes to background
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState) => {
+      if (nextAppState === 'background' && isMounted && !gameOver) {
+        // Save game state when app goes to background
+        const gameState = {
+          board,
+          score,
+          nextBlock,
+          previewBlock,
+          gameStats,
+          maxTileAchieved,
+          floorLevel,
+          currentMinSpawn,
+          timestamp: Date.now()
+        };
+        
+        try {
+          saveGame(gameState);
+        } catch (error) {
+          console.warn('Failed to save game on app background:', error);
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame]);
 
 
 
-  // Auto-save functionality removed - using local state only
-
-  // Save game state functionality removed - using local state only
+  // Auto-save functionality - save game state whenever it changes
+  useEffect(() => {
+    if (isMounted && !gameOver) {
+      const gameState = {
+        board,
+        score,
+        nextBlock,
+        previewBlock,
+        gameStats,
+        maxTileAchieved,
+        floorLevel,
+        currentMinSpawn,
+        timestamp: Date.now()
+      };
+      
+      try {
+        saveGame(gameState);
+        // Update high score if current score is higher
+        if (score > 0) {
+          updateScore(score);
+        }
+        // Update highest block achieved
+        if (maxTileAchieved > 0) {
+          updateHighestBlock(maxTileAchieved);
+        }
+      } catch (error) {
+        console.warn('Auto-save failed:', error);
+      }
+    }
+  }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame, updateScore, updateHighestBlock]);
 
   // Pause modal handlers
   const handlePause = () => {
-    setIsPaused(true);
-    soundManager.playSoundIfEnabled('pauseResume');
+    try {
+      setIsPaused(true);
+      soundManager.playSoundIfEnabled('pauseResume');
+      
+      // Save game state when pausing
+      const gameState = {
+        board,
+        score,
+        nextBlock,
+        previewBlock,
+        gameStats,
+        maxTileAchieved,
+        floorLevel,
+        currentMinSpawn,
+        timestamp: Date.now()
+      };
+      saveGame(gameState);
+    } catch (error) {
+      console.warn('Pause error:', error);
+      setIsPaused(true); // Still pause even if sound fails
+    }
   };
 
   const handleResume = () => {
-    setIsPaused(false);
-    soundManager.playSoundIfEnabled('pauseResume');
+    try {
+      setIsPaused(false);
+      soundManager.playSoundIfEnabled('pauseResume');
+    } catch (error) {
+      console.warn('Resume error:', error);
+      setIsPaused(false); // Still resume even if sound fails
+    }
   };
   
   const handleRestart = () => {
-    resetGame(); // Use the local reset function for comprehensive game reset
+    try {
+      resetGame(); // Use the local reset function for comprehensive game reset
+      setIsPaused(false); // Dismiss modal after restarting
+    } catch (error) {
+      console.warn('Restart error:', error);
+      setIsPaused(false); // Still dismiss modal even if restart fails
+    }
   }
 
   const handleHome = () => {
-    // Save game state functionality removed - using local state only
-    
-    setIsPaused(false);
-    navigation.navigate('Home');
+    try {
+      // Save game state before going home
+      const gameState = {
+        board,
+        score,
+        nextBlock,
+        previewBlock,
+        gameStats,
+        maxTileAchieved,
+        floorLevel,
+        currentMinSpawn,
+        timestamp: Date.now()
+      };
+      saveGame(gameState);
+      
+      // Dismiss modal first, then navigate
+      setIsPaused(false);
+      navigation.navigate('Home');
+    } catch (error) {
+      console.warn('Home navigation error:', error);
+      // Still dismiss modal and navigate even if save fails
+      setIsPaused(false);
+      navigation.navigate('Home');
+    }
   };
 
   const handleClosePause = () => {
-    setIsPaused(false);
+    try {
+      setIsPaused(false);
+    } catch (error) {
+      console.warn('Close pause error:', error);
+      // Force close if normal close fails
+      setIsPaused(false);
+    }
   };
 
 
@@ -263,13 +470,22 @@ const DropNumberBoard = ({ navigation, route }) => {
    * Uses timing configuration from GameRules
    */
   useEffect(() => {
-    if (!falling && !gameOver && !isPaused) {
+    // Prevent infinite loops by checking if we're already processing
+    if (falling || gameOver || isPaused) {
+      return;
+    }
+    
+    try {
       const spawnCol = Math.floor(COLS / 2); // Center column as per rules
       
       // Check for game over condition - check if top row is full
       if (GameValidator.isGameOver(board)) {
         setGameOver(true);
-        soundManager.playSoundIfEnabled('gameOver');
+        try {
+          soundManager.playSoundIfEnabled('gameOver');
+        } catch (error) {
+          console.warn('Game loop game over sound error:', error);
+        }
         return;
       }
       
@@ -286,52 +502,73 @@ const DropNumberBoard = ({ navigation, route }) => {
       };
       
       // Falling tile created with nextBlock value
-      
       setFalling(fallingTile);
       // Don't automatically show guide for every new tile
       // setShowGuide(true); // Removed this line
+    } catch (error) {
+      console.warn('Game loop error:', error);
+      // Recover gracefully
+      setGameOver(true);
     }
     // eslint-disable-next-line
-  }, [falling, gameOver, board, nextBlock]); // Added nextBlock to dependencies
+  }, [falling, gameOver, isPaused, nextBlock]); // Removed board to prevent infinite loops
 
   /**
-   * Cleanup touch timeout on component unmount
+   * Cleanup touch timeout and set mounted state on component unmount
    */
   useEffect(() => {
     return () => {
+      setIsMounted(false);
       if (touchTimeoutRef.current) {
         clearTimeout(touchTimeoutRef.current);
       }
+      // Clear any falling animations
+      if (falling && falling.animationRef) {
+        falling.animationRef.stop();
+      }
+      // Clear merge animations
+      clearMergeAnimationsRef.current();
     };
-  }, []);
+  }, []); // Empty dependency array - only run on unmount
+
+
+
+
 
   /**
    * Handle user tapping anywhere on screen - uses measured column detection
    * Always drops from bottom - tap X position determines the column
    */
   const handleScreenTap = (event) => {
-    // Touch sensitivity control - prevent rapid successive taps
-    if (!isTouchEnabled) {
-      return;
-    }
-    
-    // Validate tap conditions
-    if (!falling || falling.fastDrop || gameOver || isPaused) {
-      return;
-    }
+    try {
+      // Touch sensitivity control - prevent rapid successive taps
+      if (!isTouchEnabled) {
+        return;
+      }
+      
+      // Validate tap conditions
+      if (!falling || falling.fastDrop || gameOver || isPaused) {
+        return;
+      }
     
     // Emergency cleanup if animations are stuck - more aggressive
-    if (mergeAnimations.length > 5) {
-      clearMergeAnimations();
-    }
-    
-    // Additional emergency cleanup for any stuck animations over 200ms old
-    const now = Date.now();
-    const stuckAnimations = mergeAnimations.filter(anim => 
-      now - (anim.createdAt || 0) > 200
-    );
-    if (stuckAnimations.length > 0) {
-      clearMergeAnimations();
+    try {
+      if (mergeAnimations.length > 5) {
+        clearMergeAnimationsRef.current();
+      }
+      
+      // Additional emergency cleanup for any stuck animations over 200ms old
+      const now = Date.now();
+      const stuckAnimations = mergeAnimations.filter(anim => 
+        now - (anim.createdAt || 0) > 200
+      );
+      if (stuckAnimations.length > 0) {
+        clearMergeAnimationsRef.current();
+      }
+    } catch (error) {
+      console.warn('Emergency cleanup error:', error);
+      // Force cleanup if normal cleanup fails
+      clearMergeAnimationsRef.current();
     }
     
     // Use the pre-calculated column from enhanced grid detection
@@ -339,6 +576,11 @@ const DropNumberBoard = ({ navigation, route }) => {
     
     // Use the existing logic but with the accurately detected column
     handleRowTap(0, targetColumn); // Row doesn't matter, only column
+    } catch (error) {
+      // Error in handleScreenTap - recover gracefully
+      console.warn('HandleScreenTap error:', error);
+      setIsTouchEnabled(true);
+    }
   };
 
   /**
@@ -347,15 +589,16 @@ const DropNumberBoard = ({ navigation, route }) => {
    * Includes touch sensitivity controls to prevent rapid successive taps
    */
   const handleRowTap = (targetRow, targetCol = null) => {
-    // Touch sensitivity control - prevent rapid successive taps
-    if (!isTouchEnabled) {
-      return;
-    }
-    
-    // Validate tap conditions
-    if (!falling || falling.fastDrop || gameOver || isPaused) {
-      return;
-    }
+    try {
+      // Touch sensitivity control - prevent rapid successive taps
+      if (!isTouchEnabled) {
+        return;
+      }
+      
+      // Validate tap conditions
+      if (!falling || falling.fastDrop || gameOver || isPaused) {
+        return;
+      }
     
     // Use the column from the tap - ignore the row (always drop from bottom)
     const col = targetCol !== null ? targetCol : falling.col;
@@ -432,24 +675,48 @@ const DropNumberBoard = ({ navigation, route }) => {
     
     // Start the animation from below the grid
     falling.anim.setValue(startPosition);
-    Animated.timing(falling.anim, {
+    const animation = Animated.timing(falling.anim, {
       toValue: targetRowPosition,
       duration: GAME_CONFIG.TIMING.COSMIC_DROP_DURATION,
       useNativeDriver: false,
       easing: Easing.out(Easing.quad),
-    }).start();
+    });
+    
+    // Store animation reference for cleanup
+    if (falling.animationRef) {
+      falling.animationRef.stop();
+    }
+    falling.animationRef = animation;
+    animation.start();
     
     // Handle landing after animation completes
-    setTimeout(async () => {
-      if (canMergeInFull) {
-        // Special handling for full column merge
-        await handleFullColumnTileLanded(landingRow, landingCol, tileValueToDrop);
-      } else {
-        // Normal tile landing
-        handleTileLanded(landingRow, landingCol, tileValueToDrop);
+    const landingTimeout = setTimeout(async () => {
+      if (isMounted) {
+        try {
+          if (canMergeInFull) {
+            // Special handling for full column merge
+            await handleFullColumnTileLanded(landingRow, landingCol, tileValueToDrop);
+          } else {
+            // Normal tile landing
+            handleTileLanded(landingRow, landingCol, tileValueToDrop);
+          }
+        } catch (error) {
+          console.warn('Landing timeout error:', error);
+          setIsTouchEnabled(true);
+        } finally {
+          clearFallingRef.current();
+        }
       }
-      clearFalling();
     }, GAME_CONFIG.TIMING.COSMIC_DROP_DURATION);
+    
+    // Store timeout reference for cleanup
+    touchTimeoutRef.current = landingTimeout;
+    } catch (error) {
+      // Error in handleRowTap - recover gracefully
+      console.warn('HandleRowTap error:', error);
+      setIsTouchEnabled(true);
+      clearFallingRef.current();
+    }
   };
 
   /**
@@ -460,18 +727,23 @@ const DropNumberBoard = ({ navigation, route }) => {
    * @returns {boolean} - True if there are adjacent tiles
    */
   const hasAdjacentTiles = (board, row, col) => {
-    const adjacentPositions = [
-      { row: row - 1, col }, // up
-      { row: row + 1, col }, // down
-      { row, col: col - 1 }, // left
-      { row, col: col + 1 }  // right
-    ];
-    
-    return adjacentPositions.some(pos => {
-      return pos.row >= 0 && pos.row < ROWS && 
-             pos.col >= 0 && pos.col < COLS && 
-             board[pos.row][pos.col] !== 0;
-    });
+    try {
+      const adjacentPositions = [
+        { row: row - 1, col }, // up
+        { row: row + 1, col }, // down
+        { row, col: col - 1 }, // left
+        { row, col: col + 1 }  // right
+      ];
+      
+      return adjacentPositions.some(pos => {
+        return pos.row >= 0 && pos.row < ROWS && 
+               pos.col >= 0 && pos.col < COLS && 
+               board[pos.row] && board[pos.row][pos.col] !== 0;
+      });
+    } catch (error) {
+      console.warn('Adjacent tiles check error:', error);
+      return false; // Safe fallback
+    }
   };
 
   /**
@@ -482,29 +754,34 @@ const DropNumberBoard = ({ navigation, route }) => {
    * @returns {Object|null} - { canMerge: boolean, mergeRow: number } or null
    */
   const canMergeInFullColumn = (board, col, value) => {
-    // Check if the bottom tile in the column matches the dropping tile
-    const bottomRow = ROWS - 1;
-    if (board[bottomRow][col] === value) {
-      return { canMerge: true, mergeRow: bottomRow };
-    }
-    
-    // Check if any TRULY adjacent tiles to the bottom can merge (no same-column merges)
-    const adjacentPositions = [
-      { row: bottomRow - 1, col: col - 1 }, // diagonal left
-      { row: bottomRow - 1, col: col + 1 }, // diagonal right
-      { row: bottomRow, col: col - 1 },     // left of bottom
-      { row: bottomRow, col: col + 1 }      // right of bottom
-    ];
-    
-    for (const pos of adjacentPositions) {
-      if (pos.row >= 0 && pos.row < ROWS && 
-          pos.col >= 0 && pos.col < COLS && 
-          board[pos.row][pos.col] === value) {
+    try {
+      // Check if the bottom tile in the column matches the dropping tile
+      const bottomRow = ROWS - 1;
+      if (board[bottomRow] && board[bottomRow][col] === value) {
         return { canMerge: true, mergeRow: bottomRow };
       }
+      
+      // Check if any TRULY adjacent tiles to the bottom can merge (no same-column merges)
+      const adjacentPositions = [
+        { row: bottomRow - 1, col: col - 1 }, // diagonal left
+        { row: bottomRow - 1, col: col + 1 }, // diagonal right
+        { row: bottomRow, col: col - 1 },     // left of bottom
+        { row: bottomRow, col: col + 1 }      // right of bottom
+      ];
+      
+      for (const pos of adjacentPositions) {
+        if (pos.row >= 0 && pos.row < ROWS && 
+            pos.col >= 0 && pos.col < COLS && 
+            board[pos.row] && board[pos.row][pos.col] === value) {
+          return { canMerge: true, mergeRow: bottomRow };
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.warn('Can merge in full column error:', error);
+      return null; // Safe fallback
     }
-    
-    return null;
   };
 
   /**
@@ -552,14 +829,16 @@ const DropNumberBoard = ({ navigation, route }) => {
           setScore(newScore);
         }
         
-        // Update local state after all state updates
+        // Update local state after all state updates - only if component is mounted
         setTimeout(() => {
-          if (newHighestTile > lastHighestBlock) {
-            setLastHighestBlock(newHighestTile);
-          }
-          
-          if (totalScore > 0) {
-            setLastScore(newScore);
+          if (isMounted) {
+            if (newHighestTile > lastHighestBlock) {
+              setLastHighestBlock(newHighestTile);
+            }
+            
+            if (totalScore > 0) {
+              setLastScore(newScore);
+            }
           }
         }, 0);
 
@@ -571,13 +850,44 @@ const DropNumberBoard = ({ navigation, route }) => {
         // Check for game over condition
         if (GameValidator.isGameOver(newBoard)) {
           setGameOver(true);
-          soundManager.playSoundIfEnabled('gameOver');
+          
+          // Save final game state when game ends
+          const finalGameState = {
+            board: newBoard,
+            score: newScore,
+            nextBlock,
+            previewBlock,
+            gameStats: {
+              ...gameStats,
+              tilesPlaced: gameStats.tilesPlaced + 1,
+              mergesPerformed: gameStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
+              chainReactions: gameStats.chainReactions + chainReactionCount,
+              highestTile: newHighestTile,
+            },
+            maxTileAchieved,
+            floorLevel,
+            currentMinSpawn,
+            timestamp: Date.now()
+          };
+          saveGame(finalGameState);
+          
+          try {
+            soundManager.playSoundIfEnabled('gameOver');
+          } catch (error) {
+            console.warn('Game over sound error:', error);
+          }
         }
       }).catch(error => {
-        // Error processing tile landing
+        // Error processing tile landing - recover gracefully
+        console.warn('Tile landing error:', error);
+        setIsTouchEnabled(true);
+        clearFallingRef.current();
       });
     } catch (error) {
-      // Error in handleTileLanded
+      // Error in handleTileLanded - recover gracefully
+      console.warn('HandleTileLanded error:', error);
+      setIsTouchEnabled(true);
+      clearFallingRef.current();
     }
   };
 
@@ -628,28 +938,58 @@ const DropNumberBoard = ({ navigation, route }) => {
           setScore(newScore);
         }
         
-        // Update local state after all state updates
+        // Update local state after all state updates - only if component is mounted
         setTimeout(() => {
-          if (newHighestTile > lastHighestBlock) {
-            setLastHighestBlock(newHighestTile);
-          }
-          
-          if (totalScore > 0) {
-            setLastScore(newScore);
+          if (isMounted) {
+            if (newHighestTile > lastHighestBlock) {
+              setLastHighestBlock(newHighestTile);
+            }
+            
+            if (totalScore > 0) {
+              setLastScore(newScore);
+            }
           }
         }, 0);
         
         // Check for game over condition
         if (GameValidator.isGameOver(newBoard)) {
           setGameOver(true);
-          soundManager.playSoundIfEnabled('gameOver');
+          
+          // Save final game state when game ends
+          const finalGameState = {
+            board: newBoard,
+            score: newScore,
+            nextBlock,
+            previewBlock,
+            gameStats: {
+              ...gameStats,
+              tilesPlaced: gameStats.tilesPlaced + 1,
+              mergesPerformed: gameStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
+              chainReactions: gameStats.chainReactions + chainReactionCount,
+              highestTile: newHighestTile,
+            },
+            maxTileAchieved,
+            floorLevel,
+            currentMinSpawn,
+            timestamp: Date.now()
+          };
+          saveGame(finalGameState);
+          
+          try {
+            soundManager.playSoundIfEnabled('gameOver');
+          } catch (error) {
+            console.warn('Game over sound error:', error);
+          }
         }
       } else {
         // Full column drop failed, should not happen if canMergeInFullColumn worked correctly
         // Error handled silently
       }
     } catch (error) {
-      // Error in handleFullColumnTileLanded - handled silently
+      // Error in handleFullColumnTileLanded - recover gracefully
+      console.warn('FullColumnTileLanded error:', error);
+      setIsTouchEnabled(true);
+      clearFallingRef.current();
     }
   };
 
@@ -658,52 +998,76 @@ const DropNumberBoard = ({ navigation, route }) => {
    * Uses GameHelpers for consistent initialization
    */
   const resetGame = () => {
-    setBoard(Array.from({ length: gridConfig.ROWS }, () => Array(gridConfig.COLS).fill(0)));
-    setScore(0);
-    setGameOver(false);
-    setNextBlock(getRandomBlockValue());
-    setPreviewBlock(getRandomBlockValue());
-    setGameStats({
-      tilesPlaced: 0,
-      mergesPerformed: 0,
-      chainReactions: 0,
-      highestTile: 0,
-      startTime: Date.now(),
-    });
+    try {
+      setBoard(Array.from({ length: gridConfig.ROWS }, () => Array(gridConfig.COLS).fill(0)));
+      setScore(0);
+      setGameOver(false);
+      setNextBlock(getRandomBlockValue());
+      setPreviewBlock(getRandomBlockValue());
+      setGameStats({
+        tilesPlaced: 0,
+        mergesPerformed: 0,
+        chainReactions: 0,
+        highestTile: 0,
+        startTime: Date.now(),
+      });
     
-    // Clear all animations
-    clearFalling();
-    clearMergeAnimations();
+          // Clear all animations
+      clearFallingRef.current();
+      clearMergeAnimationsRef.current();
     
     // Floor system reset
     setCurrentMinSpawn(2);
     setFloorLevel(1);
     setMaxTileAchieved(0);
     
-    // Clear saved game functionality removed - using local state only
+          // Clear saved game when resetting
+      try {
+        // Clear the saved game state
+        const { clearSavedGame } = useGameStore();
+        clearSavedGame();
+      } catch (error) {
+        console.warn('Failed to clear saved game:', error);
+      }
     
     // Enable touch
     setIsTouchEnabled(true);
+    } catch (error) {
+      // Error in resetGame - recover gracefully
+      console.warn('ResetGame error:', error);
+      // Try to reset to a safe state
+      setBoard(Array.from({ length: gridConfig.ROWS }, () => Array(gridConfig.COLS).fill(0)));
+      setScore(0);
+      setGameOver(false);
+      setIsTouchEnabled(true);
+    }
   };
 
   /**
    * Get current game difficulty based on board state
    */
   const getCurrentDifficulty = () => {
-    const emptyCells = board.flat().filter(cell => cell === 0).length;
-    const totalCells = ROWS * COLS;
-    const fillPercentage = 1 - (emptyCells / totalCells);
-    
-    if (fillPercentage < 0.3) return 'easy';
-    if (fillPercentage < 0.6) return 'medium';
-    if (fillPercentage < 0.8) return 'hard';
-    return 'extreme';
+    try {
+      const emptyCells = board.flat().filter(cell => cell === 0).length;
+      const totalCells = ROWS * COLS;
+      const fillPercentage = 1 - (emptyCells / totalCells);
+      
+      if (fillPercentage < 0.3) return 'easy';
+      if (fillPercentage < 0.6) return 'medium';
+      if (fillPercentage < 0.8) return 'hard';
+      return 'extreme';
+    } catch (error) {
+      console.warn('Difficulty calculation error:', error);
+      return 'easy'; // Safe fallback
+    }
   };
 
   // UI rendering
   return (
     <View style={[styles.container, styles.containerDark]}>
       <OptimizedBackground showMovingStars={true} />
+      
+
       
       <OptimizedHeader 
         score={score}
@@ -713,7 +1077,13 @@ const DropNumberBoard = ({ navigation, route }) => {
       
       <View
         ref={boardRef}
-        onLayout={e => setBoardLeft(e.nativeEvent.layout.x)}
+        onLayout={e => {
+          try {
+            setBoardLeft(e.nativeEvent.layout.x);
+          } catch (error) {
+            console.warn('Board layout error:', error);
+          }
+        }}
       >
         <GameGrid
           board={board}
@@ -726,7 +1096,7 @@ const DropNumberBoard = ({ navigation, route }) => {
           onRowTap={handleRowTap}
           onScreenTap={handleScreenTap}
           gameOver={gameOver}
-          showGuide={false}
+          showGuide={showGuide}
           panHandlers={panResponder.panHandlers}
           isTouchEnabled={isTouchEnabled}
         />
@@ -767,7 +1137,20 @@ const DropNumberBoard = ({ navigation, route }) => {
             </View>
             
             {/* Action Button */}
-            <TouchableOpacity style={styles.restartBtn} onPress={resetGame}>
+            <TouchableOpacity 
+              style={styles.restartBtn} 
+              onPress={() => {
+                try {
+                  resetGame();
+                } catch (error) {
+                  console.warn('Game over restart error:', error);
+                  // Force reset to safe state
+                  setBoard(Array.from({ length: gridConfig.ROWS }, () => Array(gridConfig.COLS).fill(0)));
+                  setScore(0);
+                  setGameOver(false);
+                }
+              }}
+            >
               <Text style={styles.restartText}>PLAY AGAIN</Text>
             </TouchableOpacity>
           </View>
@@ -1052,6 +1435,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  
+
 });
 
 export default DropNumberBoard; 

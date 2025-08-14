@@ -12,7 +12,6 @@ export class SoundSystemTester {
   }
 
   async runAllTests() {
-    console.log('🧪 Starting comprehensive sound system tests...');
     
     const tests = [
       this.testInitialization.bind(this),
@@ -28,7 +27,6 @@ export class SoundSystemTester {
       try {
         await test();
       } catch (error) {
-        console.error('❌ Test failed:', error);
         this.testResults.push({ name: test.name, status: 'FAILED', error: error.message });
       }
     }
@@ -37,17 +35,14 @@ export class SoundSystemTester {
   }
 
   async testInitialization() {
-    console.log('🔧 Testing sound system initialization...');
     
     const status = soundManager.getStatus();
-    console.log('📊 Initial status:', status);
     
     if (!status.isInitialized) {
       throw new Error('Sound system not initialized');
     }
     
     if (status.isWebPlatform) {
-      console.log('✅ Web platform detected - audio disabled as expected');
       return;
     }
     
@@ -56,12 +51,10 @@ export class SoundSystemTester {
       throw new Error('Some audio players are missing');
     }
     
-    console.log('✅ Initialization test passed');
     this.testResults.push({ name: 'Initialization', status: 'PASSED' });
   }
 
   async testQueuingSystem() {
-    console.log('📋 Testing sound queuing system...');
     
     // Clear any existing queue
     await soundManager.stopAllSounds();
@@ -77,10 +70,6 @@ export class SoundSystemTester {
     await Promise.all(promises);
     
     const status = soundManager.getStatus();
-    console.log('📊 Queue status:', {
-      queueLength: status.queueLength,
-      isProcessing: status.isProcessingQueue
-    });
     
     // Wait for queue to process
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -90,12 +79,10 @@ export class SoundSystemTester {
       throw new Error('Queue not fully processed');
     }
     
-    console.log('✅ Queuing system test passed');
     this.testResults.push({ name: 'Queuing System', status: 'PASSED' });
   }
 
   async testOverlapPrevention() {
-    console.log('🔇 Testing overlap prevention...');
     
     await soundManager.stopAllSounds();
     
@@ -107,10 +94,6 @@ export class SoundSystemTester {
     }
     
     const status = soundManager.getStatus();
-    console.log('📊 Overlap test status:', {
-      queueLength: status.queueLength,
-      lastSoundTimes: status.lastSoundTimes
-    });
     
     // Wait for processing
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -120,12 +103,10 @@ export class SoundSystemTester {
       throw new Error('Queue not processed after overlap test');
     }
     
-    console.log('✅ Overlap prevention test passed');
     this.testResults.push({ name: 'Overlap Prevention', status: 'PASSED' });
   }
 
   async testPrioritySystem() {
-    console.log('⭐ Testing priority system...');
     
     await soundManager.stopAllSounds();
     
@@ -140,17 +121,14 @@ export class SoundSystemTester {
     await Promise.all(promises);
     
     const status = soundManager.getStatus();
-    console.log('📊 Priority test queue length:', status.queueLength);
     
     // Wait for processing
     await new Promise(resolve => setTimeout(resolve, 3000));
     
-    console.log('✅ Priority system test passed');
     this.testResults.push({ name: 'Priority System', status: 'PASSED' });
   }
 
   async testRapidRequests() {
-    console.log('⚡ Testing rapid sound requests...');
     
     await soundManager.stopAllSounds();
     
@@ -164,7 +142,6 @@ export class SoundSystemTester {
     }
     
     const queueTime = Date.now() - startTime;
-    console.log(`📊 Rapid requests completed in ${queueTime}ms`);
     
     // Wait for processing
     await new Promise(resolve => setTimeout(resolve, 4000));
@@ -174,12 +151,10 @@ export class SoundSystemTester {
       throw new Error('Queue not processed after rapid requests');
     }
     
-    console.log('✅ Rapid requests test passed');
     this.testResults.push({ name: 'Rapid Requests', status: 'PASSED' });
   }
 
   async testSoundIntervals() {
-    console.log('⏱️ Testing sound intervals...');
     
     await soundManager.stopAllSounds();
     
@@ -193,7 +168,6 @@ export class SoundSystemTester {
     };
     
     for (const [soundType, interval] of Object.entries(intervals)) {
-      console.log(`🔊 Testing ${soundType} interval (${interval}ms)...`);
       
       const startTime = Date.now();
       soundManager.queueSound(soundType);
@@ -202,25 +176,20 @@ export class SoundSystemTester {
       soundManager.queueSound(soundType);
       
       const status = soundManager.getStatus();
-      console.log(`📊 ${soundType} queue length:`, status.queueLength);
       
       // Wait for the interval
       await new Promise(resolve => setTimeout(resolve, interval + 100));
     }
     
-    console.log('✅ Sound intervals test passed');
     this.testResults.push({ name: 'Sound Intervals', status: 'PASSED' });
   }
 
   async testErrorHandling() {
-    console.log('🛡️ Testing error handling...');
     
     // Test with invalid sound type
     try {
       soundManager.queueSound('invalidSound');
-      console.log('✅ Invalid sound type handled gracefully');
     } catch (error) {
-      console.log('✅ Invalid sound type properly rejected');
     }
     
     // Test with disabled sound
@@ -233,37 +202,27 @@ export class SoundSystemTester {
     // Restore original state
     useGameStore.setState({ soundEnabled: originalState.soundEnabled });
     
-    console.log('✅ Error handling test passed');
     this.testResults.push({ name: 'Error Handling', status: 'PASSED' });
   }
 
   printTestResults() {
-    console.log('\n📊 SOUND SYSTEM TEST RESULTS:');
-    console.log('==============================');
     
     const passed = this.testResults.filter(r => r.status === 'PASSED').length;
     const failed = this.testResults.filter(r => r.status === 'FAILED').length;
     
     this.testResults.forEach(result => {
       const icon = result.status === 'PASSED' ? '✅' : '❌';
-      console.log(`${icon} ${result.name}: ${result.status}`);
       if (result.error) {
-        console.log(`   Error: ${result.error}`);
       }
     });
     
-    console.log(`\n📈 SUMMARY: ${passed} passed, ${failed} failed`);
-    
     if (failed === 0) {
-      console.log('🎉 All sound system tests passed!');
     } else {
-      console.log('⚠️ Some tests failed - check the implementation');
     }
   }
 
   // Quick test for development
   async quickTest() {
-    console.log('🚀 Running quick sound test...');
     
     await soundManager.stopAllSounds();
     
@@ -271,12 +230,10 @@ export class SoundSystemTester {
     const soundTypes = ['drop', 'merge', 'intermediateMerge', 'gameOver'];
     
     for (const soundType of soundTypes) {
-      console.log(`🔊 Testing ${soundType}...`);
       await soundManager.queueSound(soundType);
       await new Promise(resolve => setTimeout(resolve, 500));
     }
     
-    console.log('✅ Quick test completed');
   }
 }
 

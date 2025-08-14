@@ -93,7 +93,6 @@ class SoundManager {
       this.createAudioPlayers();
       this.isInitialized = true;
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to initialize audio system:', error);
       this.isInitialized = false;
     }
   }
@@ -195,8 +194,6 @@ class SoundManager {
             )
           ]);
         } catch (error) {
-          console.warn(`⏰ Sound completion timeout for ${soundType}:`, error.message);
-          // Clean up the hanging promise
           this.activeSounds.delete(soundType);
           this.soundCompletionPromises.delete(soundType);
         }
@@ -231,7 +228,7 @@ class SoundManager {
             )
           ]);
         } catch (error) {
-          console.warn('⏰ All sounds completion timeout:', error.message);
+          // console.warn('⏰ All sounds completion timeout:', error.message);
           // Clean up hanging promises
           this.activeSounds.clear();
           this.soundCompletionPromises.clear();
@@ -276,7 +273,7 @@ class SoundManager {
       try {
         await this.playSoundDirectly(soundRequest.type);
       } catch (error) {
-        console.warn(`❌ Failed to play queued ${soundRequest.type} sound:`, error);
+        // console.warn(`❌ Failed to play queued ${soundRequest.type} sound:`, error);
       }
       
       // OPTIMIZATION 7: Reduced delay between sounds for chain reactions
@@ -361,7 +358,7 @@ class SoundManager {
       const { soundVolume } = useGameStore.getState();
       this.updateVolumeLevels(soundVolume);
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to create audio players:', error);
+      // console.warn('OptimizedSoundManager: Failed to create audio players:', error);
     }
   }
 
@@ -376,7 +373,7 @@ class SoundManager {
       if (this.dropPlayer) this.dropPlayer.volume = baseVolume * 0.9;
       if (this.gameOverPlayer) this.gameOverPlayer.volume = baseVolume * 0.8;
     } catch (error) {
-      console.warn('❌ OptimizedSoundManager: Failed to update volume levels:', error);
+      // console.warn('❌ OptimizedSoundManager: Failed to update volume levels:', error);
     }
   }
 
@@ -388,7 +385,7 @@ class SoundManager {
       this.mergePlayer.seekTo(0);
       await this.mergePlayer.play();
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to play merge sound:', error);
+      // console.warn('OptimizedSoundManager: Failed to play merge sound:', error);
       throw error;
     }
   }
@@ -400,7 +397,7 @@ class SoundManager {
       this.intermediateMergePlayer.seekTo(0);
       await this.intermediateMergePlayer.play();
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to play intermediate merge sound:', error);
+      // console.warn('OptimizedSoundManager: Failed to play intermediate merge sound:', error);
       throw error;
     }
   }
@@ -412,7 +409,7 @@ class SoundManager {
       this.dropPlayer.seekTo(0);
       await this.dropPlayer.play();
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to play drop sound:', error);
+      // console.warn('OptimizedSoundManager: Failed to play drop sound:', error);
       throw error;
     }
   }
@@ -424,7 +421,7 @@ class SoundManager {
       this.gameOverPlayer.seekTo(0);
       await this.gameOverPlayer.play();
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to play game over sound:', error);
+      // console.warn('OptimizedSoundManager: Failed to play game over sound:', error);
       throw error;
     }
   }
@@ -436,7 +433,7 @@ class SoundManager {
       this.dropPlayer.seekTo(0);
       await this.dropPlayer.play();
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to play pause/resume sound:', error);
+      // console.warn('OptimizedSoundManager: Failed to play pause/resume sound:', error);
       throw error;
     }
   }
@@ -511,7 +508,7 @@ class SoundManager {
         pauseResume: 0
       };
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to stop sounds:', error);
+      // console.warn('OptimizedSoundManager: Failed to stop sounds:', error);
     }
   }
 
@@ -536,7 +533,7 @@ class SoundManager {
         this.gameOverPlayer = null;
       }
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to unload sounds:', error);
+      // console.warn('OptimizedSoundManager: Failed to unload sounds:', error);
     }
   }
 
@@ -546,7 +543,7 @@ class SoundManager {
     try {
       this.updateVolumeLevels(volume);
     } catch (error) {
-      console.warn('OptimizedSoundManager: Failed to set volume:', error);
+      // console.warn('OptimizedSoundManager: Failed to set volume:', error);
     }
   }
 
@@ -635,34 +632,34 @@ class SoundManager {
   }
 
   logStatus() {
-    console.log('OptimizedSoundManager Status:', this.getStatus());
+    // console.log('OptimizedSoundManager Status:', this.getStatus());
   }
 
   // Test if sound system is working properly
   async testSoundSystem() {
     const status = this.getStatus();
-    console.log('🔍 OptimizedSoundManager Test Results:', status);
+    // console.log('🔍 OptimizedSoundManager Test Results:', status);
     
     if (!status.isInitialized) {
-      console.warn('❌ OptimizedSoundManager: Not initialized');
+      // console.warn('❌ OptimizedSoundManager: Not initialized');
       return false;
     }
     
     if (status.isWebPlatform) {
-      console.log('✅ OptimizedSoundManager: Web platform - audio disabled');
+      // console.log('✅ OptimizedSoundManager: Web platform - audio disabled');
       return true; // Not an error on web
     }
     
     // Test if all players are created
     const allPlayersExist = Object.values(status.hasPlayers).every(exists => exists);
     if (!allPlayersExist) {
-      console.warn('❌ OptimizedSoundManager: Some audio players are missing');
+      // console.warn('❌ OptimizedSoundManager: Some audio players are missing');
       return false;
     }
     
     // Test if sound is enabled
     if (!status.soundEnabled) {
-      console.log('🔇 OptimizedSoundManager: Sound is disabled in settings');
+      // console.log('🔇 OptimizedSoundManager: Sound is disabled in settings');
       return true; // Not an error, just disabled
     }
     

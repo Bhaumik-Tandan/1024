@@ -22,7 +22,7 @@ class SoundLogger {
     // Enable/disable logging
     this.isEnabled = true;
     
-    console.log('🎵 SoundLogger initialized');
+    // console.log('🎵 SoundLogger initialized');
   }
 
   // Log a merge event
@@ -42,15 +42,15 @@ class SoundLogger {
     this.logs.push(logEntry);
     this.lastLogTime = timestamp;
     
-    console.log(`🔗 MERGE #${logEntry.mergeNumber} at ${new Date(timestamp).toLocaleTimeString()}:`, {
-      tiles: logEntry.numberOfTiles,
-      value: logEntry.originalValue,
-      newValue: logEntry.newValue,
-      score: logEntry.score,
-      isChainReaction: logEntry.isChainReaction,
-      positions: logEntry.positions,
-      resultPosition: logEntry.resultPosition
-    });
+    // console.log(`🔗 MERGE #${logEntry.mergeNumber} at ${new Date(timestamp).toLocaleTimeString()}:`, {
+    //   tiles: logEntry.numberOfTiles,
+    //   value: logEntry.originalValue,
+    //   newValue: logEntry.newValue,
+    //   score: logEntry.score,
+    //   isChainReaction: logEntry.isChainReaction,
+    //   positions: logEntry.positions,
+    //   resultPosition: logEntry.resultPosition
+    // });
   }
 
   // Log a sound event
@@ -70,15 +70,15 @@ class SoundLogger {
     this.logs.push(logEntry);
     this.lastLogTime = timestamp;
     
-    console.log(`🎵 SOUND #${logEntry.soundNumber} at ${new Date(timestamp).toLocaleTimeString()}:`, {
-      soundType: logEntry.soundType,
-      priority: logEntry.priority,
-      queueLength: logEntry.queueLength,
-      isDirectPlay: logEntry.isDirectPlay,
-      duration: logEntry.estimatedDuration,
-      enabled: logEntry.soundEnabled,
-      volume: logEntry.volume
-    });
+    // console.log(`🎵 SOUND #${logEntry.soundNumber} at ${new Date(timestamp).toLocaleTimeString()}:`, {
+    //   soundType: logEntry.soundType,
+    //   priority: logEntry.priority,
+    //   queueLength: logEntry.queueLength,
+    //   isDirectPlay: logEntry.isDirectPlay,
+    //   duration: logEntry.estimatedDuration,
+    //   enabled: logEntry.soundEnabled,
+    //   volume: logEntry.volume
+    // });
   }
 
   // Log a drop event
@@ -98,13 +98,13 @@ class SoundLogger {
     this.logs.push(logEntry);
     this.lastLogTime = timestamp;
     
-    console.log(`📦 DROP #${logEntry.dropNumber} at ${new Date(timestamp).toLocaleTimeString()}:`, {
-      value: logEntry.value,
-      column: logEntry.column,
-      row: logEntry.landingRow,
-      soundTriggered: logEntry.soundTriggered,
-      soundEnabled: logEntry.soundEnabled
-    });
+    // console.log(`📦 DROP #${logEntry.dropNumber} at ${new Date(timestamp).toLocaleTimeString()}:`, {
+    //   value: logEntry.value,
+    //   column: logEntry.column,
+    //   row: logEntry.landingRow,
+    //   soundTriggered: logEntry.soundTriggered,
+    //   soundEnabled: logEntry.soundEnabled
+    // });
   }
 
   // Log a chain reaction event
@@ -124,12 +124,12 @@ class SoundLogger {
     this.logs.push(logEntry);
     this.lastLogTime = timestamp;
     
-    console.log(`⚡ CHAIN REACTION #${logEntry.chainNumber} at ${new Date(timestamp).toLocaleTimeString()}:`, {
-      mergesInChain: logEntry.mergeCount,
-      totalScore: logEntry.totalScore,
-      duration: logEntry.duration,
-      originColumn: logEntry.originColumn
-    });
+    // console.log(`⚡ CHAIN REACTION #${logEntry.chainNumber} at ${new Date(timestamp).toLocaleTimeString()}:`, {
+    //   mergesInChain: logEntry.mergeCount,
+    //   totalScore: logEntry.totalScore,
+    //   duration: logEntry.duration,
+    //   originColumn: logEntry.originColumn
+    // });
   }
 
   // Log a queue event
@@ -148,13 +148,13 @@ class SoundLogger {
     this.logs.push(logEntry);
     this.lastLogTime = timestamp;
     
-    console.log(`📋 QUEUE EVENT at ${new Date(timestamp).toLocaleTimeString()}:`, {
-      action: logEntry.action,
-      soundType: logEntry.soundType,
-      queueLength: logEntry.queueLength,
-      isProcessing: logEntry.isProcessing,
-      priority: logEntry.priority
-    });
+    // console.log(`📋 QUEUE EVENT at ${new Date(timestamp).toLocaleTimeString()}:`, {
+    //   action: logEntry.action,
+    //   soundType: logEntry.soundType,
+    //   queueLength: logEntry.queueLength,
+    //   isProcessing: logEntry.isProcessing,
+    //   priority: logEntry.priority
+    // });
   }
 
   // Log a sound completion event
@@ -173,12 +173,12 @@ class SoundLogger {
     this.logs.push(logEntry);
     this.lastLogTime = timestamp;
     
-    console.log(`✅ SOUND COMPLETION at ${new Date(timestamp).toLocaleTimeString()}:`, {
-      soundType: logEntry.soundType,
-      actualDuration: logEntry.actualDuration,
-      estimatedDuration: logEntry.estimatedDuration,
-      wasSuccessful: logEntry.wasSuccessful
-    });
+    // console.log(`✅ SOUND COMPLETION at ${new Date(timestamp).toLocaleTimeString()}:`, {
+    //   soundType: logEntry.soundType,
+    //   actualDuration: logEntry.actualDuration,
+    //   estimatedDuration: logEntry.estimatedDuration,
+    //   wasSuccessful: logEntry.wasSuccessful
+    // });
   }
 
   // Get summary statistics
@@ -230,39 +230,39 @@ class SoundLogger {
   printSummary() {
     const summary = this.getSummary();
     
-    console.log('\n🎵 ===== SOUND & MERGE LOG SUMMARY =====');
-    console.log(`⏱️  Total Duration: ${summary.totalDuration}ms (${(summary.totalDuration / 1000).toFixed(1)}s)`);
-    console.log(`📊 Total Logs: ${summary.totalLogs}`);
-    console.log('');
+    // console.log('\n🎵 ===== SOUND & MERGE LOG SUMMARY =====');
+    // console.log(`⏱️  Total Duration: ${summary.totalDuration}ms (${(summary.totalDuration / 1000).toFixed(1)}s)`);
+    // console.log(`📊 Total Logs: ${summary.totalLogs}`);
+    // console.log('');
     
-    console.log('🔗 MERGES:');
-    console.log(`   Count: ${summary.merges.count}`);
-    console.log(`   Average tiles per merge: ${summary.merges.averageTiles.toFixed(1)}`);
-    console.log(`   Total score: ${summary.merges.totalScore}`);
-    console.log(`   Chain reactions: ${summary.merges.chainReactions}`);
-    console.log('');
+    // console.log('🔗 MERGES:');
+    // console.log(`   Count: ${summary.merges.count}`);
+    // console.log(`   Average tiles per merge: ${summary.merges.averageTiles.toFixed(1)}`);
+    // console.log(`   Total score: ${summary.merges.totalScore}`);
+    // console.log(`   Chain reactions: ${summary.merges.chainReactions}`);
+    // console.log('');
     
-    console.log('🎵 SOUNDS:');
-    console.log(`   Total: ${summary.sounds.count}`);
-    console.log(`   Successful: ${summary.sounds.successful}`);
-    console.log(`   Failed: ${summary.sounds.failed}`);
-    console.log('   By type:');
-    Object.entries(summary.sounds.byType).forEach(([type, count]) => {
-      console.log(`     ${type}: ${count}`);
-    });
-    console.log('');
+    // console.log('🎵 SOUNDS:');
+    // console.log(`   Total: ${summary.sounds.count}`);
+    // console.log(`   Successful: ${summary.sounds.successful}`);
+    // console.log(`   Failed: ${summary.sounds.failed}`);
+    // console.log('   By type:');
+    // Object.entries(summary.sounds.byType).forEach(([type, count]) => {
+    //   console.log(`     ${type}: ${count}`);
+    // });
+    // console.log('');
     
-    console.log('📦 DROPS:');
-    console.log(`   Total: ${summary.drops.count}`);
-    console.log(`   With sound: ${summary.drops.withSound}`);
-    console.log(`   Without sound: ${summary.drops.withoutSound}`);
-    console.log('');
+    // console.log('📦 DROPS:');
+    // console.log(`   Total: ${summary.drops.count}`);
+    // console.log(`   With sound: ${summary.drops.withSound}`);
+    // console.log(`   Without sound: ${summary.drops.withoutSound}`);
+    // console.log('');
     
-    console.log('⚡ CHAIN REACTIONS:');
-    console.log(`   Count: ${summary.chainReactions.count}`);
-    console.log(`   Average merges per chain: ${summary.chainReactions.averageMerges.toFixed(1)}`);
-    console.log(`   Total score: ${summary.chainReactions.totalScore}`);
-    console.log('=====================================\n');
+    // console.log('⚡ CHAIN REACTIONS:');
+    // console.log(`   Count: ${summary.chainReactions.count}`);
+    // console.log(`   Average merges per chain: ${summary.chainReactions.averageMerges.toFixed(1)}`);
+    // console.log(`   Total score: ${summary.chainReactions.totalScore}`);
+    // console.log('=====================================\n');
   }
 
   // Get all logs
@@ -284,13 +284,13 @@ class SoundLogger {
     this.dropCount = 0;
     this.startTime = Date.now();
     this.lastLogTime = Date.now();
-    console.log('🗑️ SoundLogger: All logs cleared');
+    // console.log('🗑️ SoundLogger: All logs cleared');
   }
 
   // Enable/disable logging
   setEnabled(enabled) {
     this.isEnabled = enabled;
-    console.log(`🎵 SoundLogger: ${enabled ? 'enabled' : 'disabled'}`);
+    // console.log(`🎵 SoundLogger: ${enabled ? 'enabled' : 'disabled'}`);
   }
 
   // Export logs as JSON

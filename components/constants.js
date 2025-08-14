@@ -287,38 +287,22 @@ export const PLANET_TYPES = {
   
   // ☀️ Famous Stars (in increasing size)
   2048: {
-    type: 'proxima_centauri',
-    name: 'Proxima Centauri',
-    diameter: '~200,000 km',
-    description: 'The nearest star to our Sun, a red dwarf that hosts potentially habitable exoplanets.',
+    type: 'polaris',
+    name: 'Polaris',
+    diameter: '~6.4 million km',
+    description: 'The North Star, the brightest star in Ursa Minor and a reliable guide for navigation throughout history.',
     facts: [
-      'Nearest star to the Sun (4.24 light-years)',
-      'Red dwarf star',
-      'Has potentially habitable exoplanet',
-      'Will live for trillions of years'
-    ],
-    glow: true,
-    primary: '#FF4500',
-    accent: '#FF6347'
-  },
-  
-  4096: {
-    type: 'alpha_centauri_a',
-    name: 'Alpha Centauri A',
-    diameter: '~1.2 million km',
-    description: 'Part of the closest star system to Earth, very similar to our Sun in mass and brightness.',
-    facts: [
-      'Part of closest star system to Earth',
-      'Very similar to our Sun',
-      'Binary star with Alpha Centauri B',
-      'Located 4.37 light-years away'
+      'Known as the North Star',
+      'Always points to true north',
+      'Used for navigation for centuries',
+      'Located 433 light-years away'
     ],
     glow: true,
     primary: '#FFD700',
     accent: '#FFA500'
   },
   
-  8192: {
+  4096: {
     type: 'sun',
     name: 'Sun',
     diameter: '1.392 million km',
@@ -334,15 +318,15 @@ export const PLANET_TYPES = {
     accent: '#FFA500'
   },
   
-  16384: {
-    type: 'sirius_a',
-    name: 'Sirius A',
+  8192: {
+    type: 'sirius',
+    name: 'Sirius',
     diameter: '~2.38 million km',
-    description: 'The brightest star in our night sky, a hot blue-white star in the constellation Canis Major.',
+    description: 'The brightest star in our night sky, also known as the Dog Star, visible from almost anywhere on Earth.',
     facts: [
       'Brightest star in night sky',
-      'Blue-white main sequence star',
-      'Binary system with white dwarf companion',
+      'Also called the Dog Star',
+      'Visible from almost anywhere on Earth',
       'Located 8.6 light-years away'
     ],
     glow: true,
@@ -350,171 +334,41 @@ export const PLANET_TYPES = {
     accent: '#4169E1'
   },
   
+  16384: {
+    type: 'orion_nebula',
+    name: 'Orion Nebula',
+    diameter: '~24 light-years',
+    description: 'One of the brightest nebulae visible to the naked eye, a stellar nursery where new stars are born.',
+    facts: [
+      'Visible to naked eye',
+      'Stellar nursery for new stars',
+      'Located in Orion constellation',
+      '1,344 light-years away'
+    ],
+    glow: true,
+    primary: '#9370DB',
+    accent: '#8A2BE2'
+  },
+  
   32768: {
-    type: 'pollux',
-    name: 'Pollux',
-    diameter: '~9 million km',
-    description: 'An orange giant star in Gemini, the brightest star in the constellation and host to an exoplanet.',
+    type: 'pleiades',
+    name: 'Pleiades',
+    diameter: '~8 light-years',
+    description: 'The Seven Sisters, a beautiful star cluster visible to the naked eye, featured in many cultures and myths.',
     facts: [
-      'Orange giant star in Gemini',
-      'Brightest star in its constellation',
-      'Has a confirmed exoplanet',
-      'Located 34 light-years away'
+      'Also called Seven Sisters',
+      'Visible to naked eye',
+      'Featured in many cultures',
+      '444 light-years away'
     ],
     glow: true,
-    primary: '#FF8C00',
-    accent: '#FF7F50'
-  },
-  
-  65536: {
-    type: 'arcturus',
-    name: 'Arcturus',
-    diameter: '~35 million km',
-    description: 'A red giant star, the brightest star in the northern celestial hemisphere and fourth brightest in the night sky.',
-    facts: [
-      'Red giant star',
-      'Brightest star in northern sky',
-      'Fourth brightest star overall',
-      'Located 37 light-years away'
-    ],
-    glow: true,
-    primary: '#FF6B35',
-    accent: '#FF4500'
-  },
-  
-  131072: {
-    type: 'aldebaran',
-    name: 'Aldebaran',
-    diameter: '~61 million km',
-    description: 'The "Follower of the Pleiades," a red giant star that appears to be the eye of Taurus the Bull.',
-    facts: [
-      'Red giant in constellation Taurus',
-      'Known as the "Eye of the Bull"',
-      'Appears to lead the Hyades cluster',
-      'Located 65 light-years away'
-    ],
-    glow: true,
-    primary: '#DC143C',
-    accent: '#FF6B6B'
-  },
-  
-  262144: {
-    type: 'rigel',
-    name: 'Rigel',
-    diameter: '~97 million km',
-    description: 'A blue supergiant in Orion, one of the most luminous stars known and the seventh brightest star in the night sky.',
-    facts: [
-      'Blue supergiant in Orion',
-      'One of most luminous known stars',
-      'Seventh brightest star in night sky',
-      'Located 860 light-years away'
-    ],
-    glow: true,
-    primary: '#4169E1',
+    primary: '#87CEEB',
     accent: '#00BFFF'
   },
   
-  524288: {
-    type: 'antares',
-    name: 'Antares',
-    diameter: '~1.2 billion km',
-    description: 'A red supergiant in Scorpius, one of the largest known stars that would engulf Mars if placed in our solar system.',
-    facts: [
-      'Red supergiant in Scorpius',
-      'Would engulf Mars orbit if in our system',
-      'Semi-regular variable star',
-      'Located 600 light-years away'
-    ],
-    glow: true,
-    primary: '#B22222',
-    accent: '#DC143C'
-  },
-  
-  1048576: {
-    type: 'betelgeuse',
-    name: 'Betelgeuse',
-    diameter: '~1.6 billion km',
-    description: 'A red supergiant in Orion, famous for its variability and potential to explode as a supernova.',
-    facts: [
-      'Red supergiant in Orion',
-      'May explode as supernova',
-      'Highly variable brightness',
-      'Located 700 light-years away'
-    ],
-    glow: true,
-    primary: '#CD5C5C',
-    accent: '#F08080'
-  },
-  
-  2097152: {
-    type: 'vy_canis_majoris',
-    name: 'VY Canis Majoris',
-    diameter: '~2 billion km',
-    description: 'One of the largest known stars, a red hypergiant that could contain over a billion Suns.',
-    facts: [
-      'One of largest known stars',
-      'Red hypergiant star',
-      'Could contain over 1 billion Suns',
-      'Located 3,900 light-years away'
-    ],
-    glow: true,
-    primary: '#8B0000',
-    accent: '#A52A2A'
-  },
-  
-  4194304: {
-    type: 'uy_scuti',
-    name: 'UY Scuti',
-    diameter: '~2.4 billion km',
-    description: 'Currently considered one of the largest known stars by radius, a red supergiant of incredible scale.',
-    facts: [
-      'One of largest known stars by radius',
-      'Red supergiant',
-      'Radius 1,700 times larger than Sun',
-      'Located 9,500 light-years away'
-    ],
-    glow: true,
-    primary: '#800000',
-    accent: '#B22222'
-  },
-  
-  // 🕳️ Supermassive Objects (Non-Stellar)
-  8388608: {
-    type: 'ton_618',
-    name: 'TON 618',
-    diameter: '~390 billion km',
-    description: 'One of the largest known black holes by event horizon size, a hyperluminous quasar.',
-    facts: [
-      'One of largest known black holes',
-      'Hyperluminous quasar',
-      'Event horizon 390 billion km across',
-      'Located 18.2 billion light-years away'
-    ],
-    glow: true,
-    primary: '#1a1a1a',
-    accent: '#9932CC',
-    special: 'black_hole'
-  },
-  
-  16777216: {
-    type: 'milky_way_core',
-    name: 'Milky Way Core',
-    diameter: '~13,000 light-years',
-    description: 'The central bulge of our galaxy, containing billions of stars and the supermassive black hole Sagittarius A*.',
-    facts: [
-      'Central bulge of our galaxy',
-      'Contains billions of stars',
-      'Home to Sagittarius A* black hole',
-      'Diameter about 13,000 light-years'
-    ],
-    glow: true,
-    primary: '#4B0082',
-    accent: '#9370DB'
-  },
-  
-  33554432: {
+  65536: {
     type: 'milky_way',
-    name: 'Milky Way Galaxy',
+    name: 'Milky Way',
     diameter: '~105,000 light-years',
     description: 'Our home galaxy, containing 200-400 billion stars and the solar system we call home.',
     facts: [
@@ -528,84 +382,55 @@ export const PLANET_TYPES = {
     accent: '#6A5ACD'
   },
   
-  67108864: {
-    type: 'andromeda',
-    name: 'Andromeda Galaxy',
-    diameter: '~220,000 light-years',
-    description: 'The nearest major galaxy to the Milky Way, approaching us and will merge with our galaxy in 4.5 billion years.',
+  131072: {
+    type: 'quasar',
+    name: 'Quasar',
+    diameter: '~1 billion km',
+    description: 'The brightest objects in the universe, powered by supermassive black holes at the center of galaxies.',
     facts: [
-      'Nearest major galaxy to Milky Way',
-      'Will merge with Milky Way in 4.5 billion years',
-      'Contains 1 trillion stars',
-      'Diameter 220,000 light-years'
+      'Brightest objects in universe',
+      'Powered by black holes',
+      'Found in distant galaxies',
+      'Emits massive energy'
     ],
     glow: true,
-    primary: '#2F4F4F',
-    accent: '#708090'
+    primary: '#FF4500',
+    accent: '#FF6347'
   },
   
-  134217728: {
-    type: 'local_group',
-    name: 'Local Group',
-    diameter: '~10 million light-years',
-    description: 'The galaxy group containing the Milky Way, Andromeda, and about 80 other smaller galaxies.',
+  262144: {
+    type: 'supernova',
+    name: 'Supernova',
+    diameter: '~100 million km',
+    description: 'The explosive death of a massive star, one of the most powerful events in the universe.',
     facts: [
-      'Contains Milky Way and Andromeda',
-      'About 80 galaxies total',
-      'Gravitationally bound group',
-      'Diameter 10 million light-years'
+      'Explosive star death',
+      'Brighter than entire galaxies',
+      'Creates heavy elements',
+      'Most powerful cosmic event'
     ],
     glow: true,
-    primary: '#191970',
-    accent: '#4169E1'
+    primary: '#FFD700',
+    accent: '#FFA500'
   },
   
-  268435456: {
-    type: 'virgo_supercluster',
-    name: 'Virgo Supercluster',
-    diameter: '~110 million light-years',
-    description: 'The galaxy supercluster containing the Local Group and about 1,300 other galaxy groups.',
+  // 🕳️ Ultimate Black Hole (Final Form)
+  1048576: {
+    type: 'ultimate_black_hole',
+    name: 'Black Hole',
+    diameter: '∞',
+    description: 'The ultimate cosmic entity - a black hole of infinite density that consumes everything and represents the end of all things.',
     facts: [
-      'Contains the Local Group',
-      'About 1,300 galaxy groups',
-      'Part of larger cosmic web',
-      'Diameter 110 million light-years'
+      'Infinite density and gravity',
+      'Consumes all matter and energy',
+      'Represents the end of existence',
+      'Nothing can escape its pull'
     ],
     glow: true,
-    primary: '#0D0D0D',
-    accent: '#4B0082'
-  },
-  
-  536870912: {
-    type: 'laniakea_supercluster',
-    name: 'Laniakea Supercluster',
-    diameter: '~520 million light-years',
-    description: 'The galaxy supercluster that contains the Virgo Supercluster and our Local Group of galaxies.',
-    facts: [
-      'Contains Virgo Supercluster',
-      'Contains 100,000 galaxies',
-      'Means "immeasurable heaven" in Hawaiian',
-      'Diameter 520 million light-years'
-    ],
-    glow: true,
-    primary: '#000080',
-    accent: '#6A0DAD'
-  },
-  
-  1073741824: {
-    type: 'observable_universe',
-    name: 'Observable Universe',
-    diameter: '~93 billion light-years',
-    description: 'The largest scale we can observe, containing all matter and energy that we can detect from Earth.',
-    facts: [
-      'Largest scale we can observe',
-      'Contains 2 trillion galaxies',
-      'Age: 13.8 billion years',
-      'Diameter 93 billion light-years'
-    ],
-    glow: true,
-    primary: '#000033',
-    accent: '#4B0082'
+    primary: '#000000',
+    accent: '#9932CC',
+    special: 'ultimate_black_hole',
+    infinitySymbol: true
   }
 };
 

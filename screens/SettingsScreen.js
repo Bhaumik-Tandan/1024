@@ -209,25 +209,10 @@ const SettingsScreen = ({ navigation }) => {
               <Text style={styles.dangerButtonText}>Reset All Progress</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.secondaryButton} 
-              onPress={() => {
-                resetOnboarding();
-                Alert.alert('Success', 'Onboarding has been reset. You will see it again when you restart the app.');
-              }}
-              activeOpacity={0.8}
-            >
-              <View style={styles.secondaryButtonGlow} />
-              <Ionicons name="school" size={20} color="#4CAF50" />
-              <Text style={styles.secondaryButtonText}>Reset Onboarding</Text>
-            </TouchableOpacity>
+
           </View>
           
-          {/* Version Information */}
-          <View style={styles.footer}>
-            <Text style={styles.versionText}>Space Drop v1.0.0</Text>
-            <Text style={styles.copyrightText}>Explore the cosmic puzzle universe</Text>
-          </View>
+
         </ScrollView>
       </Animated.View>
     </SafeAreaView>
@@ -433,61 +418,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  secondaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderWidth: 2,
-    borderColor: 'rgba(76, 175, 80, 0.3)',
-    position: 'relative',
-    overflow: 'hidden',
-    marginTop: 15,
-  },
-  
-  secondaryButtonGlow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(76, 175, 80, 0.05)',
-    borderRadius: 12,
-  },
-  
-  secondaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#4CAF50',
-    marginLeft: 8,
-    letterSpacing: 0.5,
-  },
+
 
 
   
-  footer: {
-    alignItems: 'center',
-    paddingVertical: 30,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
-    marginTop: 20,
-  },
-  
-  versionText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  
-  copyrightText: {
-    fontSize: 12,
-    color: '#555',
-    textAlign: 'center',
-  },
+
 });
 
 export default SettingsScreen; 

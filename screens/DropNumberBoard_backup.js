@@ -556,13 +556,13 @@ const DropNumberBoard = ({ navigation, route }) => {
           setGameOver(true);
         }
       }).catch(error => {
-        console.error('Error processing tile landing:', error);
+        // console.error('Error processing tile landing:', error);
         // Reset to a safe state on error
         setBoard(prevBoard => [...prevBoard]);
         setIsTouchEnabled(true);
       });
     } catch (error) {
-      console.error('Error in handleTileLanded:', error);
+      // console.error('Error in handleTileLanded:', error);
       setIsTouchEnabled(true);
     }
   };

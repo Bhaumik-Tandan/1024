@@ -2,7 +2,7 @@
   "expo": {
     "name": "Drop from Space",
     "slug": "1024-game",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "default",
     "icon": "./assets/icons/icon.png",
     "userInterfaceStyle": "dark",
@@ -22,7 +22,7 @@
         "backgroundColor": "#0A0A1A"
       },
       "bundleIdentifier": "com.space.drop",
-      "buildNumber": "4",
+      "buildNumber": "5",
       "infoPlist": {
         "UIBackgroundModes": []
       }

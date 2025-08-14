@@ -142,7 +142,15 @@ export const mergeConnectedTiles = (board, targetRow, targetCol, preferredRow, p
   // Calculate new value using exponential rule: originalValue * 2^(numberOfTiles - 1)
   const numberOfTiles = connectedTiles.length;
   const targetValue = board[targetRow][targetCol];
-  const newValue = targetValue * Math.pow(2, numberOfTiles - 1);
+  let newValue;
+  
+  // Special handling for Ultimate Black Hole
+  if (targetValue === 8388608) {
+    // Ultimate Black Hole absorbs everything - stays as black hole
+    newValue = 8388608;
+  } else {
+    newValue = targetValue * Math.pow(2, numberOfTiles - 1);
+  }
   
   // Find the best position for the merge result
   let bestRow = -1;
@@ -603,6 +611,15 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
       // Drop sound error silently handled
     });
     
+    // Special handling for Ultimate Black Hole
+    let newValue;
+    if (bottomValue === 8388608 || value === 8388608) {
+      // Ultimate Black Hole absorbs everything - stays as black hole
+      newValue = 8388608;
+    } else {
+      newValue = value * 2; // Simple 2-tile merge
+    }
+    
     // Use the proper merge animation system
     if (showMergeResultAnimation) {
       // Prepare merge positions for animation
@@ -610,8 +627,6 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
         { row: bottomRow, col: column, value: bottomValue },
         { row: bottomRow, col: column, value: value } // Simulated dropped tile position
       ];
-      
-      const newValue = value * 2; // Simple 2-tile merge
       
       // Show merge animation
       showMergeResultAnimation(bottomRow, column, newValue, mergingTilePositions, false);
@@ -621,12 +636,9 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
     }
     
     // Create the merge result
-    const newValue = value * 2; // Simple 2-tile merge
     newBoard[bottomRow][column] = newValue;
     
     totalScore += newValue;
-    
-
     
     // Apply upward gravity to settle everything
     for (let c = 0; c < COLS; c++) {
@@ -667,7 +679,13 @@ export const processFullColumnDrop = async (board, value, column, showMergeResul
       });
       
       // Found an adjacent tile that can merge
-      const newValue = value * 2;
+      let newValue;
+      if (value === 8388608) {
+        // Ultimate Black Hole absorbs everything - stays as black hole
+        newValue = 8388608;
+      } else {
+        newValue = value * 2;
+      }
       
       // Use the proper merge animation system for adjacent merges
       if (showMergeResultAnimation) {
@@ -758,7 +776,16 @@ export const checkAndMergeConnectedGroup = async (board, targetRow, targetCol, s
   
   // Calculate new value using exponential rule: originalValue * 2^(numberOfTiles - 1)
   const numberOfTiles = connectedTiles.length;
-  const newValue = targetValue * Math.pow(2, numberOfTiles - 1);
+  let newValue;
+  
+  // Special handling for Ultimate Black Hole
+  if (targetValue === 8388608) {
+    // Ultimate Black Hole absorbs everything - stays as black hole
+    newValue = 8388608;
+  } else {
+    newValue = targetValue * Math.pow(2, numberOfTiles - 1);
+  }
+  
   const scoreGained = newValue;
   
   // Find the best position for the merge result

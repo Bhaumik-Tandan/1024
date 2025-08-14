@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions, Platform } from 'react-native';
 import { 
   ROWS, 
   COLS, 
@@ -181,6 +181,30 @@ const GameGrid = React.memo(({
 }) => {
   const gridRef = useRef(null);
   const isDisabled = gameOver || !falling || (falling?.fastDrop && !falling?.static) || !isTouchEnabled;
+  
+  // Add subtle pulsing animation for guide
+  const guideOpacity = useRef(new Animated.Value(0.8)).current;
+  
+  useEffect(() => {
+    if (showGuide) {
+      const pulseAnimation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(guideOpacity, {
+            toValue: 1.0,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(guideOpacity, {
+            toValue: 0.8,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      pulseAnimation.start();
+      return () => pulseAnimation.stop();
+    }
+  }, [showGuide, guideOpacity]);
   
   // Enhanced screen tap handler with accurate coordinates
   const handleGridTap = (event) => {
@@ -469,11 +493,14 @@ const GameGrid = React.memo(({
         </Animated.View>
       )}
 
-      {/* Guide overlay for new players */}
+      {/* Guide overlay for new players - non-blocking with subtle animation */}
       {showGuide && (
-        <View style={styles.guideOverlay}>
-          <Text style={styles.guideText}>Tap to drop tiles</Text>
-        </View>
+        <Animated.View 
+          style={[styles.guideOverlay, { opacity: guideOpacity }]} 
+          pointerEvents="none"
+        >
+          <Text style={styles.guideText}>Tap to play</Text>
+        </Animated.View>
       )}
     </View>
   );
@@ -730,7 +757,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   
-  // Guide overlay styles
+  // Guide overlay styles - Premium Space themed
   guideOverlay: {
     position: 'absolute',
     top: 0,
@@ -739,14 +766,26 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: 8,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 144, 226, 0.3)',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 10,
   },
   guideText: {
-    color: '#fff',
-    fontSize: Math.max(16, CELL_SIZE / 2.5),
-    fontWeight: 'bold',
+    color: '#4A90E2',
+    fontSize: Math.max(20, CELL_SIZE / 2.0),
+    fontWeight: '700',
     textAlign: 'center',
+    letterSpacing: 1.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif-medium',
   },
   
   // Animation styles

@@ -71,11 +71,19 @@ export const useAnimationManager = () => {
 
   const clearFalling = () => {
     try {
-      if (falling && falling.anim && falling.anim.stopAnimation) {
-        falling.anim.stopAnimation();
+      if (falling) {
+        // Stop the main animation
+        if (falling.anim && falling.anim.stopAnimation) {
+          falling.anim.stopAnimation();
+        }
+        // Stop any stored animation reference
+        if (falling.animationRef && falling.animationRef.stop) {
+          falling.animationRef.stop();
+        }
       }
       setFalling(null);
     } catch (error) {
+      // Ensure falling is cleared even if animation cleanup fails
       setFalling(null);
     }
   };

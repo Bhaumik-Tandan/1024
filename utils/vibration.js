@@ -41,7 +41,7 @@ export const vibrateOnIntermediateMerge = async (isChainReaction = true) => {
     try {
       await soundManager.playIntermediateMergeSound(isChainReaction);
     } catch (error) {
-      console.warn('Failed to play intermediate merge sound:', error);
+      // console.warn('Failed to play intermediate merge sound:', error);
     }
   }
 };
@@ -66,7 +66,7 @@ export const vibrateOnTouch = async (forcePlay = false) => {
     try {
       await soundManager.playDropSound(forcePlay);
     } catch (error) {
-      console.warn('Failed to play drop sound:', error);
+      // console.warn('Failed to play drop sound:', error);
     }
   }
 };
@@ -84,7 +84,7 @@ export const vibrateOnButtonPress = async () => {
     try {
       await soundManager.playDropSound(); // Reuse drop sound for button press
     } catch (error) {
-      console.warn('Failed to play button press sound:', error);
+      // console.warn('Failed to play button press sound:', error);
     }
   }
 }; 

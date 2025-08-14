@@ -5,6 +5,8 @@
  * 
  * Visual styling for the ultimate space puzzle experience
  * Featuring real planets ordered by size - NO ELEMENTS, ONLY PLANETS
+ * 
+ * Grid Configuration: 6 rows × 4 columns for all devices
  */
 
 import { Dimensions, Platform } from 'react-native';
@@ -17,15 +19,8 @@ const isLandscape = width > height;
 
 // Calculate static grid configuration to avoid render-time updates
 const getStaticGridConfig = () => {
-  if (isTablet) {
-    if (isLandscape) {
-      return { ROWS: 5, COLS: 7 }; // Reduced rows for landscape iPad
-    } else {
-      return { ROWS: 5, COLS: 5 }; // Reduced rows for portrait iPad
-    }
-  } else {
-    return { ROWS: 5, COLS: 4 }; // Keep original for phones
-  }
+  // Use consistent 6x4 grid for all devices
+  return { ROWS: 6, COLS: 4 };
 };
 
 // Static grid configuration
@@ -37,19 +32,8 @@ export const COLS = STATIC_GRID_CONFIG.COLS;
 
 // Export function for dynamic updates (used only in orientation change handlers)
 export const getCurrentGridConfig = () => {
-  const { width, height } = Dimensions.get('window');
-  const isTablet = width >= 768;
-  const isLandscape = width > height;
-  
-  if (isTablet) {
-    if (isLandscape) {
-      return { ROWS: 5, COLS: 7 }; // Reduced rows for landscape iPad
-    } else {
-      return { ROWS: 5, COLS: 5 }; // Reduced rows for portrait iPad
-    }
-  } else {
-    return { ROWS: 5, COLS: 4 }; // Keep original for phones
-  }
+  // Use consistent 6x4 grid for all devices
+  return { ROWS: 6, COLS: 4 };
 };
 
 // UI Layout Constants - with web fallbacks
@@ -74,58 +58,45 @@ export const { width: screenWidth, height: screenHeight } = getDimensions();
 // Web-responsive sizing
 const getResponsiveSizing = () => {
   if (Platform.OS === 'web') {
-    // For web, use smaller fixed sizes for better desktop experience
+    // For web, use consistent sizing for 6x4 grid
     const maxGameWidth = 480; // Maximum game width on web
     const cellMargin = 6;
     const cellSize = Math.floor((maxGameWidth - 40 - (COLS - 1) * cellMargin) / COLS);
     return {
-      cellSize: Math.min(cellSize, 70), // Cap cell size at 70px for web
+      cellSize: Math.min(cellSize, 75), // Slightly larger for 6x4 grid
       cellMargin: cellMargin
     };
   } else {
-    // Enhanced mobile/tablet sizing with iPad-specific optimizations
+    // Consistent sizing for 6x4 grid across all devices
     const isTablet = screenWidth >= 768; // iPad and larger tablets
     const isLargeTablet = screenWidth >= 1024; // iPad Pro and larger
-    const isLandscape = screenWidth > screenHeight;
     
     let maxGameWidth;
     let cellMargin;
     
     if (isTablet) {
-      if (isLandscape) {
-        // iPad landscape: Use most of the screen width for larger grid
-        maxGameWidth = Math.min(1200, screenWidth * 0.95); // Much larger game area
-        cellMargin = 8; // Adequate spacing for larger grid
-      } else {
-        // iPad portrait: Much larger game area for better utilization
-        maxGameWidth = Math.min(800, screenWidth * 0.95); // Significantly increased
-        cellMargin = 10; // More spacing for larger cells
-      }
+      // Use consistent approach for all tablet orientations
+      maxGameWidth = Math.min(900, screenWidth * 0.9); // Optimized for 6x4 grid
+      cellMargin = 8; // Consistent spacing
     } else {
       // Phones - use most of screen width
       maxGameWidth = screenWidth - 40;
-      cellMargin = Math.max(2, Math.floor(screenWidth * 0.008));
+      cellMargin = Math.max(3, Math.floor(screenWidth * 0.01));
     }
     
-    // Calculate cell size based on grid dimensions
+    // Calculate cell size based on 6x4 grid dimensions
     const availableWidth = maxGameWidth - (COLS - 1) * cellMargin;
     let cellSize = Math.floor(availableWidth / COLS);
     
-    // Set much larger min/max cell sizes for iPad
+    // Set consistent min/max cell sizes for 6x4 grid
     if (isTablet) {
-      if (isLandscape) {
-        // Landscape iPad: Larger cells even for bigger grid
-        cellSize = Math.min(cellSize, 130); // Increased max for more vertical space
-        cellSize = Math.max(cellSize, 90);  // Increased min
-      } else {
-        // Portrait iPad: Much larger cells for excellent visibility
-        cellSize = Math.min(cellSize, 160); // Increased max for more vertical space
-        cellSize = Math.max(cellSize, 120); // Increased min
-      }
+      // Tablet: Optimized for 6x4 grid
+      cellSize = Math.min(cellSize, 140); // Good size for 6 rows
+      cellSize = Math.max(cellSize, 100); // Minimum size for visibility
     } else {
-      // Phone: Ensure good touch targets
-      cellSize = Math.min(cellSize, 120);
-      cellSize = Math.max(cellSize, 60);
+      // Phone: Ensure good touch targets for 6x4 grid
+      cellSize = Math.min(cellSize, 110); // Good size for 6 rows
+      cellSize = Math.max(cellSize, 70); // Minimum size for touch
     }
     
     return { 
@@ -278,7 +249,8 @@ export const PLANET_TYPES = {
       'Less dense than water',
       '146 known moons',
       'Hexagonal storm at north pole'
-    ]
+    ],
+    rings: true
   },
   
   1024: {
@@ -365,6 +337,23 @@ export const PLANET_TYPES = {
   },
   
   32768: {
+    type: 'quasar',
+    name: 'Quasar',
+    diameter: '~1 light-year',
+    mass: '~10⁹ × 10³⁰ kg',
+    description: 'A supermassive black hole with an extremely bright accretion disk - one of the most luminous objects in the universe.',
+    facts: [
+      'Brightest objects in universe',
+      'Powered by supermassive black holes',
+      'Located at galaxy centers',
+      'Emits intense radiation'
+    ],
+    glow: true,
+    primary: '#FF4500',
+    accent: '#FFD700'
+  },
+  
+  65536: {
     type: 'vega',
     name: 'Vega',
     diameter: '~3.2 solar diameters',
@@ -416,25 +405,25 @@ export const PLANET_TYPES = {
   },
   
   262144: {
-    type: 'supernova',
-    name: 'Supernova',
-    diameter: '~100 million km',
-    mass: '~20 × 10³⁰ kg',
-    description: 'The explosive death of a massive star, one of the most powerful events in the universe.',
+    type: 'milky_way',
+    name: 'Milky Way',
+    diameter: '~100,000 light years',
+    mass: '~10¹² × 10³⁰ kg',
+    description: 'Our home galaxy containing billions of stars, planets, and cosmic phenomena - one of the largest structures in the universe.',
     facts: [
-      'Explosive star death',
-      'Brighter than entire galaxies',
-      'Creates heavy elements',
-      'Most powerful cosmic event'
+      'Contains billions of stars',
+      'Spans 100,000 light years',
+      'Home to countless worlds',
+      'Our cosmic neighborhood'
     ],
     glow: true,
-    primary: '#FF4500', // Bright red-orange for supernova
+    primary: '#FF4500', // Bright red-orange for Milky Way
     accent: '#FF6347'   // Tomato red accent
   },
   
   // 🕳️ Ultimate Black Hole (Final Form)
   '∞': {
-    type: 'ultimate_black_hole',
+    type: 'black_hole',
     name: 'Black Hole',
     diameter: '∞',
     mass: '∞',
@@ -448,7 +437,7 @@ export const PLANET_TYPES = {
     glow: true,
     primary: '#000000',
     accent: '#9932CC',
-    special: 'ultimate_black_hole',
+    special: 'black_hole',
     infinitySymbol: true
   }
 };

@@ -104,7 +104,11 @@ class BackgroundMusicManager {
         return;
       }
       
-      // Set up event listeners
+      // Check what methods are actually available
+      const availableMethods = Object.getOwnPropertyNames(this.musicPlayer);
+      console.log('BackgroundMusicManager: Available methods:', availableMethods);
+      
+      // Set up event listeners if available
       if (this.musicPlayer && typeof this.musicPlayer.setOnPlaybackStatusUpdate === 'function') {
         this.musicPlayer.setOnPlaybackStatusUpdate((status) => {
           if (status.isLoaded && status.didJustFinish) {
@@ -135,15 +139,44 @@ class BackgroundMusicManager {
 
     try {
       console.log('BackgroundMusicManager: Loading background music...');
+      
+      // Try standard loadAsync method first
       if (this.musicPlayer && typeof this.musicPlayer.loadAsync === 'function') {
         await this.musicPlayer.loadAsync(
           require('../assets/audio/background.mp3'),
           { shouldPlay: false, isLooping: true }
         );
         console.log('BackgroundMusicManager: Background music loaded successfully');
-      } else {
-        console.log('BackgroundMusicManager: Music player missing loadAsync method');
+        return;
       }
+      
+      // Fallback: try alternative loading methods
+      if (this.musicPlayer && typeof this.musicPlayer.load === 'function') {
+        await this.musicPlayer.load(
+          require('../assets/audio/background.mp3'),
+          { shouldPlay: false, isLooping: true }
+        );
+        console.log('BackgroundMusicManager: Background music loaded with fallback method');
+        return;
+      }
+      
+      // Check if there are any other loading methods
+      const loadingMethods = ['loadAsync', 'load', 'loadFromUri', 'loadFromFile'];
+      const availableLoadingMethod = loadingMethods.find(method => 
+        this.musicPlayer && typeof this.musicPlayer[method] === 'function'
+      );
+      
+      if (availableLoadingMethod) {
+        console.log('BackgroundMusicManager: Found alternative loading method:', availableLoadingMethod);
+        await this.musicPlayer[availableLoadingMethod](
+          require('../assets/audio/background.mp3'),
+          { shouldPlay: false, isLooping: true }
+        );
+        console.log('BackgroundMusicManager: Background music loaded with alternative method');
+        return;
+      }
+      
+      console.log('BackgroundMusicManager: No loading methods available');
     } catch (error) {
       console.warn('Failed to load background music:', error);
     }
@@ -177,12 +210,26 @@ class BackgroundMusicManager {
 
     try {
       console.log('BackgroundMusicManager: Playing music with volume:', this.currentVolume);
+      
+      // Try to set volume with various methods
       if (this.musicPlayer && typeof this.musicPlayer.setVolumeAsync === 'function') {
         await this.musicPlayer.setVolumeAsync(this.currentVolume);
+      } else if (this.musicPlayer && typeof this.musicPlayer.setVolume === 'function') {
+        await this.musicPlayer.setVolume(this.currentVolume);
       }
+      
+      // Try to play with various methods
       if (this.musicPlayer && typeof this.musicPlayer.playAsync === 'function') {
         await this.musicPlayer.playAsync();
+      } else if (this.musicPlayer && typeof this.musicPlayer.play === 'function') {
+        await this.musicPlayer.play();
+      } else if (this.musicPlayer && typeof this.musicPlayer.start === 'function') {
+        await this.musicPlayer.start();
+      } else {
+        console.warn('BackgroundMusicManager: No play method available');
+        return;
       }
+      
       this.isPlaying = true;
       console.log('BackgroundMusicManager: Music started successfully');
     } catch (error) {

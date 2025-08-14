@@ -8,31 +8,11 @@ import { Dimensions, Platform } from 'react-native';
 
 // Adaptive board configuration based on device and orientation
 export const getBoardConfig = () => {
-  const { width, height } = Dimensions.get('window');
-  const isTablet = width >= 768; // iPad and larger tablets
-  const isLandscape = width > height;
-
-  if (isTablet) {
-    if (isLandscape) {
-      // iPad landscape: More columns, same rows to leave space for UI
-      return {
-        ROWS: 5,
-        COLS: 7
-      };
-    } else {
-      // iPad portrait: More columns, same rows to leave space for next preview
-      return {
-        ROWS: 5,
-        COLS: 5
-      };
-    }
-  } else {
-    // Phone: Keep original compact size
-    return {
-      ROWS: 5,
-      COLS: 4
-    };
-  }
+  // Use consistent 6x4 grid for all devices
+  return {
+    ROWS: 6,
+    COLS: 4
+  };
 };
 
 // Get initial board configuration
@@ -162,7 +142,7 @@ export const GAME_RULES = {
    */
   gameOver: {
     condition: 'bottomRowFull',
-    checkRow: GAME_CONFIG.BOARD.ROWS - 1, // Bottom row index (row 4 for 5-row board)
+    checkRow: GAME_CONFIG.BOARD.ROWS - 1, // Bottom row index (row 5 for 6-row board)
     allowPartialFill: false,
   },
   

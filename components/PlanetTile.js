@@ -297,63 +297,607 @@ const DynamicOrionNebula = ({ size }) => {
   );
 };
 
-// Animated Spiral Galaxy Component - Like the HTML simulation
+// Dynamic Black Hole Component - Spiral going inside with waves, rotating like cyclone
+const DynamicBlackHole = ({ size }) => {
+  // Animation values for the black hole effects
+  const spiralRotationAnim = useRef(new Animated.Value(0)).current;
+  const waveRotationAnim = useRef(new Animated.Value(0)).current;
+  const accretionRotationAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Spiral rotation - fast inward spiral
+    const spiralRotation = Animated.loop(
+      Animated.timing(spiralRotationAnim, {
+        toValue: 1,
+        duration: 3000,
+        useNativeDriver: true,
+      })
+    );
+
+    // Wave rotation - slower gravitational waves
+    const waveRotation = Animated.loop(
+      Animated.timing(waveRotationAnim, {
+        toValue: 1,
+        duration: 5000,
+        useNativeDriver: true,
+      })
+    );
+
+    // Accretion disk rotation - medium speed
+    const accretionRotation = Animated.loop(
+      Animated.timing(accretionRotationAnim, {
+        toValue: 1,
+        duration: 4000,
+        useNativeDriver: true,
+      })
+    );
+
+    // Pulse animation - subtle breathing effect
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    // Start all animations
+    spiralRotation.start();
+    waveRotation.start();
+    accretionRotation.start();
+    pulse.start();
+
+    return () => {
+      spiralRotation.stop();
+      waveRotation.stop();
+      accretionRotation.stop();
+      pulse.stop();
+    };
+  }, []);
+
+  // Interpolate animation values
+  const spiralRotationDeg = spiralRotationAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const waveRotationDeg = waveRotationAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['360deg', '0deg'],
+  });
+
+  const accretionRotationDeg = accretionRotationAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  return (
+    <View style={{
+      width: size,
+      height: size,
+      backgroundColor: 'transparent',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      {/* Black hole event horizon - pure black center */}
+      <Animated.View style={{
+        position: 'absolute',
+        width: size * 0.4,
+        height: size * 0.4,
+        borderRadius: size * 0.2,
+        backgroundColor: '#000000',
+        top: size * 0.3,
+        left: size * 0.3,
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 1,
+        shadowRadius: size * 0.3,
+        elevation: 10,
+        zIndex: 10,
+        transform: [{ scale: pulseAnim }],
+      }} />
+      
+      {/* Inner spiral waves - rotating cyclone effect going INTO the black hole */}
+      <Animated.View style={{
+        position: 'absolute',
+        width: size * 0.8,
+        height: size * 0.8,
+        top: size * 0.1,
+        left: size * 0.1,
+        transform: [{ rotate: spiralRotationDeg }],
+        zIndex: 5,
+      }}>
+        {/* Spiral arm 1 - going inward */}
+        <View style={{
+          position: 'absolute',
+          width: size * 0.6,
+          height: size * 0.02,
+          backgroundColor: '#1a1a1a',
+          borderRadius: size * 0.01,
+          top: size * 0.39,
+          left: size * 0.1,
+          transform: [{ rotate: '45deg' }],
+        }} />
+        
+        {/* Spiral arm 2 - going inward */}
+        <View style={{
+          position: 'absolute',
+          width: size * 0.5,
+          height: size * 0.02,
+          backgroundColor: '#2a2a2a',
+          borderRadius: size * 0.01,
+          top: size * 0.39,
+          left: size * 0.15,
+          transform: [{ rotate: '135deg' }],
+        }} />
+        
+        {/* Spiral arm 3 - going inward */}
+        <View style={{
+          position: 'absolute',
+          width: size * 0.4,
+          height: size * 0.02,
+          backgroundColor: '#3a3a3a',
+          borderRadius: size * 0.01,
+          top: size * 0.39,
+          left: size * 0.2,
+          transform: [{ rotate: '225deg' }],
+        }} />
+        
+        {/* Spiral arm 4 - going inward */}
+        <View style={{
+          position: 'absolute',
+          width: size * 0.3,
+          height: size * 0.02,
+          backgroundColor: '#4a4a4a',
+          borderRadius: size * 0.01,
+          top: size * 0.39,
+          left: size * 0.25,
+          transform: [{ rotate: '315deg' }],
+        }} />
+      </Animated.View>
+      
+      {/* Outer accretion disk - dark matter swirling around */}
+      <Animated.View style={{
+        position: 'absolute',
+        width: size * 1.2,
+        height: size * 1.2,
+        top: (size - size * 1.2) / 2,
+        left: (size - size * 1.2) / 2,
+        transform: [{ rotate: accretionRotationDeg }],
+        zIndex: 1,
+      }}>
+        {/* Accretion disk ring 1 */}
+        <View style={{
+          position: 'absolute',
+          width: size * 1.2,
+          height: size * 1.2,
+          borderRadius: size * 0.6,
+          borderWidth: 1,
+          borderColor: '#0a0a0a',
+          backgroundColor: 'transparent',
+        }} />
+        
+        {/* Accretion disk ring 2 */}
+        <View style={{
+          position: 'absolute',
+          width: size * 1.0,
+          height: size * 1.0,
+          borderRadius: size * 0.5,
+          borderWidth: 1,
+          borderColor: '#1a1a1a',
+          backgroundColor: 'transparent',
+        }} />
+        
+        {/* Accretion disk ring 3 */}
+        <View style={{
+          position: 'absolute',
+          width: size * 0.8,
+          height: size * 0.8,
+          borderRadius: size * 0.4,
+          borderWidth: 1,
+          borderColor: '#2a2a2a',
+          backgroundColor: 'transparent',
+        }} />
+      </Animated.View>
+      
+      {/* Gravitational waves - rippling spacetime */}
+      <Animated.View style={{
+        position: 'absolute',
+        width: size * 1.5,
+        height: size * 1.5,
+        top: (size - size * 1.5) / 2,
+        left: (size - size * 1.5) / 2,
+        transform: [{ rotate: waveRotationDeg }],
+        zIndex: 0,
+      }}>
+        {/* Wave 1 */}
+        <View style={{
+          position: 'absolute',
+          width: size * 1.5,
+          height: size * 1.5,
+          borderRadius: size * 0.75,
+          borderWidth: 0.5,
+          borderColor: '#0a0a0a',
+          backgroundColor: 'transparent',
+          opacity: 0.3,
+        }} />
+        
+        {/* Wave 2 */}
+        <View style={{
+          position: 'absolute',
+          width: size * 1.1,
+          height: size * 1.1,
+          borderRadius: size * 0.55,
+          borderWidth: 0.5,
+          borderColor: '#1a1a1a',
+          backgroundColor: 'transparent',
+          opacity: 0.2,
+        }} />
+        
+        {/* Wave 3 */}
+        <View style={{
+          position: 'absolute',
+          width: size * 0.7,
+          height: size * 0.7,
+          borderRadius: size * 0.35,
+          borderWidth: 0.5,
+          borderColor: '#2a2a2a',
+          backgroundColor: 'transparent',
+          opacity: 0.1,
+        }} />
+      </Animated.View>
+    </View>
+  );
+};
+
+// Dynamic Quasar Component - Bright energy source powered by supermassive black hole
+const DynamicQuasar = ({ size }) => {
+  // Animation values for the quasar effects
+  const corePulseAnim = useRef(new Animated.Value(1)).current;
+  const accretionRotationAnim = useRef(new Animated.Value(0)).current;
+  const energyWaveAnim = useRef(new Animated.Value(0)).current;
+  const jetRotationAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Core pulse - bright center pulsing
+    const corePulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(corePulseAnim, {
+          toValue: 1.3,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(corePulseAnim, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    // Accretion disk rotation - fast spinning disk
+    const accretionRotation = Animated.loop(
+      Animated.timing(accretionRotationAnim, {
+        toValue: 1,
+        duration: 2000,
+        useNativeDriver: true,
+      })
+    );
+
+    // Energy waves - rippling outward
+    const energyWaves = Animated.loop(
+      Animated.timing(energyWaveAnim, {
+        toValue: 1,
+        duration: 3000,
+        useNativeDriver: true,
+      })
+    );
+
+    // Jet rotation - relativistic jets
+    const jetRotation = Animated.loop(
+      Animated.timing(jetRotationAnim, {
+        toValue: 1,
+        duration: 4000,
+        useNativeDriver: true,
+      })
+    );
+
+    // Start all animations
+    corePulse.start();
+    accretionRotation.start();
+    energyWaves.start();
+    jetRotation.start();
+
+    return () => {
+      corePulse.stop();
+      accretionRotation.stop();
+      energyWaves.stop();
+      jetRotation.stop();
+    };
+  }, []);
+
+  // Interpolate animation values
+  const coreScale = corePulseAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.3],
+  });
+
+  const accretionRotationDeg = accretionRotationAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  const energyWaveScale = energyWaveAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.5],
+  });
+
+  const jetRotationDeg = jetRotationAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  return (
+    <View style={{
+      width: size,
+      height: size,
+      backgroundColor: 'transparent',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      {/* Quasar core - bright white center */}
+      <Animated.View style={{
+        position: 'absolute',
+        width: size * 0.3,
+        height: size * 0.3,
+        borderRadius: size * 0.15,
+        backgroundColor: '#FFFFFF',
+        top: size * 0.35,
+        left: size * 0.35,
+        shadowColor: '#FFFFFF',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 1,
+        shadowRadius: size * 0.4,
+        elevation: 15,
+        zIndex: 10,
+        transform: [{ scale: coreScale }],
+      }} />
+      
+      {/* Accretion disk - bright orange disk */}
+      <Animated.View style={{
+        position: 'absolute',
+        width: size * 0.8,
+        height: size * 0.8,
+        top: size * 0.1,
+        left: size * 0.1,
+        transform: [{ rotate: accretionRotationDeg }],
+        zIndex: 5,
+      }}>
+        {/* Main accretion disk */}
+        <View style={{
+          position: 'absolute',
+          width: size * 0.8,
+          height: size * 0.8,
+          borderRadius: size * 0.4,
+          borderWidth: 4,
+          borderColor: '#FF4500',
+          backgroundColor: 'transparent',
+        }} />
+        
+        {/* Inner bright ring */}
+        <View style={{
+          position: 'absolute',
+          width: size * 0.6,
+          height: size * 0.6,
+          borderRadius: size * 0.3,
+          borderWidth: 3,
+          borderColor: '#FFD700',
+          backgroundColor: 'transparent',
+        }} />
+        
+        {/* Core ring */}
+        <View style={{
+          position: 'absolute',
+          width: size * 0.4,
+          height: size * 0.4,
+          borderRadius: size * 0.2,
+          borderWidth: 2,
+          borderColor: '#FF6347',
+          backgroundColor: 'transparent',
+        }} />
+      </Animated.View>
+      
+      {/* Energy waves - rippling outward */}
+      <Animated.View style={{
+        position: 'absolute',
+        width: size * 1.2,
+        height: size * 1.2,
+        top: (size - size * 1.2) / 2,
+        left: (size - size * 1.2) / 2,
+        transform: [{ scale: energyWaveScale }],
+        zIndex: 1,
+      }}>
+        {/* Wave 1 */}
+        <View style={{
+          position: 'absolute',
+          width: size * 1.2,
+          height: size * 1.2,
+          borderRadius: size * 0.6,
+          borderWidth: 1,
+          borderColor: '#FF4500',
+          backgroundColor: 'transparent',
+          opacity: 0.6,
+        }} />
+        
+        {/* Wave 2 */}
+        <View style={{
+          position: 'absolute',
+          width: size * 1.0,
+          height: size * 1.0,
+          borderRadius: size * 0.5,
+          borderWidth: 1,
+          borderColor: '#FFD700',
+          backgroundColor: 'transparent',
+        }} />
+        
+        {/* Wave 3 */}
+        <View style={{
+          position: 'absolute',
+          width: size * 0.8,
+          height: size * 0.8,
+          borderRadius: size * 0.4,
+          borderWidth: 1,
+          borderColor: '#FF6347',
+          backgroundColor: 'transparent',
+          opacity: 0.2,
+        }} />
+      </Animated.View>
+      
+      {/* Relativistic jets - high-energy particle streams */}
+      <Animated.View style={{
+        position: 'absolute',
+        width: size * 2,
+        height: size * 0.1,
+        top: size * 0.45,
+        left: -size * 0.5,
+        transform: [{ rotate: jetRotationDeg }],
+        zIndex: 0,
+      }}>
+        {/* Jet 1 - left side */}
+        <View style={{
+          position: 'absolute',
+          width: size * 0.8,
+          height: size * 0.08,
+          backgroundColor: '#FF4500',
+          borderRadius: size * 0.04,
+          left: 0,
+          opacity: 0.8,
+        }} />
+        
+        {/* Jet 2 - right side */}
+        <View style={{
+          position: 'absolute',
+          width: size * 0.8,
+          height: size * 0.08,
+          backgroundColor: '#FFD700',
+          borderRadius: size * 0.04,
+          right: 0,
+          opacity: 0.6,
+        }} />
+      </Animated.View>
+    </View>
+  );
+};
+
+// Animated Spiral Galaxy Component - Realistic Milky Way
 const DynamicMilkyWay = ({ size }) => {
   // Core rotation animation
   const rotationAnim = useRef(new Animated.Value(0)).current;
   const starTwinkleAnim = useRef(new Animated.Value(1)).current;
   const coreGlowAnim = useRef(new Animated.Value(0.9)).current;
+  const gasCloudAnim = useRef(new Animated.Value(0)).current;
+  const spiralArmAnim = useRef(new Animated.Value(0)).current;
+  const centerShineAnim = useRef(new Animated.Value(0)).current;
   
   // Star field movement - subtle movement for stars
   const starFieldAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Galaxy rotation - rotates in place like Orion Nebula
+    // Galaxy rotation - slow, majestic rotation
     const rotation = Animated.loop(
       Animated.timing(rotationAnim, {
         toValue: 1,
-        duration: 45000, // 45 seconds for full rotation
+        duration: 60000, // 60 seconds for full rotation - more majestic
         useNativeDriver: true,
       })
     );
 
-    // Star twinkling effect
+    // Star twinkling effect - subtle and varied
     const starTwinkle = Animated.loop(
       Animated.sequence([
         Animated.timing(starTwinkleAnim, {
-          toValue: 0.7,
-          duration: 2000,
+          toValue: 0.8,
+          duration: 3000,
           useNativeDriver: true,
         }),
         Animated.timing(starTwinkleAnim, {
           toValue: 1,
-          duration: 3000,
+          duration: 4000,
           useNativeDriver: true,
         }),
       ])
     );
 
-    // Core glow variation
+    // Core glow variation - subtle pulsing
     const coreGlow = Animated.loop(
       Animated.sequence([
         Animated.timing(coreGlowAnim, {
           toValue: 1,
-          duration: 8000,
+          duration: 10000,
           useNativeDriver: true,
         }),
         Animated.timing(coreGlowAnim, {
-          toValue: 0.8,
-          duration: 6000,
+          toValue: 0.85,
+          duration: 8000,
           useNativeDriver: true,
         }),
       ])
     );
 
-    // Star field movement - subtle movement for stars
+    // Gas cloud movement - ethereal floating effect
+    const gasCloud = Animated.loop(
+      Animated.sequence([
+        Animated.timing(gasCloudAnim, {
+          toValue: 1,
+          duration: 25000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(gasCloudAnim, {
+          toValue: 0,
+          duration: 25000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    // Spiral arm subtle movement
+    const spiralArm = Animated.loop(
+      Animated.timing(spiralArmAnim, {
+        toValue: 1,
+        duration: 40000,
+        useNativeDriver: true,
+      })
+    );
+
+    // Center shine effect - making it more brilliant
+    const centerShine = Animated.loop(
+      Animated.sequence([
+        Animated.timing(centerShineAnim, {
+          toValue: 1,
+          duration: 6000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(centerShineAnim, {
+          toValue: 0.7,
+          duration: 4000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    // Star field movement - very subtle movement
     const starField = Animated.loop(
       Animated.timing(starFieldAnim, {
         toValue: 1,
-        duration: 35000,
+        duration: 50000,
         useNativeDriver: true,
       })
     );
@@ -362,12 +906,18 @@ const DynamicMilkyWay = ({ size }) => {
     rotation.start();
     starTwinkle.start();
     coreGlow.start();
+    gasCloud.start();
+    spiralArm.start();
+    centerShine.start();
     starField.start();
 
     return () => {
       rotation.stop();
       starTwinkle.stop();
       coreGlow.stop();
+      gasCloud.stop();
+      spiralArm.stop();
+      centerShine.stop();
       starField.stop();
     };
   }, []);
@@ -380,20 +930,33 @@ const DynamicMilkyWay = ({ size }) => {
 
   const starOpacity = starTwinkleAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.7, 1],
+    outputRange: [0.8, 1],
   });
 
   const coreOpacity = coreGlowAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.8, 1],
+    outputRange: [0.85, 1],
+  });
+
+  const centerShineOpacity = centerShineAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.7, 1],
+  });
+
+  const gasCloudOffset = gasCloudAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-size * 0.002, size * 0.002],
+  });
+
+  const spiralArmOffset = spiralArmAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-size * 0.001, size * 0.001],
   });
 
   const starFieldOffset = starFieldAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [-size * 0.003, size * 0.003],
+    outputRange: [-size * 0.001, size * 0.001],
   });
-
-
 
   return (
     <View style={{
@@ -411,7 +974,58 @@ const DynamicMilkyWay = ({ size }) => {
         transform: [{ rotate: rotationDeg }],
       }}>
         
-        {/* Galactic Core - Bright yellowish-white center like the image */}
+        {/* OUTER GALAXY HALO - Bright silvery glow around entire galaxy */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.02,
+          left: size * 0.02,
+          width: size * 0.96,
+          height: size * 0.96,
+          borderRadius: size * 0.48,
+          borderWidth: 4,
+          borderColor: 'rgba(255, 255, 255, 0.4)', // Bright white halo
+          opacity: 0.4,
+        }} />
+        
+        {/* SECONDARY HALO - Additional bright layer */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.04,
+          left: size * 0.04,
+          width: size * 0.92,
+          height: size * 0.92,
+          borderRadius: size * 0.46,
+          borderWidth: 3,
+          borderColor: 'rgba(230, 230, 250, 0.5)', // Bright silvery halo
+          opacity: 0.5,
+        }} />
+        
+        {/* TERTIARY HALO - Third bright layer for extra brilliance */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.06,
+          left: size * 0.06,
+          width: size * 0.88,
+          height: size * 0.88,
+          borderRadius: size * 0.44,
+          borderWidth: 2,
+          borderColor: 'rgba(176, 196, 222, 0.4)', // Light steel blue
+          opacity: 0.4,
+        }} />
+        
+        {/* INTERSTELLAR MEDIUM - Overall bright blue tint */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.05,
+          left: size * 0.05,
+          width: size * 0.9,
+          height: size * 0.9,
+          borderRadius: size * 0.45,
+          backgroundColor: 'rgba(176, 196, 222, 0.12)', // Brighter blue tint
+          opacity: 0.12,
+        }} />
+        
+        {/* GALACTIC CORE - Super bright white-yellow center with realistic dust obscuration */}
         <Animated.View style={{
           position: 'absolute',
           top: size * 0.35,
@@ -420,7 +1034,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.3,
           borderRadius: size * 0.15,
           backgroundColor: '#FFF8DC', // Creamy white-yellow
-          opacity: coreOpacity,
+          opacity: coreOpacity * 1.1, // Increased brightness
         }} />
         
         {/* Core glow - intense white-hot center */}
@@ -432,23 +1046,34 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.24,
           borderRadius: size * 0.12,
           backgroundColor: '#FFFFFF', // Pure white hot center
-          opacity: coreOpacity * 0.8, // Reduced from 0.95 for more realistic brightness
+          opacity: coreOpacity * 0.9, // Increased for more brilliance
         }} />
         
-        {/* Dust lane effect - obscuring part of the core for realism */}
+        {/* CENTER SHINE EFFECT - Making it super bright and shiny */}
         <Animated.View style={{
           position: 'absolute',
-          top: size * 0.35,
-          left: size * 0.35,
-          width: size * 0.3,
-          height: size * 0.3,
-          borderRadius: size * 0.15,
-          backgroundColor: '#2F2F2F', // Dark gray dust
-          opacity: 0.3,
-          transform: [{ rotate: '45deg' }],
+          top: size * 0.4,
+          left: size * 0.4,
+          width: size * 0.2,
+          height: size * 0.2,
+          borderRadius: size * 0.1,
+          backgroundColor: '#FFFFFF', // Pure white
+          opacity: centerShineOpacity * 1.2, // Super bright
         }} />
         
-        {/* Interstellar medium - subtle gas clouds */}
+        {/* Additional center shine layers for extra brilliance */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.42,
+          left: size * 0.42,
+          width: size * 0.16,
+          height: size * 0.16,
+          borderRadius: size * 0.08,
+          backgroundColor: '#FFFFF0', // Ivory white
+          opacity: centerShineOpacity * 1.1,
+        }} />
+        
+        {/* DUST LANES - Multiple overlapping dust regions for realism */}
         <Animated.View style={{
           position: 'absolute',
           top: size * 0.32,
@@ -456,23 +1081,167 @@ const DynamicMilkyWay = ({ size }) => {
           width: size * 0.36,
           height: size * 0.36,
           borderRadius: size * 0.18,
-          backgroundColor: 'rgba(70, 70, 100, 0.2)', // Subtle blue-gray gas
-          opacity: 0.15,
+          backgroundColor: '#2F2F2F', // Dark gray dust
+          opacity: 0.2, // Reduced for more brightness
+          transform: [{ rotate: '45deg' }],
         }} />
         
-        {/* Overall galaxy blue tint - simulating interstellar medium */}
         <Animated.View style={{
           position: 'absolute',
-          top: size * 0.02,
-          left: size * 0.02,
-          width: size * 0.96,
-          height: size * 0.96,
-          borderRadius: size * 0.48,
-          backgroundColor: 'rgba(176, 196, 222, 0.08)', // Light steel blue tint
-          opacity: 0.08,
+          top: size * 0.34,
+          left: size * 0.34,
+          width: size * 0.32,
+          height: size * 0.32,
+          borderRadius: size * 0.16,
+          backgroundColor: '#1A1A1A', // Darker dust lane
+          opacity: 0.15, // Reduced for more brightness
+          transform: [{ rotate: '-30deg' }],
         }} />
         
-        {/* Additional gas clouds in spiral arms */}
+        {/* GAS CLOUDS - Bright blue-gray gas formations */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.28,
+          left: size * 0.28,
+          width: size * 0.44,
+          height: size * 0.44,
+          borderRadius: size * 0.22,
+          backgroundColor: 'rgba(70, 70, 100, 0.2)', // Brighter blue-gray gas
+          opacity: 0.2,
+          transform: [{ translateX: gasCloudOffset }],
+        }} />
+        
+        {/* SPIRAL ARMS - Main structure with realistic colors and glow */}
+        {/* Primary Spiral Arm 1 - Main arm with continuous luminous band */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.08,
+          left: size * 0.08,
+          width: size * 0.84,
+          height: size * 0.28,
+          borderRadius: size * 0.42,
+          backgroundColor: '#FFFFFF', // Pure white - brightest glow
+          opacity: 0.9, // Increased brightness
+          transform: [
+            { rotate: '35deg' },
+            { translateX: spiralArmOffset * 0.3 }
+          ],
+        }} />
+        
+        {/* Primary Spiral Arm 2 - Main arm with continuous glow */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.58,
+          right: size * 0.03,
+          width: size * 0.79,
+          height: size * 0.26,
+          borderRadius: size * 0.37,
+          backgroundColor: '#F8F8FF', // Ghost white - bright silvery white
+          opacity: 0.85, // Increased brightness
+          transform: [
+            { rotate: '-40deg' },
+            { translateX: spiralArmOffset * 0.4 }
+          ],
+        }} />
+        
+        {/* Secondary Spiral Arm 3 - Thinner silvery arm */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.23,
+          right: size * 0.13,
+          width: size * 0.64,
+          height: size * 0.22,
+          borderRadius: size * 0.32,
+          backgroundColor: '#F0F8FF', // Alice blue - soft glow
+          opacity: 0.75, // Increased brightness
+          transform: [
+            { rotate: '20deg' },
+            { translateX: spiralArmOffset * 0.2 }
+          ],
+        }} />
+        
+        {/* Secondary Spiral Arm 4 - Thinner silvery arm */}
+        <Animated.View style={{
+          position: 'absolute',
+          bottom: size * 0.18,
+          left: size * 0.18,
+          width: size * 0.59,
+          height: size * 0.2,
+          borderRadius: size * 0.27,
+          backgroundColor: '#E6E6FA', // Lavender white - subtle glow
+          opacity: 0.7, // Increased brightness
+          transform: [
+            { rotate: '-25deg' },
+            { translateX: spiralArmOffset * 0.3 }
+          ],
+        }} />
+        
+        {/* ENHANCED GLOW LAYERS - Creating super bright ethereal Milky Way luminosity */}
+        {/* Enhanced glow for Primary Spiral Arm 1 */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.06,
+          left: size * 0.06,
+          width: size * 0.88,
+          height: size * 0.32,
+          borderRadius: size * 0.44,
+          backgroundColor: '#FFFFFF', // Pure white for brightest glow
+          opacity: 0.6, // Increased brightness
+          transform: [
+            { rotate: '35deg' },
+            { translateX: spiralArmOffset * 0.2 }
+          ],
+        }} />
+        
+        {/* Enhanced glow for Primary Spiral Arm 2 */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.56,
+          right: size * 0.01,
+          width: size * 0.83,
+          height: size * 0.3,
+          borderRadius: size * 0.39,
+          backgroundColor: '#FFFFFF', // Pure white for bright glow
+          opacity: 0.5, // Increased brightness
+          transform: [
+            { rotate: '-40deg' },
+            { translateX: spiralArmOffset * 0.3 }
+          ],
+        }} />
+        
+        {/* Enhanced glow for Secondary Spiral Arm 3 */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.21,
+          right: size * 0.11,
+          width: size * 0.68,
+          height: size * 0.26,
+          borderRadius: size * 0.34,
+          backgroundColor: '#F8F8FF', // Ghost white for soft glow
+          opacity: 0.45, // Increased brightness
+          transform: [
+            { rotate: '20deg' },
+            { translateX: spiralArmOffset * 0.15 }
+          ],
+        }} />
+        
+        {/* Enhanced glow for Secondary Spiral Arm 4 */}
+        <Animated.View style={{
+          position: 'absolute',
+          bottom: size * 0.16,
+          left: size * 0.16,
+          width: size * 0.63,
+          height: size * 0.24,
+          borderRadius: size * 0.29,
+          backgroundColor: '#F0F8FF', // Alice blue for subtle glow
+          opacity: 0.4, // Increased brightness
+          transform: [
+            { rotate: '-25deg' },
+            { translateX: spiralArmOffset * 0.25 }
+          ],
+        }} />
+        
+        {/* ADDITIONAL GAS CLOUDS - More realistic interstellar medium */}
         <Animated.View style={{
           position: 'absolute',
           top: size * 0.15,
@@ -480,9 +1249,12 @@ const DynamicMilkyWay = ({ size }) => {
           width: size * 0.3,
           height: size * 0.15,
           borderRadius: size * 0.075,
-          backgroundColor: 'rgba(176, 196, 222, 0.1)', // Light steel blue gas
-          opacity: 0.1,
-          transform: [{ rotate: '35deg' }],
+          backgroundColor: 'rgba(176, 196, 222, 0.15)', // Brighter light steel blue gas
+          opacity: 0.15,
+          transform: [
+            { rotate: '35deg' },
+            { translateX: gasCloudOffset * 0.5 }
+          ],
         }} />
         
         <Animated.View style={{
@@ -492,772 +1264,15 @@ const DynamicMilkyWay = ({ size }) => {
           width: size * 0.25,
           height: size * 0.12,
           borderRadius: size * 0.06,
-          backgroundColor: 'rgba(176, 196, 222, 0.08)', // Light steel blue gas
-          opacity: 0.08,
-          transform: [{ rotate: '-40deg' }],
-        }} />
-        
-        {/* SILVERY-WHITE SPIRAL ARMS - Continuous luminous bands like real Milky Way */}
-        {/* Primary Spiral Arm 1 - Main arm with continuous glow */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.1,
-          left: size * 0.1,
-          width: size * 0.8,
-          height: size * 0.25,
-          borderRadius: size * 0.4,
-          backgroundColor: '#E6E6FA', // Lavender white - silvery tone
-          opacity: 0.9,
-          transform: [
-            { rotate: '35deg' },
-            { translateX: starFieldOffset * 0.3 }
-          ],
-        }} />
-        
-        {/* Primary Spiral Arm 2 - Main arm with continuous glow */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.6,
-          right: size * 0.05,
-          width: size * 0.75,
-          height: size * 0.22,
-          borderRadius: size * 0.35,
-          backgroundColor: '#F0F8FF', // Alice blue - bright silvery white
-          opacity: 0.85,
+          backgroundColor: 'rgba(176, 196, 222, 0.12)', // Brighter light steel blue gas
+          opacity: 0.12,
           transform: [
             { rotate: '-40deg' },
-            { translateX: starFieldOffset * 0.4 }
+            { translateX: gasCloudOffset * 0.3 }
           ],
         }} />
         
-        {/* Secondary Spiral Arm 3 - Thinner silvery arm */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.25,
-          right: size * 0.15,
-          width: size * 0.6,
-          height: size * 0.18,
-          borderRadius: size * 0.3,
-          backgroundColor: '#B0C4DE', // Light steel blue - subtle blue tint
-          opacity: 0.7,
-          transform: [
-            { rotate: '20deg' },
-            { translateX: starFieldOffset * 0.2 }
-          ],
-        }} />
-        
-        {/* Secondary Spiral Arm 4 - Thinner silvery arm */}
-        <Animated.View style={{
-          position: 'absolute',
-          bottom: size * 0.2,
-          left: size * 0.2,
-          width: size * 0.55,
-          height: size * 0.16,
-          borderRadius: size * 0.25,
-          backgroundColor: '#E0E6FA', // Light lavender - soft silvery tone
-          opacity: 0.65,
-          transform: [
-            { rotate: '-25deg' },
-            { translateX: starFieldOffset * 0.3 }
-          ],
-        }} />
-        
-        {/* CONTINUOUS LUMINOUS BANDS - Creating ethereal Milky Way glow */}
-        {/* Enhanced glow for Primary Spiral Arm 1 */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.08,
-          left: size * 0.08,
-          width: size * 0.84,
-          height: size * 0.29,
-          borderRadius: size * 0.42,
-          backgroundColor: '#F8F8FF', // Ghost white - brightest glow
-          opacity: 0.6,
-          transform: [
-            { rotate: '35deg' },
-            { translateX: starFieldOffset * 0.2 }
-          ],
-        }} />
-        
-        {/* Enhanced glow for Primary Spiral Arm 2 */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.58,
-          right: size * 0.03,
-          width: size * 0.79,
-          height: size * 0.26,
-          borderRadius: size * 0.37,
-          backgroundColor: '#F0F8FF', // Alice blue - bright glow
-          opacity: 0.55,
-          transform: [
-            { rotate: '-40deg' },
-            { translateX: starFieldOffset * 0.3 }
-          ],
-        }} />
-        
-        {/* Enhanced glow for Secondary Spiral Arm 3 */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.23,
-          right: size * 0.13,
-          width: size * 0.64,
-          height: size * 0.22,
-          borderRadius: size * 0.32,
-          backgroundColor: '#E6E6FA', // Lavender white - soft glow
-          opacity: 0.45,
-          transform: [
-            { rotate: '20deg' },
-            { translateX: starFieldOffset * 0.15 }
-          ],
-        }} />
-        
-        {/* Enhanced glow for Secondary Spiral Arm 4 */}
-        <Animated.View style={{
-          position: 'absolute',
-          bottom: size * 0.18,
-          left: size * 0.18,
-          width: size * 0.59,
-          height: size * 0.2,
-          borderRadius: size * 0.27,
-          backgroundColor: '#F0F0FF', // Light lavender - subtle glow
-          opacity: 0.4,
-          transform: [
-            { rotate: '-25deg' },
-            { translateX: starFieldOffset * 0.25 }
-          ],
-        }} />
-        
-        {/* STAR-FORMING REGIONS - Subtle bright spots for realism */}
-        {/* Core region bright spots - reduced for continuous glow effect */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.42,
-          left: size * 0.42,
-          width: size * 0.03,
-          height: size * 0.03,
-          borderRadius: size * 0.015,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.6,
-          transform: [{ translateX: starFieldOffset * 0.1 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.38,
-          left: size * 0.48,
-          width: size * 0.025,
-          height: size * 0.025,
-          borderRadius: size * 0.0125,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
-          transform: [{ translateX: starFieldOffset * 0.2 }],
-        }} />
-        
-        {/* Spiral arm 1 stars - dense field of small white dots */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.08,
-          left: size * 0.25,
-          width: size * 0.025,
-          height: size * 0.025,
-          borderRadius: size * 0.0125,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.6,
-          transform: [{ translateX: starFieldOffset * 0.3 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.12,
-          left: size * 0.22,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
-          transform: [{ translateX: starFieldOffset * 0.4 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.16,
-          left: size * 0.28,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
-          transform: [{ translateX: starFieldOffset * 0.2 }],
-        }} />
-        
-        {/* Spiral arm 2 stars - dense field of small white dots */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.58,
-          right: size * 0.08,
-          width: size * 0.025,
-          height: size * 0.025,
-          borderRadius: size * 0.0125,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.6,
-          transform: [{ translateX: starFieldOffset * 0.3 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.62,
-          right: size * 0.12,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
-          transform: [{ translateX: starFieldOffset * 0.4 }],
-        }} />
-        
-        {/* More stars scattered throughout spiral arms */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.22,
-          right: size * 0.18,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
-          transform: [{ translateX: starFieldOffset * 0.3 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          bottom: size * 0.18,
-          left: size * 0.22,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
-          transform: [{ translateX: starFieldOffset * 0.3 }],
-        }} />
-        
-        {/* Additional stars for density */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.35,
-          left: size * 0.65,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
-          transform: [{ translateX: starFieldOffset * 0.1 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.48,
-          right: size * 0.35,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
-          transform: [{ translateX: starFieldOffset * 0.3 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          bottom: size * 0.42,
-          right: size * 0.28,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
-          transform: [{ translateX: starFieldOffset * 0.2 }],
-        }} />
-        
-        {/* Dense star field in spiral arms - countless small white dots */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.15,
-          left: size * 0.4,
-          width: size * 0.12,
-          height: size * 0.12,
-          borderRadius: size * 0.06,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.8,
-          transform: [{ translateX: starFieldOffset }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.6,
-          right: size * 0.25,
-          width: size * 0.08,
-          height: size * 0.08,
-          borderRadius: size * 0.04,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.7,
-          transform: [{ translateX: starFieldOffset * 0.8 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          bottom: size * 0.25,
-          left: size * 0.35,
-          width: size * 0.06,
-          height: size * 0.06,
-          borderRadius: size * 0.03,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.8,
-          transform: [{ translateX: starFieldOffset * 0.6 }],
-        }} />
-        
-        {/* More stars in spiral arms - creating dense star fields */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.1,
-          right: size * 0.4,
-          width: size * 0.05,
-          height: size * 0.05,
-          borderRadius: size * 0.025,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.6,
-          transform: [{ translateX: starFieldOffset * 0.4 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.45,
-          left: size * 0.1,
-          width: size * 0.04,
-          height: size * 0.04,
-          borderRadius: size * 0.02,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
-          transform: [{ translateX: starFieldOffset * 0.3 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          bottom: size * 0.1,
-          right: size * 0.35,
-          width: size * 0.05,
-          height: size * 0.05,
-          borderRadius: size * 0.025,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.6,
-          transform: [{ translateX: starFieldOffset * 0.5 }],
-        }} />
-        
-        {/* Outer galaxy halo - subtle silvery glow like real Milky Way */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.05,
-          left: size * 0.05,
-          width: size * 0.9,
-          height: size * 0.9,
-          borderRadius: size * 0.45,
-          borderWidth: 2,
-          borderColor: '#E6E6FA', // Silvery halo matching new spiral arms
-          opacity: 0.4,
-        }} />
-        
-        {/* Spiral arm 2 stars - ultra-dense field */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.58,
-          right: size * 0.08,
-          width: size * 0.025,
-          height: size * 0.025,
-          borderRadius: size * 0.0125,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
-          transform: [{ translateX: starFieldOffset * 0.3 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.62,
-          right: size * 0.12,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
-          transform: [{ translateX: starFieldOffset * 0.4 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.66,
-          right: size * 0.16,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
-          transform: [{ translateX: starFieldOffset * 0.2 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.54,
-          right: size * 0.2,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.6,
-          transform: [{ translateX: starFieldOffset * 0.5 }],
-        }} />
-        
-        {/* Secondary arm stars */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.22,
-          right: size * 0.18,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
-          transform: [{ translateX: starFieldOffset * 0.3 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.26,
-          right: size * 0.22,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
-          transform: [{ translateX: starFieldOffset * 0.4 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.18,
-          right: size * 0.26,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
-          transform: [{ translateX: starFieldOffset * 0.2 }],
-        }} />
-        
-        {/* Bottom arm stars */}
-        <Animated.View style={{
-          position: 'absolute',
-          bottom: size * 0.18,
-          left: size * 0.22,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
-          transform: [{ translateX: starFieldOffset * 0.3 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          bottom: size * 0.22,
-          left: size * 0.28,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
-          transform: [{ translateX: starFieldOffset * 0.4 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          bottom: size * 0.26,
-          left: size * 0.32,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
-          transform: [{ translateX: starFieldOffset * 0.2 }],
-        }} />
-        
-        {/* Inter-arm region stars - scattered throughout */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.35,
-          left: size * 0.65,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
-          transform: [{ translateX: starFieldOffset * 0.1 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.48,
-          right: size * 0.35,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
-          transform: [{ translateX: starFieldOffset * 0.3 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          bottom: size * 0.42,
-          right: size * 0.28,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
-          transform: [{ translateX: starFieldOffset * 0.2 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.72,
-          left: size * 0.45,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
-          transform: [{ translateX: starFieldOffset * 0.4 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.76,
-          left: size * 0.52,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
-          transform: [{ translateX: starFieldOffset * 0.2 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.68,
-          left: size * 0.38,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
-          transform: [{ translateX: starFieldOffset * 0.3 }],
-        }} />
-        
-        {/* Even more tiny stars for ultra-realistic density */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.33,
-          left: size * 0.72,
-          width: size * 0.012,
-          height: size * 0.012,
-          borderRadius: size * 0.006,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.25,
-          transform: [{ translateX: starFieldOffset * 0.1 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.37,
-          left: size * 0.68,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.35,
-          transform: [{ translateX: starFieldOffset * 0.2 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.41,
-          left: size * 0.75,
-          width: size * 0.01,
-          height: size * 0.01,
-          borderRadius: size * 0.005,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.2,
-          transform: [{ translateX: starFieldOffset * 0.15 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.52,
-          right: size * 0.42,
-          width: size * 0.012,
-          height: size * 0.012,
-          borderRadius: size * 0.006,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.25,
-          transform: [{ translateX: starFieldOffset * 0.1 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.56,
-          right: size * 0.38,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.35,
-          transform: [{ translateX: starFieldOffset * 0.2 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.6,
-          right: size * 0.32,
-          width: size * 0.01,
-          height: size * 0.01,
-          borderRadius: size * 0.005,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.2,
-          transform: [{ translateX: starFieldOffset * 0.15 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          bottom: size * 0.38,
-          right: size * 0.25,
-          width: size * 0.012,
-          height: size * 0.012,
-          borderRadius: size * 0.006,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.25,
-          transform: [{ translateX: starFieldOffset * 0.1 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          bottom: size * 0.42,
-          right: size * 0.22,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.35,
-          transform: [{ translateX: starFieldOffset * 0.2 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          bottom: size * 0.46,
-          right: size * 0.28,
-          width: size * 0.01,
-          height: size * 0.01,
-          borderRadius: size * 0.005,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.2,
-          transform: [{ translateX: starFieldOffset * 0.15 }],
-        }} />
-        
-        {/* NEW: Outer Galaxy Halo - Subtle silvery glow around entire galaxy */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.05,
-          left: size * 0.05,
-          width: size * 0.9,
-          height: size * 0.9,
-          borderRadius: size * 0.45,
-          borderWidth: 2,
-          borderColor: '#E6E6FA', // Silvery halo matching new spiral arms
-          opacity: 0.4,
-          transform: [{ rotate: rotationDeg }], // Same rotation as main galaxy
-        }} />
-        
-        {/* Additional stars for density - creating the granular texture */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.3,
-          left: size * 0.05,
-          width: size * 0.04,
-          height: size * 0.04,
-          borderRadius: size * 0.02,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
-          transform: [{ translateX: starFieldOffset * 0.2 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.7,
-          left: size * 0.6,
-          width: size * 0.05,
-          height: size * 0.05,
-          borderRadius: size * 0.025,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
-          transform: [{ translateX: starFieldOffset * 0.7 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.25,
-          right: size * 0.1,
-          width: size * 0.04,
-          height: size * 0.04,
-          borderRadius: size * 0.02,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
-          transform: [{ translateX: starFieldOffset * 0.4 }],
-        }} />
-        
-        {/* Even more stars for realistic density */}
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.18,
-          left: size * 0.55,
-          width: size * 0.03,
-          height: size * 0.03,
-          borderRadius: size * 0.015,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
-          transform: [{ translateX: starFieldOffset * 0.1 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          top: size * 0.65,
-          right: size * 0.45,
-          width: size * 0.04,
-          height: size * 0.04,
-          borderRadius: size * 0.02,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
-          transform: [{ translateX: starFieldOffset * 0.6 }],
-        }} />
-        
-        <Animated.View style={{
-          position: 'absolute',
-          bottom: size * 0.35,
-          left: size * 0.15,
-          width: size * 0.03,
-          height: size * 0.03,
-          borderRadius: size * 0.015,
-          backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
-          transform: [{ translateX: starFieldOffset * 0.2 }],
-        }} />
-        
-        {/* STAR-FORMING REGIONS - Pink/red hints for stellar nurseries */}
+        {/* STAR-FORMING REGIONS - Bright pink/red hints for stellar nurseries */}
         <Animated.View style={{
           position: 'absolute',
           top: size * 0.12,
@@ -1265,8 +1280,8 @@ const DynamicMilkyWay = ({ size }) => {
           width: size * 0.08,
           height: size * 0.08,
           borderRadius: size * 0.04,
-          backgroundColor: '#FF69B4', // Subtle pink for star-forming regions
-          opacity: starOpacity * 0.5,
+          backgroundColor: '#FF69B4', // Bright pink for star-forming regions
+          opacity: starOpacity * 0.6, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.3 }],
         }} />
         
@@ -1277,12 +1292,11 @@ const DynamicMilkyWay = ({ size }) => {
           width: size * 0.06,
           height: size * 0.06,
           borderRadius: size * 0.03,
-          backgroundColor: '#FF6347', // Subtle red for stellar nurseries
-          opacity: starOpacity * 0.4,
+          backgroundColor: '#FF6347', // Bright red for stellar nurseries
+          opacity: starOpacity * 0.5, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.5 }],
         }} />
         
-        {/* Additional star-forming regions for realism */}
         <Animated.View style={{
           position: 'absolute',
           top: size * 0.25,
@@ -1291,7 +1305,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.05,
           borderRadius: size * 0.025,
           backgroundColor: '#FFB6C1', // Light pink
-          opacity: starOpacity * 0.3,
+          opacity: starOpacity * 0.4, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.2 }],
         }} />
         
@@ -1303,21 +1317,20 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.04,
           borderRadius: size * 0.02,
           backgroundColor: '#FFC0CB', // Pink
-          opacity: starOpacity * 0.25,
+          opacity: starOpacity * 0.35, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.4 }],
         }} />
         
-        {/* MANY MORE TINY STARS for realistic density - creating the granular Milky Way texture */}
-        {/* Core region stars */}
+        {/* CORE STARS - Super bright central stars */}
         <Animated.View style={{
           position: 'absolute',
           top: size * 0.42,
           left: size * 0.42,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
+          width: size * 0.03,
+          height: size * 0.03,
+          borderRadius: size * 0.015,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.6,
+          opacity: starOpacity * 0.9, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.1 }],
         }} />
         
@@ -1325,11 +1338,11 @@ const DynamicMilkyWay = ({ size }) => {
           position: 'absolute',
           top: size * 0.38,
           left: size * 0.48,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
+          width: size * 0.025,
+          height: size * 0.025,
+          borderRadius: size * 0.0125,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
+          opacity: starOpacity * 0.8, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.2 }],
         }} />
         
@@ -1341,11 +1354,12 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.02,
           borderRadius: size * 0.01,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.7,
+          opacity: starOpacity * 1.0, // Maximum brightness
           transform: [{ translateX: starFieldOffset * 0.15 }],
         }} />
         
-        {/* Spiral arm 1 stars - dense field */}
+        {/* SPIRAL ARM STARS - Dense star fields creating luminous bands */}
+        {/* Primary Arm 1 stars - dense field */}
         <Animated.View style={{
           position: 'absolute',
           top: size * 0.08,
@@ -1354,7 +1368,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.025,
           borderRadius: size * 0.0125,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
+          opacity: starOpacity * 0.8, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.3 }],
         }} />
         
@@ -1366,7 +1380,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.02,
           borderRadius: size * 0.01,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
+          opacity: starOpacity * 0.7, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.4 }],
         }} />
         
@@ -1378,7 +1392,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.015,
           borderRadius: size * 0.0075,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
+          opacity: starOpacity * 0.6, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.2 }],
         }} />
         
@@ -1390,11 +1404,11 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.02,
           borderRadius: size * 0.01,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.6,
+          opacity: starOpacity * 0.9, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.5 }],
         }} />
         
-        {/* Spiral arm 2 stars - dense field */}
+        {/* Primary Arm 2 stars - dense field */}
         <Animated.View style={{
           position: 'absolute',
           top: size * 0.58,
@@ -1403,7 +1417,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.025,
           borderRadius: size * 0.0125,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
+          opacity: starOpacity * 0.8, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.3 }],
         }} />
         
@@ -1415,7 +1429,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.02,
           borderRadius: size * 0.01,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
+          opacity: starOpacity * 0.7, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.4 }],
         }} />
         
@@ -1427,7 +1441,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.015,
           borderRadius: size * 0.0075,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
+          opacity: starOpacity * 0.6, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.2 }],
         }} />
         
@@ -1439,7 +1453,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.02,
           borderRadius: size * 0.01,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.6,
+          opacity: starOpacity * 0.9, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.5 }],
         }} />
         
@@ -1452,7 +1466,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.02,
           borderRadius: size * 0.01,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
+          opacity: starOpacity * 0.7, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.3 }],
         }} />
         
@@ -1464,7 +1478,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.015,
           borderRadius: size * 0.0075,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
+          opacity: starOpacity * 0.8, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.4 }],
         }} />
         
@@ -1476,7 +1490,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.02,
           borderRadius: size * 0.01,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
+          opacity: starOpacity * 0.6, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.2 }],
         }} />
         
@@ -1489,7 +1503,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.02,
           borderRadius: size * 0.01,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
+          opacity: starOpacity * 0.7, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.3 }],
         }} />
         
@@ -1501,7 +1515,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.015,
           borderRadius: size * 0.0075,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
+          opacity: starOpacity * 0.8, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.4 }],
         }} />
         
@@ -1513,84 +1527,139 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.02,
           borderRadius: size * 0.01,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
+          opacity: starOpacity * 0.6, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.2 }],
         }} />
         
-        {/* Inter-arm region stars - scattered throughout */}
+        {/* DENSE STAR FIELDS - Creating continuous luminous texture */}
+        {/* Large star clusters for density */}
         <Animated.View style={{
           position: 'absolute',
-          top: size * 0.35,
-          left: size * 0.65,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
+          top: size * 0.15,
+          left: size * 0.4,
+          width: size * 0.12,
+          height: size * 0.12,
+          borderRadius: size * 0.06,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
-          transform: [{ translateX: starFieldOffset * 0.1 }],
+          opacity: starOpacity * 0.8, // Increased brightness
+          transform: [{ translateX: starFieldOffset }],
         }} />
         
         <Animated.View style={{
           position: 'absolute',
-          top: size * 0.48,
-          right: size * 0.35,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
+          top: size * 0.6,
+          right: size * 0.25,
+          width: size * 0.08,
+          height: size * 0.08,
+          borderRadius: size * 0.04,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
-          transform: [{ translateX: starFieldOffset * 0.3 }],
+          opacity: starOpacity * 0.7, // Increased brightness
+          transform: [{ translateX: starFieldOffset * 0.8 }],
         }} />
         
         <Animated.View style={{
           position: 'absolute',
-          bottom: size * 0.42,
-          right: size * 0.28,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
+          bottom: size * 0.25,
+          left: size * 0.35,
+          width: size * 0.06,
+          height: size * 0.06,
+          borderRadius: size * 0.03,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
-          transform: [{ translateX: starFieldOffset * 0.2 }],
+          opacity: starOpacity * 0.9, // Increased brightness
+          transform: [{ translateX: starFieldOffset * 0.6 }],
         }} />
         
+        {/* More star clusters for realistic density */}
         <Animated.View style={{
           position: 'absolute',
-          top: size * 0.72,
-          left: size * 0.45,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
+          top: size * 0.1,
+          right: size * 0.4,
+          width: size * 0.05,
+          height: size * 0.05,
+          borderRadius: size * 0.025,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.4,
+          opacity: starOpacity * 0.7, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.4 }],
         }} />
         
         <Animated.View style={{
           position: 'absolute',
-          top: size * 0.76,
-          left: size * 0.52,
-          width: size * 0.015,
-          height: size * 0.015,
-          borderRadius: size * 0.0075,
+          top: size * 0.45,
+          left: size * 0.1,
+          width: size * 0.04,
+          height: size * 0.04,
+          borderRadius: size * 0.02,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.3,
-          transform: [{ translateX: starFieldOffset * 0.2 }],
+          opacity: starOpacity * 0.6, // Increased brightness
+          transform: [{ translateX: starFieldOffset * 0.3 }],
         }} />
         
         <Animated.View style={{
           position: 'absolute',
-          top: size * 0.68,
-          left: size * 0.38,
-          width: size * 0.02,
-          height: size * 0.02,
-          borderRadius: size * 0.01,
+          bottom: size * 0.1,
+          right: size * 0.35,
+          width: size * 0.05,
+          height: size * 0.05,
+          borderRadius: size * 0.025,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.5,
+          opacity: starOpacity * 0.7, // Increased brightness
+          transform: [{ translateX: starFieldOffset * 0.5 }],
+        }} />
+        
+        {/* SMALL STAR CLUSTERS - Adding more detail and brightness */}
+        {/* Cluster 1 - Top left */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.05,
+          left: size * 0.15,
+          width: size * 0.06,
+          height: size * 0.06,
+          borderRadius: size * 0.03,
+          backgroundColor: '#FFFFFF',
+          opacity: starOpacity * 0.8,
+          transform: [{ translateX: starFieldOffset * 0.2 }],
+        }} />
+        
+        {/* Cluster 2 - Top right */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.08,
+          right: size * 0.2,
+          width: size * 0.05,
+          height: size * 0.05,
+          borderRadius: size * 0.025,
+          backgroundColor: '#FFFFFF',
+          opacity: starOpacity * 0.7,
           transform: [{ translateX: starFieldOffset * 0.3 }],
         }} />
         
-        {/* Even more tiny stars for ultra-realistic density */}
+        {/* Cluster 3 - Bottom left */}
+        <Animated.View style={{
+          position: 'absolute',
+          bottom: size * 0.05,
+          left: size * 0.25,
+          width: size * 0.04,
+          height: size * 0.04,
+          borderRadius: size * 0.02,
+          backgroundColor: '#FFFFFF',
+          opacity: starOpacity * 0.6,
+          transform: [{ translateX: starFieldOffset * 0.4 }],
+        }} />
+        
+        {/* Cluster 4 - Bottom right */}
+        <Animated.View style={{
+          position: 'absolute',
+          bottom: size * 0.08,
+          right: size * 0.15,
+          width: size * 0.05,
+          height: size * 0.05,
+          borderRadius: size * 0.025,
+          backgroundColor: '#FFFFFF',
+          opacity: starOpacity * 0.7,
+          transform: [{ translateX: starFieldOffset * 0.2 }],
+        }} />
+        
+        {/* Additional stars for ultra-realistic density */}
         <Animated.View style={{
           position: 'absolute',
           top: size * 0.33,
@@ -1599,7 +1668,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.012,
           borderRadius: size * 0.006,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.25,
+          opacity: starOpacity * 0.5, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.1 }],
         }} />
         
@@ -1611,7 +1680,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.015,
           borderRadius: size * 0.0075,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.35,
+          opacity: starOpacity * 0.6, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.2 }],
         }} />
         
@@ -1623,7 +1692,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.01,
           borderRadius: size * 0.005,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.2,
+          opacity: starOpacity * 0.4, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.15 }],
         }} />
         
@@ -1635,7 +1704,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.012,
           borderRadius: size * 0.006,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.25,
+          opacity: starOpacity * 0.5, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.1 }],
         }} />
         
@@ -1647,7 +1716,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.015,
           borderRadius: size * 0.0075,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.35,
+          opacity: starOpacity * 0.6, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.2 }],
         }} />
         
@@ -1659,7 +1728,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.01,
           borderRadius: size * 0.005,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.2,
+          opacity: starOpacity * 0.4, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.15 }],
         }} />
         
@@ -1671,7 +1740,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.012,
           borderRadius: size * 0.006,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.25,
+          opacity: starOpacity * 0.5, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.1 }],
         }} />
         
@@ -1683,7 +1752,7 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.015,
           borderRadius: size * 0.0075,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.35,
+          opacity: starOpacity * 0.6, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.2 }],
         }} />
         
@@ -1695,9 +1764,144 @@ const DynamicMilkyWay = ({ size }) => {
           height: size * 0.01,
           borderRadius: size * 0.005,
           backgroundColor: '#FFFFFF',
-          opacity: starOpacity * 0.2,
+          opacity: starOpacity * 0.4, // Increased brightness
           transform: [{ translateX: starFieldOffset * 0.15 }],
         }} />
+        
+        {/* FINAL DETAIL STARS - Ultra-fine detail for realism */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.3,
+          left: size * 0.05,
+          width: size * 0.04,
+          height: size * 0.04,
+          borderRadius: size * 0.02,
+          backgroundColor: '#FFFFFF',
+          opacity: starOpacity * 0.6, // Increased brightness
+          transform: [{ translateX: starFieldOffset * 0.2 }],
+        }} />
+        
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.7,
+          left: size * 0.6,
+          width: size * 0.05,
+          height: size * 0.05,
+          borderRadius: size * 0.025,
+          backgroundColor: '#FFFFFF',
+          opacity: starOpacity * 0.7, // Increased brightness
+          transform: [{ translateX: starFieldOffset * 0.7 }],
+        }} />
+        
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.25,
+          right: size * 0.1,
+          width: size * 0.04,
+          height: size * 0.04,
+          borderRadius: size * 0.02,
+          backgroundColor: '#FFFFFF',
+          opacity: starOpacity * 0.6, // Increased brightness
+          transform: [{ translateX: starFieldOffset * 0.4 }],
+        }} />
+        
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.18,
+          left: size * 0.55,
+          width: size * 0.03,
+          height: size * 0.03,
+          borderRadius: size * 0.015,
+          backgroundColor: '#FFFFFF',
+          opacity: starOpacity * 0.5, // Increased brightness
+          transform: [{ translateX: starFieldOffset * 0.1 }],
+        }} />
+        
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.65,
+          right: size * 0.45,
+          width: size * 0.04,
+          height: size * 0.04,
+          borderRadius: size * 0.02,
+          backgroundColor: '#FFFFFF',
+          opacity: starOpacity * 0.6, // Increased brightness
+          transform: [{ translateX: starFieldOffset * 0.6 }],
+        }} />
+        
+        <Animated.View style={{
+          position: 'absolute',
+          bottom: size * 0.35,
+          left: size * 0.15,
+          width: size * 0.03,
+          height: size * 0.03,
+          borderRadius: size * 0.015,
+          backgroundColor: '#FFFFFF',
+          opacity: starOpacity * 0.5, // Increased brightness
+          transform: [{ translateX: starFieldOffset * 0.2 }],
+        }} />
+        
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.72,
+          left: size * 0.45,
+          width: size * 0.02,
+          height: size * 0.02,
+          borderRadius: size * 0.01,
+          backgroundColor: '#FFFFFF',
+          opacity: starOpacity * 0.6, // Increased brightness
+          transform: [{ translateX: starFieldOffset * 0.4 }],
+        }} />
+        
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.76,
+          left: size * 0.52,
+          width: size * 0.015,
+          height: size * 0.015,
+          borderRadius: size * 0.0075,
+          backgroundColor: '#FFFFFF',
+          opacity: starOpacity * 0.5, // Increased brightness
+          transform: [{ translateX: starFieldOffset * 0.2 }],
+        }} />
+        
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.68,
+          left: size * 0.38,
+          width: size * 0.02,
+          height: size * 0.02,
+          borderRadius: size * 0.01,
+          backgroundColor: '#FFFFFF',
+          opacity: starOpacity * 0.7, // Increased brightness
+          transform: [{ translateX: starFieldOffset * 0.3 }],
+        }} />
+        
+        {/* EXTRA BRIGHTNESS LAYERS - Making it super bright like people imagine */}
+        {/* Brightness overlay 1 */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.1,
+          left: size * 0.1,
+          width: size * 0.8,
+          height: size * 0.8,
+          borderRadius: size * 0.4,
+          backgroundColor: 'rgba(255, 255, 255, 0.05)', // White brightness overlay
+          opacity: 0.05,
+        }} />
+        
+        {/* Brightness overlay 2 */}
+        <Animated.View style={{
+          position: 'absolute',
+          top: size * 0.2,
+          left: size * 0.2,
+          width: size * 0.6,
+          height: size * 0.6,
+          borderRadius: size * 0.3,
+          backgroundColor: 'rgba(255, 255, 255, 0.03)', // Additional brightness
+          opacity: 0.03,
+        }} />
+        
       </Animated.View>
     </View>
   );
@@ -2038,11 +2242,11 @@ const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = fa
         };
       case 'saturn':
         return {
-          colors: ['#FFEAA7', '#FAD5A5', '#DDB892'],
+          colors: ['#E6B8AF', '#D4A574', '#B8860B'],
           style: { 
             borderWidth: 3, 
-            borderColor: '#F4D03F',
-            shadowColor: '#FFEAA7',
+            borderColor: '#8B4513',
+            shadowColor: '#E6B8AF',
             shadowOpacity: 0.8
           }
         };
@@ -2099,18 +2303,7 @@ const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = fa
             shadowOpacity: 0.9
           }
         };
-      case 'ultimate_black_hole':
-        return {
-          colors: ['#000000', '#000000', '#000000'], // Pure black void
-          style: { 
-            borderWidth: 0, // No border - it's a void
-            borderColor: 'transparent',
-            shadowColor: '#9932CC', // Purple glow around the void
-            shadowOpacity: 0.8,
-            shadowRadius: 20,
-            elevation: 15
-          }
-        };
+
       case 'orion_nebula':
         return {
           colors: ['#9370DB', '#8A2BE2', '#6A5ACD'], // Purple nebula colors
@@ -2120,6 +2313,28 @@ const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = fa
             shadowColor: '#9370DB',
             shadowOpacity: 0.7,
             shadowRadius: 15
+          }
+        };
+      case 'black_hole':
+        return {
+          colors: ['#000000', '#0a0a0a', '#1a1a1a'], // Pure black hole colors
+          style: { 
+            borderWidth: 0, // No border - black holes are voids
+            borderColor: 'transparent',
+            shadowColor: '#000000',
+            shadowOpacity: 1,
+            shadowRadius: 20
+          }
+        };
+      case 'quasar':
+        return {
+          colors: ['#FF4500', '#FFD700', '#FF6347'], // Bright quasar colors
+          style: { 
+            borderWidth: 0, // No border - quasars are energy sources
+            borderColor: 'transparent',
+            shadowColor: '#FF4500',
+            shadowOpacity: 0.9,
+            shadowRadius: 25
           }
         };
       case 'milky_way':
@@ -2163,61 +2378,21 @@ const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = fa
     );
   }
 
-  // Special rendering for black hole - it's a void, not a planet
-  if (planet.type === 'ultimate_black_hole') {
+  // Special rendering for black hole - it's a void with spiral waves
+  if (planet.type === 'black_hole') {
     return (
-      <View style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: '#000000', // Pure black void
-        position: 'relative',
-        overflow: 'hidden',
-        ...gradient.style,
-        shadowOffset: { width: 0, height: 0 },
-        shadowRadius: 20,
-        elevation: 15,
-      }}>
-        
-        {/* Black hole event horizon - pure void */}
-        <View style={{
-          position: 'absolute',
-          top: size * 0.1,
-          left: size * 0.1,
-          width: size * 0.8,
-          height: size * 0.8,
-          borderRadius: size / 2,
-          backgroundColor: '#000000',
-          borderWidth: 0,
-        }} />
-        
-        {/* Purple accretion disk glow around the void */}
-        <View style={{
-          position: 'absolute',
-          top: -size * 0.1,
-          left: -size * 0.1,
-          width: size * 1.2,
-          height: size * 1.2,
-          borderRadius: size * 0.6,
-          borderWidth: 3,
-          borderColor: '#9932CC',
-          backgroundColor: 'transparent',
-          opacity: 0.6,
-        }} />
-        
-        {/* Inner void - completely black center */}
-        <View style={{
-          position: 'absolute',
-          top: size * 0.25,
-          left: size * 0.25,
-          width: size * 0.5,
-          height: size * 0.5,
-          borderRadius: size * 0.25,
-          backgroundColor: '#000000',
-        }} />
-      </View>
+      <DynamicBlackHole size={size} />
     );
   }
+
+  // Special rendering for quasar - it's a bright energy source
+  if (planet.type === 'quasar') {
+    return (
+      <DynamicQuasar size={size} />
+    );
+  }
+
+
 
   // Normal planet rendering
   return (
@@ -2271,6 +2446,56 @@ const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = fa
       
       {/* Planet-specific authentic features */}
       <AuthenticPlanetFeatures planet={planet} size={size} value={value} />
+      
+      {/* Planet rings for Saturn and other ringed planets */}
+      {planet.rings && (
+        <>
+          {/* Main ring system */}
+          <View style={{
+            position: 'absolute',
+            width: size * 1.6,
+            height: size * 1.6,
+            borderRadius: size * 0.8,
+            borderWidth: 3,
+            borderColor: 'rgba(255, 215, 0, 0.7)',
+            top: (size - size * 1.6) / 2,
+            left: (size - size * 1.6) / 2,
+            backgroundColor: 'transparent',
+            transform: [{ rotateX: '60deg' }],
+            zIndex: -1,
+          }} />
+          
+          {/* Inner ring */}
+          <View style={{
+            position: 'absolute',
+            width: size * 1.4,
+            height: size * 1.4,
+            borderRadius: size * 0.7,
+            borderWidth: 2,
+            borderColor: 'rgba(255, 255, 255, 0.5)',
+            top: (size - size * 1.4) / 2,
+            left: (size - size * 1.4) / 2,
+            backgroundColor: 'transparent',
+            transform: [{ rotateX: '60deg' }],
+            zIndex: -1,
+          }} />
+          
+          {/* Outer ring */}
+          <View style={{
+            position: 'absolute',
+            width: size * 1.8,
+            height: size * 1.8,
+            borderRadius: size * 0.9,
+            borderWidth: 2,
+            borderColor: 'rgba(255, 165, 0, 0.6)',
+            top: (size - size * 1.8) / 2,
+            left: (size - size * 1.8) / 2,
+            backgroundColor: 'transparent',
+            transform: [{ rotateX: '60deg' }],
+            zIndex: -1,
+          }} />
+        </>
+      )}
     </View>
   );
 };

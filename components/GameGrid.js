@@ -22,9 +22,9 @@ import PlanetTile from './PlanetTile';
 // Get responsive spacing based on device - calculate once to avoid re-renders
 const isTablet = screenWidth >= 768;
 const responsiveSpacing = {
-  boardPadding: isTablet ? 12 : 4,
-  boardMargin: isTablet ? 8 : 4,
-  gridRowMargin: isTablet ? 8 : 4,
+  boardPadding: isTablet ? 6 : 2,
+  boardMargin: isTablet ? 4 : 2,
+  gridRowMargin: isTablet ? 4 : 2,
   cellMargin: isTablet ? 3 : 1,
 };
 
@@ -527,8 +527,8 @@ const styles = StyleSheet.create({
     padding: responsiveSpacing.boardPadding, // Responsive padding for iPad
     margin: responsiveSpacing.boardMargin, // Responsive margin for iPad
     alignSelf: 'center',
-    marginTop: isTablet ? 20 : 15, // Larger top margin for iPad
-    marginBottom: isTablet ? 15 : 5, // Larger bottom margin for iPad
+    marginTop: isTablet ? 8 : 4, // Reduced top margin for 6-row grid
+    marginBottom: isTablet ? 4 : 2, // Reduced bottom margin for 6-row grid
   },
   boardDark: {
     backgroundColor: 'transparent', // Remove dark background

@@ -598,123 +598,169 @@ const DropNumberBoard = ({ navigation, route }) => {
       if (!falling || falling.fastDrop || gameOver || isPaused) {
         return;
       }
-    
-    // Use the column from the tap - ignore the row (always drop from bottom)
-    const col = targetCol !== null ? targetCol : falling.col;
-    
-    // Column-based targeting - find the first available empty cell in the column (from top)
-    let landingCol = col;
-    let landingRow = -1;
-    
-    // Search from top to bottom for the first empty cell in the column
-    for (let row = 0; row < ROWS; row++) {
-      if (board[row][landingCol] === 0) {
-        landingRow = row;
-        break;
+      
+      // Validate board state
+      if (!board || !Array.isArray(board) || board.length === 0) {
+        console.warn('Invalid board state in handleRowTap');
+        return;
       }
-    }
-    
-    // If no empty cell found, check if we can merge in the full column
-    let canMergeInFull = null;
-    if (landingRow === -1) {
-      canMergeInFull = canMergeInFullColumn(board, landingCol, falling.value);
-      if (!canMergeInFull) {
-        // IMPORTANT: Return early to prevent any animation or tile landing
-        return; // Column is full and no merge possible
+      
+      // Validate falling tile state
+      if (!falling.value || !falling.anim) {
+        console.warn('Invalid falling tile state in handleRowTap');
+        return;
       }
-      // Set landing row to the bottom for the merge case
-      landingRow = canMergeInFull.mergeRow;
-    }
     
-    // DOUBLE CHECK: If we somehow got here with a full column and no merge, block it
-    if (landingRow === -1) {
-      return;
-    }
-    
-    // Remove drop sound from tap - it will play when tile reaches landing position
-    
-    // Disable touch temporarily to prevent rapid successive taps
-    setIsTouchEnabled(false);
-    
-    // Clear any existing timeout
-    if (touchTimeoutRef.current) {
-      clearTimeout(touchTimeoutRef.current);
-    }
-    
-    // PERFORMANCE: Increased debounce delay for better touch handling
-    touchTimeoutRef.current = setTimeout(() => {
-      setIsTouchEnabled(true);
-    }, 400); // 400ms debounce delay instead of 300ms
-    
-    // Hide guide overlay permanently
-    setShowGuide(false);
-    
-    // Capture the current nextBlock value before updating it
-    const tileValueToDrop = nextBlock;
-    
-    // Update next block immediately when user taps (ONLY after validation passes)
-    setNextBlock(previewBlock);
-    setPreviewBlock(getRandomBlockValue());
-    
-    // Update falling tile with target position and start animation
-    const updatedFalling = {
-      ...falling,
-      col: landingCol, // Update the column
-      toRow: landingRow,
-      value: tileValueToDrop, // Use the captured value to ensure visual consistency
-      fastDrop: true,
-      static: false,
-      inPreview: false // Remove preview mode when user taps
-    };
-    setFalling(updatedFalling);
-    
-    // Animate from BELOW THE GRID to target position (ball rises from below)
-    const startPosition = (ROWS) * (CELL_SIZE + CELL_MARGIN); // Start from below the grid
-    const targetRowPosition = (landingRow + 1) * (CELL_SIZE + CELL_MARGIN); // Target position (ball top touches tile bottom)
-    
-    // Start the animation from below the grid
-    falling.anim.setValue(startPosition);
-    const animation = Animated.timing(falling.anim, {
-      toValue: targetRowPosition,
-      duration: GAME_CONFIG.TIMING.COSMIC_DROP_DURATION,
-      useNativeDriver: false,
-      easing: Easing.out(Easing.quad),
-    });
-    
-    // Store animation reference for cleanup
-    if (falling.animationRef) {
-      falling.animationRef.stop();
-    }
-    falling.animationRef = animation;
-    animation.start();
-    
-    // Handle landing after animation completes
-    const landingTimeout = setTimeout(async () => {
-      if (isMounted) {
-        try {
-          if (canMergeInFull) {
-            // Special handling for full column merge
-            await handleFullColumnTileLanded(landingRow, landingCol, tileValueToDrop);
-          } else {
-            // Normal tile landing
-            handleTileLanded(landingRow, landingCol, tileValueToDrop);
-          }
-        } catch (error) {
-          console.warn('Landing timeout error:', error);
-          setIsTouchEnabled(true);
-        } finally {
-          clearFallingRef.current();
+      // Use the column from the tap - ignore the row (always drop from bottom)
+      const col = targetCol !== null ? targetCol : falling.col;
+      
+      // Validate column bounds
+      if (col < 0 || col >= COLS) {
+        console.warn('Invalid column index in handleRowTap:', col);
+        return;
+      }
+      
+      // Column-based targeting - find the first available empty cell in the column (from top)
+      let landingCol = col;
+      let landingRow = -1;
+      
+      // Search from top to bottom for the first empty cell in the column
+      for (let row = 0; row < ROWS; row++) {
+        if (board[row] && board[row][landingCol] === 0) {
+          landingRow = row;
+          break;
         }
       }
-    }, GAME_CONFIG.TIMING.COSMIC_DROP_DURATION);
-    
-    // Store timeout reference for cleanup
-    touchTimeoutRef.current = landingTimeout;
+      
+      // If no empty cell found, check if we can merge in the full column
+      let canMergeInFull = null;
+      if (landingRow === -1) {
+        try {
+          canMergeInFull = canMergeInFullColumn(board, landingCol, falling.value);
+        } catch (error) {
+          console.warn('Error checking full column merge:', error);
+          canMergeInFull = null;
+        }
+        
+        if (!canMergeInFull) {
+          // IMPORTANT: Return early to prevent any animation or tile landing
+          return; // Column is full and no merge possible
+        }
+        // Set landing row to the bottom for the merge case
+        landingRow = canMergeInFull.mergeRow;
+      }
+      
+      // DOUBLE CHECK: If we somehow got here with a full column and no merge, block it
+      if (landingRow === -1) {
+        return;
+      }
+      
+      // Validate landing position
+      if (landingRow < 0 || landingRow >= ROWS || landingCol < 0 || landingCol >= COLS) {
+        console.warn('Invalid landing position:', { landingRow, landingCol });
+        return;
+      }
+      
+      // Remove drop sound from tap - it will play when tile reaches landing position
+      
+      // Disable touch temporarily to prevent rapid successive taps
+      setIsTouchEnabled(false);
+      
+      // Clear any existing timeout
+      if (touchTimeoutRef.current) {
+        clearTimeout(touchTimeoutRef.current);
+      }
+      
+      // PERFORMANCE: Increased debounce delay for better touch handling
+      touchTimeoutRef.current = setTimeout(() => {
+        setIsTouchEnabled(true);
+      }, 400); // 400ms debounce delay instead of 300ms
+      
+      // Hide guide overlay permanently
+      setShowGuide(false);
+      
+      // Capture the current nextBlock value before updating it
+      const tileValueToDrop = nextBlock;
+      
+      // Update next block immediately when user taps (ONLY after validation passes)
+      setNextBlock(previewBlock);
+      setPreviewBlock(getRandomBlockValue());
+      
+      // Update falling tile with target position and start animation
+      const updatedFalling = {
+        ...falling,
+        col: landingCol, // Update the column
+        toRow: landingRow,
+        value: tileValueToDrop, // Use the captured value to ensure visual consistency
+        fastDrop: true,
+        static: false,
+        inPreview: false // Remove preview mode when user taps
+      };
+      setFalling(updatedFalling);
+      
+      // Animate from BELOW THE GRID to target position (ball rises from below)
+      const startPosition = (ROWS) * (CELL_SIZE + CELL_MARGIN); // Start from below the grid
+      const targetRowPosition = (landingRow + 1) * (CELL_SIZE + CELL_MARGIN); // Target position (ball top touches tile bottom)
+      
+      // Start the animation from below the grid
+      if (falling.anim && typeof falling.anim.setValue === 'function') {
+        falling.anim.setValue(startPosition);
+        const animation = Animated.timing(falling.anim, {
+          toValue: targetRowPosition,
+          duration: GAME_CONFIG.TIMING.COSMIC_DROP_DURATION,
+          useNativeDriver: false,
+          easing: Easing.out(Easing.quad),
+        });
+        
+        // Store animation reference for cleanup
+        if (falling.animationRef && typeof falling.animationRef.stop === 'function') {
+          falling.animationRef.stop();
+        }
+        falling.animationRef = animation;
+        animation.start();
+      }
+      
+      // Handle landing after animation completes
+      const landingTimeout = setTimeout(async () => {
+        if (isMounted) {
+          try {
+            if (canMergeInFull) {
+              // Special handling for full column merge
+              await handleFullColumnTileLanded(landingRow, landingCol, tileValueToDrop);
+            } else {
+              // Normal tile landing
+              handleTileLanded(landingRow, landingCol, tileValueToDrop);
+            }
+          } catch (error) {
+            console.warn('Landing timeout error:', error);
+            setIsTouchEnabled(true);
+          } finally {
+            // Safe cleanup of falling state
+            if (clearFallingRef.current && typeof clearFallingRef.current === 'function') {
+              try {
+                clearFallingRef.current();
+              } catch (cleanupError) {
+                console.warn('Error clearing falling state:', cleanupError);
+              }
+            }
+          }
+        }
+      }, GAME_CONFIG.TIMING.COSMIC_DROP_DURATION);
+      
+      // Store timeout reference for cleanup
+      touchTimeoutRef.current = landingTimeout;
     } catch (error) {
       // Error in handleRowTap - recover gracefully
       console.warn('HandleRowTap error:', error);
       setIsTouchEnabled(true);
-      clearFallingRef.current();
+      // Safe cleanup of falling state
+      if (clearFallingRef.current && typeof clearFallingRef.current === 'function') {
+        try {
+          clearFallingRef.current();
+        } catch (cleanupError) {
+          console.warn('Error clearing falling state during error recovery:', cleanupError);
+        }
+      }
     }
   };
 
@@ -1194,7 +1240,7 @@ const styles = StyleSheet.create({
   },
   nextBlockArea: {
     position: 'absolute',
-    bottom: screenWidth >= 768 ? 80 : 40, // More bottom spacing for iPad since grid is smaller
+    bottom: screenWidth >= 768 ? 50 : 25, // Reduced bottom spacing to give more board space
     left: '50%',
     transform: [{ translateX: screenWidth >= 768 ? -120 : -80 }], // Larger transform for iPad
     alignItems: 'center',

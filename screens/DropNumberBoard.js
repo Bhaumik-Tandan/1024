@@ -115,22 +115,23 @@ const OptimizedNextBlock = React.memo(({ nextBlock }) => (
  * Uses centralized game rules and improved state management
  */
 const DropNumberBoard = ({ navigation, route }) => {
-  // Get initial grid configuration more safely
-  const initialGridConfig = getCurrentGridConfig();
-  const [gridConfig, setGridConfig] = useState(initialGridConfig);
+  // Use the imported constants directly - they're already 6x4
   
-  // Core game state - use dynamic grid size
-  const [board, setBoard] = useState(() => 
-    Array.from({ length: initialGridConfig.ROWS }, () => Array(initialGridConfig.COLS).fill(0))
-  );
+  // Game state management
+  const [board, setBoard] = useState(() => Array.from({ length: 5 }, () => Array(4).fill(0)));
+  const [falling, setFalling] = useState(null);
+  const [nextBlock, setNextBlock] = useState(() => {
+    try {
+      return getRandomBlockValue();
+    } catch (error) {
+      console.warn('Error getting next block value:', error);
+      return 2; // Fallback to safe default
+    }
+  });
   const [score, setScore] = useState(0);
-  const [nextBlock, setNextBlock] = useState(() => getRandomBlockValue());
-  const [previewBlock, setPreviewBlock] = useState(() => getRandomBlockValue());
-  
-  // Remove debug logging
   const [gameOver, setGameOver] = useState(false);
-  const [showGuide, setShowGuide] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   
   // Touch sensitivity control
@@ -154,6 +155,45 @@ const DropNumberBoard = ({ navigation, route }) => {
   // Add mounted state tracking to prevent state updates after unmount
   const [isMounted, setIsMounted] = useState(true);
 
+  // Force game loop to run when component mounts
+  useEffect(() => {
+    // Force board to be 5x4
+    const newBoard = Array.from({ length: 5 }, () => Array(4).fill(0));
+    setBoard(newBoard);
+    
+    // Force a small delay and then check if we need to spawn a tile
+    const timer = setTimeout(() => {
+      // This will trigger the game loop effect
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Validate board dimensions - ensure it's always 5x4
+  useEffect(() => {
+    if (board && (board.length !== 5 || board[0]?.length !== 4)) {
+      console.warn('Board has wrong dimensions, fixing:', { rows: board.length, cols: board[0]?.length, expectedRows: 5, expectedCols: 4 });
+      setBoard(Array.from({ length: 5 }, () => Array(4).fill(0)));
+    }
+  }, [board]);
+  
+  // Fallback: Ensure there's always a falling tile if game is active
+  useEffect(() => {
+    if (!gameOver && !isPaused && !falling && board && board.length > 0) {
+      // Wait a bit to see if game loop spawns a tile
+      const timer = setTimeout(() => {
+        if (isMounted && !gameOver && !isPaused && !falling) {
+          console.log('Fallback: Game loop failed to spawn tile, forcing spawn');
+          spawnNewTile();
+        }
+      }, 1000); // Reduced from 2000ms for faster response
+      
+      return () => clearTimeout(timer);
+    }
+  }, [gameOver, isPaused, falling, board, isMounted]);
+  
+
+
   const boardRef = useRef(null);
   const [boardLeft, setBoardLeft] = useState(0);
   
@@ -165,52 +205,20 @@ const DropNumberBoard = ({ navigation, route }) => {
     try {
       const subscription = Dimensions.addEventListener('change', ({ window }) => {
         try {
-          const newGridConfig = getCurrentGridConfig();
-          
-          // Only update if grid configuration actually changed
-          if (newGridConfig.ROWS !== gridConfig.ROWS || newGridConfig.COLS !== gridConfig.COLS) {
-            setGridConfig(newGridConfig);
-            
-            // Update board size, preserving existing tiles where possible
-            setBoard(prevBoard => {
-              try {
-                const newBoard = Array.from({ length: newGridConfig.ROWS }, () => 
-                  Array(newGridConfig.COLS).fill(0)
-                );
-                
-                // Copy existing tiles to new board (top-left aligned)
-                for (let row = 0; row < Math.min(prevBoard.length, newGridConfig.ROWS); row++) {
-                  for (let col = 0; col < Math.min(prevBoard[row].length, newGridConfig.COLS); col++) {
-                    newBoard[row][col] = prevBoard[row][col];
-                  }
-                }
-                
-                return newBoard;
-              } catch (error) {
-                console.warn('Board resize error:', error);
-                return Array.from({ length: newGridConfig.ROWS }, () => Array(newGridConfig.COLS).fill(0));
-              }
-            });
-            
-            // Clear any falling animations that might be out of bounds
-            clearFallingRef.current();
-            clearMergeAnimationsRef.current();
-          }
+          // Always use 5x4 grid regardless of orientation - no need to change
         } catch (error) {
-          console.warn('Orientation change error:', error);
+          console.warn('Error handling orientation change:', error);
         }
       });
-
+      
       return () => subscription?.remove();
     } catch (error) {
-      console.warn('Orientation effect setup error:', error);
+      console.warn('Error setting up orientation change listener:', error);
     }
-  }, [gridConfig]); // Removed function dependencies to prevent infinite loops
+  }, []); // Empty dependency array since we don't change grid size
 
   // Use the animation manager
   const {
-    falling,
-    setFalling, // Add back setFalling since it's used in the code
     mergingTiles,
     mergeResult,
     mergeAnimations,
@@ -260,26 +268,34 @@ const DropNumberBoard = ({ navigation, route }) => {
     const loadGame = async () => {
       try {
         const savedGame = loadSavedGame();
-        if (savedGame && savedGame.board && savedGame.board.length > 0) {
-          // Restore game state
-          setBoard(savedGame.board);
-          setScore(savedGame.score || 0);
-          setNextBlock(savedGame.nextBlock || getRandomBlockValue());
-          setPreviewBlock(savedGame.previewBlock || getRandomBlockValue());
-          setGameStats(savedGame.gameStats || {
-            tilesPlaced: 0,
-            mergesPerformed: 0,
-            chainReactions: 0,
-            highestTile: 0,
-            startTime: Date.now(),
-          });
-          setMaxTileAchieved(savedGame.maxTileAchieved || 0);
-          setFloorLevel(savedGame.floorLevel || 1);
-          setCurrentMinSpawn(savedGame.currentMinSpawn || 2);
-          
-          // Check if game was over
-          if (GameValidator.isGameOver(savedGame.board)) {
-            setGameOver(true);
+        
+        if (savedGame && savedGame.board && Array.isArray(savedGame.board)) {
+          // Validate saved board dimensions
+          if (savedGame.board.length === 5 && savedGame.board[0]?.length === 4) {
+            setBoard(savedGame.board);
+            setScore(savedGame.score || 0);
+            setNextBlock(savedGame.nextBlock || getRandomBlockValue());
+            setGameStats(savedGame.gameStats || {
+              tilesPlaced: 0,
+              mergesPerformed: 0,
+              chainReactions: 0,
+              highestTile: 0,
+              startTime: Date.now(),
+            });
+            setMaxTileAchieved(savedGame.maxTileAchieved || 0);
+            setFloorLevel(savedGame.floorLevel || 1);
+            setCurrentMinSpawn(savedGame.currentMinSpawn || 2);
+          } else {
+            console.warn('Saved game has wrong dimensions, starting fresh');
+            // Clear corrupted saved game
+            try {
+              const { clearSavedGame } = useGameStore();
+              if (clearSavedGame && typeof clearSavedGame === 'function') {
+                clearSavedGame();
+              }
+            } catch (error) {
+              console.warn('Failed to clear corrupted saved game:', error);
+            }
           }
         }
       } catch (error) {
@@ -296,16 +312,20 @@ const DropNumberBoard = ({ navigation, route }) => {
       return () => {
         // Save game state when leaving the screen
         if (isMounted && !gameOver) {
+          // Save game state
           const gameState = {
-            board,
-            score,
-            nextBlock,
-            previewBlock,
-            gameStats,
-            maxTileAchieved,
-            floorLevel,
-            currentMinSpawn,
-            timestamp: Date.now()
+            board: board,
+            score: score,
+            nextBlock: nextBlock,
+            gameStats: {
+              tilesPlaced: gameStats.tilesPlaced,
+              chainReactions: gameStats.chainReactions,
+              maxTileAchieved: gameStats.maxTileAchieved,
+              lastResume: Date.now(),
+            },
+            maxTileAchieved: maxTileAchieved,
+            floorLevel: floorLevel,
+            currentMinSpawn: currentMinSpawn,
           };
           
           try {
@@ -315,7 +335,7 @@ const DropNumberBoard = ({ navigation, route }) => {
           }
         }
       };
-    }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame])
+    }, [board, score, nextBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame])
   );
 
   // Save game when app goes to background
@@ -327,7 +347,6 @@ const DropNumberBoard = ({ navigation, route }) => {
           board,
           score,
           nextBlock,
-          previewBlock,
           gameStats,
           maxTileAchieved,
           floorLevel,
@@ -345,7 +364,7 @@ const DropNumberBoard = ({ navigation, route }) => {
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
     return () => subscription?.remove();
-  }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame]);
+  }, [board, score, nextBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame]);
 
 
 
@@ -356,7 +375,6 @@ const DropNumberBoard = ({ navigation, route }) => {
         board,
         score,
         nextBlock,
-        previewBlock,
         gameStats,
         maxTileAchieved,
         floorLevel,
@@ -378,7 +396,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         console.warn('Auto-save failed:', error);
       }
     }
-  }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame, updateScore, updateHighestBlock]);
+  }, [board, score, nextBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame, updateScore, updateHighestBlock]);
 
   // Pause modal handlers
   const handlePause = () => {
@@ -391,7 +409,6 @@ const DropNumberBoard = ({ navigation, route }) => {
         board,
         score,
         nextBlock,
-        previewBlock,
         gameStats,
         maxTileAchieved,
         floorLevel,
@@ -409,6 +426,25 @@ const DropNumberBoard = ({ navigation, route }) => {
     try {
       setIsPaused(false);
       soundManager.playSoundIfEnabled('pauseResume');
+      
+      // Ensure background music is in sync with game state
+      const { backgroundMusicEnabled } = useGameStore.getState();
+      if (backgroundMusicEnabled && global.backgroundMusicManager) {
+        try {
+          global.backgroundMusicManager.play();
+        } catch (musicError) {
+          console.warn('Failed to resume background music:', musicError);
+        }
+      }
+      
+      // Force a small delay to ensure state updates properly
+      setTimeout(() => {
+        // Force a re-render by updating a timestamp
+        setGameStats(prev => ({
+          ...prev,
+          lastResume: Date.now()
+        }));
+      }, 100);
     } catch (error) {
       console.warn('Resume error:', error);
       setIsPaused(false); // Still resume even if sound fails
@@ -432,7 +468,6 @@ const DropNumberBoard = ({ navigation, route }) => {
         board,
         score,
         nextBlock,
-        previewBlock,
         gameStats,
         maxTileAchieved,
         floorLevel,
@@ -465,52 +500,65 @@ const DropNumberBoard = ({ navigation, route }) => {
 
 
   /**
-   * Game loop: Spawn new tiles automatically
-   * Uses timing configuration from GameRules
+   * Game loop: Spawn initial tile and wait for user input
+   * Tiles are spawned when the game starts and when user drops tiles
    */
   useEffect(() => {
-    // Prevent infinite loops by checking if we're already processing
+    console.log('=== GAME LOOP TRIGGERED ===');
+    console.log('Game loop state:', { 
+      falling: !!falling, 
+      gameOver, 
+      isPaused, 
+      isMounted,
+      score,
+      tilesPlaced: gameStats.tilesPlaced
+    });
+    
+    // Only spawn initial tile if no falling tile exists and game is ready
     if (falling || gameOver || isPaused) {
+      console.log('Game loop blocked:', { 
+        falling: !!falling, 
+        gameOver, 
+        isPaused 
+      });
       return;
     }
     
+    console.log('✅ Game loop proceeding to spawn tile...');
+    
     try {
-      const spawnCol = Math.floor(COLS / 2); // Center column as per rules
-      
-      // Check for game over condition - check if top row is full
-      if (GameValidator.isGameOver(board)) {
-        setGameOver(true);
-        try {
-          soundManager.playSoundIfEnabled('gameOver');
-        } catch (error) {
-          console.warn('Game loop game over sound error:', error);
-        }
+      // Validate board state before spawning
+      if (!board || !Array.isArray(board) || board.length === 0) {
+        console.warn('❌ Invalid board state in game loop');
         return;
       }
       
-      // Create static falling tile that starts from bottom (original gravity)
-      const fallingTile = {
-        col: spawnCol,
-        value: nextBlock,
-        anim: new Animated.Value(0), // Start at bottom row position
-        toRow: 0, // Will be updated when user taps a row
-        fastDrop: false,
-        static: true, // Add static flag to indicate it's not moving
-        startRow: ROWS - 1, // Starting from bottom row
-        inPreview: true // Flag to indicate it's in preview mode
-      };
+      console.log('✅ Board state validated in game loop');
       
-      // Falling tile created with nextBlock value
-      setFalling(fallingTile);
-      // Don't automatically show guide for every new tile
-      // setShowGuide(true); // Removed this line
+      // Only spawn the very first tile when game starts (score = 0, tilesPlaced = 0)
+      if (score === 0 && gameStats.tilesPlaced === 0) {
+        console.log('🎯 Game loop spawning first tile only');
+        spawnNewTile();
+        
+        // Show guide for the very first tile
+        setShowGuide(true);
+        console.log('✅ Guide overlay shown for first tile');
+      } else {
+        console.log('🎯 Game loop: Not spawning tile - waiting for user action');
+      }
+      
     } catch (error) {
-      console.warn('Game loop error:', error);
-      // Recover gracefully
-      setGameOver(true);
+      console.warn('❌ Error in game loop:', error);
+      // Clear any invalid state
+      if (clearFallingRef.current && typeof clearFallingRef.current === 'function') {
+        try {
+          clearFallingRef.current();
+        } catch (cleanupError) {
+          console.warn('Error clearing falling state during error recovery:', cleanupError);
+        }
+      }
     }
-    // eslint-disable-next-line
-  }, [falling, gameOver, isPaused, nextBlock]); // Removed board to prevent infinite loops
+  }, [falling, gameOver, isPaused, isMounted, score, gameStats.tilesPlaced]); // Remove board?.length dependency to prevent auto-spawning
 
   /**
    * Cleanup touch timeout and set mounted state on component unmount
@@ -521,6 +569,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       if (touchTimeoutRef.current) {
         clearTimeout(touchTimeoutRef.current);
       }
+
       // Clear any falling animations
       if (falling && falling.animationRef) {
         falling.animationRef.stop();
@@ -539,39 +588,34 @@ const DropNumberBoard = ({ navigation, route }) => {
    * Always drops from bottom - tap X position determines the column
    */
   const handleScreenTap = (event) => {
+    console.log('=== SCREEN TAP DETECTED ===');
+    console.log('Screen tap event:', event.nativeEvent);
+    
     try {
       // Touch sensitivity control - prevent rapid successive taps
       if (!isTouchEnabled) {
+        console.log('Screen tap blocked: Touch disabled');
         return;
       }
       
       // Validate tap conditions
       if (!falling || falling.fastDrop || gameOver || isPaused) {
+        console.log('Screen tap blocked: Invalid conditions', { 
+          hasFalling: !!falling, 
+          fastDrop: falling?.fastDrop, 
+          gameOver, 
+          isPaused 
+        });
         return;
       }
-    
-    // Emergency cleanup if animations are stuck - more aggressive
-    try {
-      if (mergeAnimations.length > 5) {
-        clearMergeAnimationsRef.current();
-      }
       
-      // Additional emergency cleanup for any stuck animations over 200ms old
-      const now = Date.now();
-      const stuckAnimations = mergeAnimations.filter(anim => 
-        now - (anim.createdAt || 0) > 200
-      );
-      if (stuckAnimations.length > 0) {
-        clearMergeAnimationsRef.current();
-      }
-    } catch (error) {
-      console.warn('Emergency cleanup error:', error);
-      // Force cleanup if normal cleanup fails
-      clearMergeAnimationsRef.current();
-    }
+      console.log('Screen tap validated, processing...');
+    
+
     
     // Use the pre-calculated column from enhanced grid detection
     const targetColumn = event.nativeEvent.detectedColumn ?? 0; // Default to column 0 if detection fails
+    console.log('Detected column from screen tap:', targetColumn);
     
     // Use the existing logic but with the accurately detected column
     handleRowTap(0, targetColumn); // Row doesn't matter, only column
@@ -588,31 +632,34 @@ const DropNumberBoard = ({ navigation, route }) => {
    * Includes touch sensitivity controls to prevent rapid successive taps
    */
   const handleRowTap = (targetRow, targetCol = null) => {
+    console.log('=== TAP DETECTED ===');
+    console.log('Tap details:', { targetRow, targetCol, falling: !!falling, gameOver, isPaused });
+    
     try {
       // Touch sensitivity control - prevent rapid successive taps
       if (!isTouchEnabled) {
+        console.log('Tap blocked: Touch disabled');
         return;
       }
       
       // Validate tap conditions
       if (!falling || falling.fastDrop || gameOver || isPaused) {
+        console.log('Tap blocked: Invalid conditions', { 
+          hasFalling: !!falling, 
+          fastDrop: falling?.fastDrop, 
+          gameOver, 
+          isPaused 
+        });
         return;
       }
       
-      // Validate board state
-      if (!board || !Array.isArray(board) || board.length === 0) {
-        console.warn('Invalid board state in handleRowTap');
-        return;
-      }
+      console.log('Tap validated, processing...');
       
-      // Validate falling tile state
-      if (!falling.value || !falling.anim) {
-        console.warn('Invalid falling tile state in handleRowTap');
-        return;
-      }
-    
+
+      
       // Use the column from the tap - ignore the row (always drop from bottom)
       const col = targetCol !== null ? targetCol : falling.col;
+      console.log('Target column:', col, 'Falling column:', falling.col);
       
       // Validate column bounds
       if (col < 0 || col >= COLS) {
@@ -620,46 +667,64 @@ const DropNumberBoard = ({ navigation, route }) => {
         return;
       }
       
+      console.log('=== SEARCHING FOR EMPTY ROW ===');
+      console.log('Board dimensions:', { ROWS, COLS, boardRows: board.length, boardCols: board[0]?.length });
+      console.log('Board state for column', col, ':', board.map((row, idx) => ({ row: idx, value: row[col] })));
+      
       // Column-based targeting - find the first available empty cell in the column (from top)
       let landingCol = col;
       let landingRow = -1;
       
       // Search from top to bottom for the first empty cell in the column
       for (let row = 0; row < ROWS; row++) {
+        const cellValue = board[row]?.[landingCol];
+        console.log(`Checking row ${row}: value = ${cellValue} (empty: ${cellValue === 0})`);
         if (board[row] && board[row][landingCol] === 0) {
           landingRow = row;
+          console.log(`✅ Found empty row: ${row}`);
           break;
         }
       }
       
+      console.log('Landing row found:', landingRow);
+      
       // If no empty cell found, check if we can merge in the full column
       let canMergeInFull = null;
       if (landingRow === -1) {
+        console.log('No empty row found, checking for full column merge...');
         try {
           canMergeInFull = canMergeInFullColumn(board, landingCol, falling.value);
+          console.log('Full column merge result:', canMergeInFull);
         } catch (error) {
           console.warn('Error checking full column merge:', error);
           canMergeInFull = null;
         }
         
         if (!canMergeInFull) {
+          console.log('❌ Column is full and no merge possible - BLOCKING DROP');
           // IMPORTANT: Return early to prevent any animation or tile landing
           return; // Column is full and no merge possible
         }
         // Set landing row to the bottom for the merge case
         landingRow = canMergeInFull.mergeRow;
+        console.log('Merge landing row set to:', landingRow);
       }
       
       // DOUBLE CHECK: If we somehow got here with a full column and no merge, block it
       if (landingRow === -1) {
+        console.log('❌ Landing row still -1 after merge check - BLOCKING DROP');
         return;
       }
       
+      console.log('Final landing position:', { row: landingRow, col: landingCol });
+      
       // Validate landing position
       if (landingRow < 0 || landingRow >= ROWS || landingCol < 0 || landingCol >= COLS) {
-        console.warn('Invalid landing position:', { landingRow, landingCol });
+        console.warn('Invalid landing position:', { landingRow, landingCol, ROWS, COLS });
         return;
       }
+      
+      console.log('✅ Landing position validated, proceeding with drop...');
       
       // Remove drop sound from tap - it will play when tile reaches landing position
       
@@ -671,20 +736,20 @@ const DropNumberBoard = ({ navigation, route }) => {
         clearTimeout(touchTimeoutRef.current);
       }
       
-      // PERFORMANCE: Increased debounce delay for better touch handling
+      // PERFORMANCE: Reduced debounce delay for more responsive touch handling
       touchTimeoutRef.current = setTimeout(() => {
         setIsTouchEnabled(true);
-      }, 400); // 400ms debounce delay instead of 300ms
+      }, 200); // Reduced from 400ms for faster response
       
       // Hide guide overlay permanently
       setShowGuide(false);
       
       // Capture the current nextBlock value before updating it
       const tileValueToDrop = nextBlock;
+      console.log('Dropping tile with value:', tileValueToDrop);
       
       // Update next block immediately when user taps (ONLY after validation passes)
-      setNextBlock(previewBlock);
-      setPreviewBlock(getRandomBlockValue());
+      setNextBlock(getRandomBlockValue());
       
       // Update falling tile with target position and start animation
       const updatedFalling = {
@@ -696,15 +761,18 @@ const DropNumberBoard = ({ navigation, route }) => {
         static: false,
         inPreview: false // Remove preview mode when user taps
       };
-      setFalling(updatedFalling);
+              setFalling(updatedFalling);
+      console.log('✅ Falling tile updated for drop:', { col: landingCol, row: landingRow, value: tileValueToDrop });
       
-      // Animate from BELOW THE GRID to target position (ball rises from below)
-      const startPosition = (ROWS) * (CELL_SIZE + CELL_MARGIN); // Start from below the grid
-      const targetRowPosition = (landingRow + 1) * (CELL_SIZE + CELL_MARGIN); // Target position (ball top touches tile bottom)
+      // Animate from current position to target position
+      const currentPosition = falling.anim._value || 0; // Get current animation value
+      const targetRowPosition = landingRow * (CELL_SIZE + CELL_MARGIN); // Target position
+      console.log('Animation details:', { currentPosition, targetRowPosition, landingRow, CELL_SIZE, CELL_MARGIN });
       
-      // Start the animation from below the grid
+      // Start the animation from current position to target
       if (falling.anim && typeof falling.anim.setValue === 'function') {
-        falling.anim.setValue(startPosition);
+        console.log('✅ Starting drop animation...');
+        // Don't change the current position, just animate to target
         const animation = Animated.timing(falling.anim, {
           toValue: targetRowPosition,
           duration: GAME_CONFIG.TIMING.COSMIC_DROP_DURATION,
@@ -718,37 +786,43 @@ const DropNumberBoard = ({ navigation, route }) => {
         }
         falling.animationRef = animation;
         animation.start();
-      }
-      
-      // Handle landing after animation completes
-      const landingTimeout = setTimeout(async () => {
-        if (isMounted) {
-          try {
-            if (canMergeInFull) {
-              // Special handling for full column merge
-              await handleFullColumnTileLanded(landingRow, landingCol, tileValueToDrop);
-            } else {
-              // Normal tile landing
-              handleTileLanded(landingRow, landingCol, tileValueToDrop);
-            }
-          } catch (error) {
-            console.warn('Landing timeout error:', error);
-            setIsTouchEnabled(true);
-          } finally {
-            // Safe cleanup of falling state
-            if (clearFallingRef.current && typeof clearFallingRef.current === 'function') {
-              try {
-                clearFallingRef.current();
-              } catch (cleanupError) {
-                console.warn('Error clearing falling state:', cleanupError);
+        console.log('✅ Drop animation started successfully');
+        
+        // Handle landing after animation completes
+        const landingTimeout = setTimeout(async () => {
+          console.log('=== TILE LANDING COMPLETE ===');
+          if (isMounted) {
+            try {
+              if (canMergeInFull) {
+                console.log('Handling full column merge landing...');
+                // Special handling for full column merge
+                await handleFullColumnTileLanded(landingRow, landingCol, tileValueToDrop);
+              } else {
+                console.log('Handling normal tile landing...');
+                // Normal tile landing
+                handleTileLanded(landingRow, landingCol, tileValueToDrop);
+              }
+            } catch (error) {
+              console.warn('Landing timeout error:', error);
+              setIsTouchEnabled(true);
+            } finally {
+              // Safe cleanup of falling state
+              if (clearFallingRef.current && typeof clearFallingRef.current === 'function') {
+                try {
+                  clearFallingRef.current();
+                } catch (cleanupError) {
+                  console.warn('Error clearing falling state:', cleanupError);
+                }
               }
             }
           }
-        }
-      }, GAME_CONFIG.TIMING.COSMIC_DROP_DURATION);
-      
-      // Store timeout reference for cleanup
-      touchTimeoutRef.current = landingTimeout;
+        }, GAME_CONFIG.TIMING.COSMIC_DROP_DURATION);
+        
+        // Store timeout reference for cleanup
+        touchTimeoutRef.current = landingTimeout;
+      } else {
+        console.warn('❌ Failed to start drop animation - falling.anim invalid');
+      }
     } catch (error) {
       // Error in handleRowTap - recover gracefully
       console.warn('HandleRowTap error:', error);
@@ -761,6 +835,112 @@ const DropNumberBoard = ({ navigation, route }) => {
           console.warn('Error clearing falling state during error recovery:', cleanupError);
         }
       }
+    }
+  };
+
+  /**
+   * Spawn a new falling tile after a tile has been dropped
+   */
+  const spawnNewTile = () => {
+    console.log('=== SPAWN NEW TILE CALLED ===');
+    console.log('Current state:', { 
+      falling: !!falling, 
+      gameOver, 
+      isPaused, 
+      boardRows: board?.length, 
+      boardCols: board?.[0]?.length 
+    });
+    
+    try {
+      // Don't spawn if there's already a falling tile
+      if (falling) {
+        console.log('❌ spawnNewTile blocked: falling tile already exists');
+        return;
+      }
+      
+      // Validate board state
+      if (!board || !Array.isArray(board) || board.length === 0) {
+        console.warn('❌ Invalid board state in spawnNewTile');
+        return;
+      }
+      
+      console.log('✅ Board state validated');
+      
+      // Find any available column instead of just the center column
+      let spawnCol = -1;
+      let spawnRow = -1;
+      
+      console.log('=== SEARCHING FOR ANY AVAILABLE SPAWN POSITION ===');
+      
+      // Check each column from left to right to find any available spawn position
+      for (let col = 0; col < COLS; col++) {
+        console.log(`Checking spawn column ${col}:`);
+        
+        // Find the first available row in this column (from top)
+        for (let row = 0; row < ROWS; row++) {
+          const cellValue = board[row]?.[col];
+          console.log(`  Row ${row}: value = ${cellValue} (empty: ${cellValue === 0})`);
+          if (board[row] && board[row][col] === 0) {
+            spawnCol = col;
+            spawnRow = row;
+            console.log(`✅ Found spawn position: column ${col}, row ${row}`);
+            break;
+          }
+        }
+        
+        if (spawnCol !== -1) {
+          break; // Found a spawn position
+        }
+      }
+      
+      // If no spawn position found, don't spawn
+      if (spawnCol === -1 || spawnRow === -1) {
+        console.log('❌ No spawn position found anywhere on the board');
+        console.log('Full board state:', board);
+        
+        // FALLBACK: If the board is completely full, this means the game should be over
+        // Check if this is a game over condition
+        const isBoardFull = board.every(row => row.every(cell => cell !== 0));
+        if (isBoardFull) {
+          console.log('🚨 Board is completely full - this should trigger game over');
+          // Don't set game over here, let the game logic handle it
+        }
+        return;
+      }
+      
+      console.log('✅ Spawn position found:', { col: spawnCol, row: spawnRow });
+      
+      // Validate spawn position
+      if (spawnCol < 0 || spawnCol >= COLS || spawnRow < 0 || spawnRow >= ROWS) {
+        console.warn('❌ Invalid spawn position in spawnNewTile:', { spawnCol, spawnRow });
+        return;
+      }
+      
+      // Use the nextBlock value for the falling tile, not a random value
+      const blockValue = nextBlock;
+      console.log('Creating preview tile with value:', blockValue);
+      
+      // Create falling tile with animation - start from below the grid (bottom) in preview mode
+      const anim = new Animated.Value((ROWS) * (CELL_SIZE + CELL_MARGIN)); // Start from below the grid
+      const fallingTile = {
+        col: spawnCol,
+        value: blockValue,
+        anim,
+        toRow: spawnRow,
+        fastDrop: false,
+        static: false,
+        inPreview: true, // Set to true so tile stays floating until user taps
+        startRow: ROWS // Start from below the grid (bottom)
+      };
+      
+              setFalling(fallingTile);
+      console.log('✅ Preview tile set successfully:', { ...fallingTile, anim: 'Animated.Value' });
+      
+      // DON'T start falling animation - tile should stay floating in preview mode
+      // User will control when and where it drops via tap
+      
+    } catch (error) {
+      console.warn('❌ Error in spawnNewTile:', error);
     }
   };
 
@@ -792,7 +972,7 @@ const DropNumberBoard = ({ navigation, route }) => {
   };
 
   /**
-   * Check if a tile can merge when dropped into a full column
+   * Check if a tile can merge in a full column by checking adjacent positions
    * @param {Array[]} board - The game board
    * @param {number} col - Column to check
    * @param {number} value - Value of the tile to drop
@@ -800,6 +980,17 @@ const DropNumberBoard = ({ navigation, route }) => {
    */
   const canMergeInFullColumn = (board, col, value) => {
     try {
+      // Validate input parameters
+      if (!board || !Array.isArray(board) || board.length === 0) {
+        console.warn('Invalid board in canMergeInFullColumn');
+        return null;
+      }
+      
+      if (col < 0 || col >= COLS || !value) {
+        console.warn('Invalid parameters in canMergeInFullColumn:', { col, value });
+        return null;
+      }
+      
       // Check if the bottom tile in the column matches the dropping tile
       const bottomRow = ROWS - 1;
       if (board[bottomRow] && board[bottomRow][col] === value) {
@@ -815,10 +1006,15 @@ const DropNumberBoard = ({ navigation, route }) => {
       ];
       
       for (const pos of adjacentPositions) {
-        if (pos.row >= 0 && pos.row < ROWS && 
-            pos.col >= 0 && pos.col < COLS && 
-            board[pos.row] && board[pos.row][pos.col] === value) {
-          return { canMerge: true, mergeRow: bottomRow };
+        try {
+          if (pos.row >= 0 && pos.row < ROWS && 
+              pos.col >= 0 && pos.col < COLS && 
+              board[pos.row] && board[pos.row][pos.col] === value) {
+            return { canMerge: true, mergeRow: bottomRow };
+          }
+        } catch (posError) {
+          console.warn('Error checking adjacent position:', posError, pos);
+          continue;
         }
       }
       
@@ -835,11 +1031,29 @@ const DropNumberBoard = ({ navigation, route }) => {
    */
   const handleTileLanded = (row, col, value) => {
     try {
+      // Validate input parameters
+      if (row < 0 || row >= ROWS || col < 0 || col >= COLS || !value) {
+        console.warn('Invalid parameters in handleTileLanded:', { row, col, value });
+        return;
+      }
+      
+      // Validate board state
+      if (!board || !Array.isArray(board) || board.length === 0) {
+        console.warn('Invalid board state in handleTileLanded');
+        return;
+      }
+      
       // Drop sound is already played when tile is placed in GameLogic.js
       // No need to play it again here
       
       // Check if the newly landed tile is touching other tiles for additional vibration
-      const isTouchingTiles = hasAdjacentTiles(board, row, col);
+      let isTouchingTiles = false;
+      try {
+        isTouchingTiles = hasAdjacentTiles(board, row, col);
+      } catch (error) {
+        console.warn('Error checking adjacent tiles:', error);
+        isTouchingTiles = false;
+      }
       
       // Process the tile landing through the game engine
       handleBlockLanding(
@@ -849,90 +1063,136 @@ const DropNumberBoard = ({ navigation, route }) => {
         value, 
         showMergeResultAnimation
       ).then(result => {
-        const { 
-          newBoard, 
-          totalScore, 
-          chainReactionCount = 0, 
-          iterations = 0 
-        } = result;
-        
-        // Calculate new values first
-        const newHighestTile = Math.max(gameStats.highestTile, ...newBoard.flat());
-        const newScore = totalScore > 0 ? score + totalScore : score;
-        
-        // Update game statistics
-        setGameStats(prevStats => ({
-          ...prevStats,
-          tilesPlaced: prevStats.tilesPlaced + 1,
-          mergesPerformed: prevStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
-          chainReactions: prevStats.chainReactions + chainReactionCount,
-          highestTile: newHighestTile,
-        }));
-        
-        // Update score
-        if (totalScore > 0) {
-          setScore(newScore);
-        }
-        
-        // Update local state after all state updates - only if component is mounted
-        setTimeout(() => {
-          if (isMounted) {
-            if (newHighestTile > lastHighestBlock) {
-              setLastHighestBlock(newHighestTile);
-            }
-            
-            if (totalScore > 0) {
-              setLastScore(newScore);
-            }
+        try {
+          if (!result || typeof result !== 'object') {
+            console.warn('Invalid result from handleBlockLanding:', result);
+            return;
           }
-        }, 0);
-
-        // Update board state
-        setBoard(newBoard);
-        
-
-        
-        // Check for game over condition
-        if (GameValidator.isGameOver(newBoard)) {
-          setGameOver(true);
           
-          // Save final game state when game ends
-          const finalGameState = {
-            board: newBoard,
-            score: newScore,
-            nextBlock,
-            previewBlock,
-            gameStats: {
-              ...gameStats,
-              tilesPlaced: gameStats.tilesPlaced + 1,
-              mergesPerformed: gameStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
-              chainReactions: gameStats.chainReactions + chainReactionCount,
-              highestTile: newHighestTile,
-            },
-            maxTileAchieved,
-            floorLevel,
-            currentMinSpawn,
-            timestamp: Date.now()
-          };
-          saveGame(finalGameState);
+          const { 
+            newBoard, 
+            totalScore, 
+            chainReactionCount = 0, 
+            iterations = 0 
+          } = result;
           
+          // Validate new board
+          if (!newBoard || !Array.isArray(newBoard) || newBoard.length === 0) {
+            console.warn('Invalid new board from handleBlockLanding');
+            return;
+          }
+          
+          // Calculate new values first
+          const newHighestTile = Math.max(gameStats.highestTile, ...newBoard.flat().filter(val => val && !isNaN(val)));
+          const newScore = totalScore > 0 ? score + totalScore : score;
+          
+          // Update game statistics
+          setGameStats(prevStats => ({
+            ...prevStats,
+            tilesPlaced: prevStats.tilesPlaced + 1,
+            mergesPerformed: prevStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
+            chainReactions: prevStats.chainReactions + chainReactionCount,
+            highestTile: newHighestTile,
+          }));
+          
+          // Update score
+          if (totalScore > 0) {
+            setScore(newScore);
+          }
+          
+          // Update local state after all state updates - only if component is mounted
+          setTimeout(() => {
+            if (isMounted) {
+              if (newHighestTile > lastHighestBlock) {
+                setLastHighestBlock(newHighestTile);
+              }
+              
+              if (totalScore > 0) {
+                setLastScore(newScore);
+              }
+            }
+          }, 0);
+
+          // Update board state
+          setBoard(newBoard);
+          
+          // Clear falling state before spawning new tile
+          console.log('Clearing falling state before spawning new tile');
+          setFalling(null);
+          
+          // Spawn new tile after a short delay
+          setTimeout(() => {
+            if (isMounted && !gameOver && !isPaused) {
+              spawnNewTile();
+            }
+          }, 100); // Reduced from 500ms for faster response
+          
+          // Check for game over condition
           try {
-            soundManager.playSoundIfEnabled('gameOver');
-          } catch (error) {
-            console.warn('Game over sound error:', error);
+            if (GameValidator.isGameOver(newBoard)) {
+              setGameOver(true);
+              
+              // Save final game state when game ends
+              const finalGameState = {
+                board: newBoard,
+                score: newScore,
+                nextBlock,
+                gameStats: {
+                  ...gameStats,
+                  tilesPlaced: gameStats.tilesPlaced + 1,
+                  mergesPerformed: gameStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
+                  chainReactions: gameStats.chainReactions + chainReactionCount,
+                  highestTile: newHighestTile,
+                },
+                maxTileAchieved,
+                floorLevel,
+                currentMinSpawn,
+                timestamp: Date.now()
+              };
+              
+              try {
+                saveGame(finalGameState);
+              } catch (saveError) {
+                console.warn('Error saving final game state:', saveError);
+              }
+              
+              try {
+                soundManager.playSoundIfEnabled('gameOver');
+              } catch (error) {
+                console.warn('Game over sound error:', error);
+              }
+            }
+          } catch (gameOverError) {
+            console.warn('Error checking game over condition:', gameOverError);
           }
+        } catch (resultError) {
+          console.warn('Error processing handleBlockLanding result:', resultError);
         }
       }).catch(error => {
         // Error processing tile landing - recover gracefully
         console.warn('Tile landing error:', error);
         setIsTouchEnabled(true);
-        clearFallingRef.current();
+        // Safe cleanup of falling state
+        if (clearFallingRef.current && typeof clearFallingRef.current === 'function') {
+          try {
+            clearFallingRef.current();
+          } catch (cleanupError) {
+            console.warn('Error clearing falling state during error recovery:', cleanupError);
+          }
+        }
       });
     } catch (error) {
       // Error in handleTileLanded - recover gracefully
       console.warn('HandleTileLanded error:', error);
       setIsTouchEnabled(true);
-      clearFallingRef.current();
+      // Safe cleanup of falling state
+      if (clearFallingRef.current && typeof clearFallingRef.current === 'function') {
+        try {
+          clearFallingRef.current();
+        } catch (cleanupError) {
+          console.warn('Error clearing falling state during error recovery:', cleanupError);
+        }
+      }
     }
   };
 
@@ -942,99 +1202,154 @@ const DropNumberBoard = ({ navigation, route }) => {
    */
   const handleFullColumnTileLanded = async (row, col, value) => {
     try {
+      // Validate input parameters
+      if (row < 0 || row >= ROWS || col < 0 || col >= COLS || !value) {
+        console.warn('Invalid parameters in handleFullColumnTileLanded:', { row, col, value });
+        return;
+      }
+      
+      // Validate board state
+      if (!board || !Array.isArray(board) || board.length === 0) {
+        console.warn('Invalid board state in handleFullColumnTileLanded');
+        return;
+      }
+      
       // Drop sound is already played when tile is placed in GameLogic.js
       // No need to play it again here
       
       // Process the full column drop through the special game engine with animation support
-      const result = await processFullColumnDrop(board, value, col, showMergeResultAnimation);
+      let result;
+      try {
+        result = await processFullColumnDrop(board, value, col, showMergeResultAnimation);
+      } catch (processError) {
+        console.warn('Error in processFullColumnDrop:', processError);
+        return;
+      }
       
-      if (result.success) {
-        const { 
-          board: newBoard, 
-          score: totalScore, 
-          chainReactions: chainReactionCount = 0, 
-          iterations = 0 
-        } = result;
-        
-        // Calculate new values first
-        const newHighestTile = Math.max(gameStats.highestTile, ...newBoard.flat());
-        const newScore = totalScore > 0 ? score + totalScore : score;
-        
-        // Update game statistics
-        setGameStats(prevStats => ({
-          ...prevStats,
-          tilesPlaced: prevStats.tilesPlaced + 1,
-          mergesPerformed: prevStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
-          chainReactions: prevStats.chainReactions + chainReactionCount,
-          highestTile: newHighestTile,
-        }));
-        
-        // Update board state
-        setBoard(newBoard);
-        
-        // Update max tile achieved
-        const currentMaxTile = Math.max(...newBoard.flat());
-        if (currentMaxTile > maxTileAchieved) {
-          setMaxTileAchieved(currentMaxTile);
-        }
-        
-        // Update score
-        if (totalScore > 0) {
-          setScore(newScore);
-        }
-        
-        // Update local state after all state updates - only if component is mounted
-        setTimeout(() => {
-          if (isMounted) {
-            if (newHighestTile > lastHighestBlock) {
-              setLastHighestBlock(newHighestTile);
-            }
-            
-            if (totalScore > 0) {
-              setLastScore(newScore);
-            }
+      if (result && result.success) {
+        try {
+          const { 
+            board: newBoard, 
+            score: totalScore, 
+            chainReactions: chainReactionCount = 0, 
+            iterations = 0 
+          } = result;
+          
+          // Validate new board
+          if (!newBoard || !Array.isArray(newBoard) || newBoard.length === 0) {
+            console.warn('Invalid new board from processFullColumnDrop');
+            return;
           }
-        }, 0);
-        
-        // Check for game over condition
-        if (GameValidator.isGameOver(newBoard)) {
-          setGameOver(true);
           
-          // Save final game state when game ends
-          const finalGameState = {
-            board: newBoard,
-            score: newScore,
-            nextBlock,
-            previewBlock,
-            gameStats: {
-              ...gameStats,
-              tilesPlaced: gameStats.tilesPlaced + 1,
-              mergesPerformed: gameStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
-              chainReactions: gameStats.chainReactions + chainReactionCount,
-              highestTile: newHighestTile,
-            },
-            maxTileAchieved,
-            floorLevel,
-            currentMinSpawn,
-            timestamp: Date.now()
-          };
-          saveGame(finalGameState);
+          // Calculate new values first
+          const newHighestTile = Math.max(gameStats.highestTile, ...newBoard.flat().filter(val => val && !isNaN(val)));
+          const newScore = totalScore > 0 ? score + totalScore : score;
           
+          // Update game statistics
+          setGameStats(prevStats => ({
+            ...prevStats,
+            tilesPlaced: prevStats.tilesPlaced + 1,
+            mergesPerformed: prevStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
+            chainReactions: prevStats.chainReactions + chainReactionCount,
+            highestTile: newHighestTile,
+          }));
+          
+          // Update board state
+          setBoard(newBoard);
+          
+          // Spawn new tile after successful landing
+          setTimeout(() => {
+            if (isMounted && !gameOver && !isPaused) {
+              spawnNewTile();
+            }
+          }, 100); // Reduced from 200ms for faster response
+          
+          // Update max tile achieved
           try {
-            soundManager.playSoundIfEnabled('gameOver');
-          } catch (error) {
-            console.warn('Game over sound error:', error);
+            const currentMaxTile = Math.max(...newBoard.flat().filter(val => val && !isNaN(val)));
+            if (currentMaxTile > maxTileAchieved) {
+              setMaxTileAchieved(currentMaxTile);
+            }
+          } catch (maxTileError) {
+            console.warn('Error calculating max tile:', maxTileError);
           }
+          
+          // Update score
+          if (totalScore > 0) {
+            setScore(newScore);
+          }
+          
+          // Update local state after all state updates - only if component is mounted
+          setTimeout(() => {
+            if (isMounted) {
+              if (newHighestTile > lastHighestBlock) {
+                setLastHighestBlock(newHighestTile);
+              }
+              
+              if (totalScore > 0) {
+                setLastScore(newScore);
+              }
+            }
+          }, 0);
+          
+          // Check for game over condition
+          try {
+            if (GameValidator.isGameOver(newBoard)) {
+              setGameOver(true);
+              
+              // Save final game state when game ends
+              const finalGameState = {
+                board: newBoard,
+                score: newScore,
+                nextBlock,
+                gameStats: {
+                  ...gameStats,
+                  tilesPlaced: gameStats.tilesPlaced + 1,
+                  mergesPerformed: gameStats.mergesPerformed + (totalScore > 0 ? 1 : 0),
+                  chainReactions: gameStats.chainReactions + chainReactionCount,
+                  highestTile: newHighestTile,
+                },
+                maxTileAchieved,
+                floorLevel,
+                currentMinSpawn,
+                timestamp: Date.now()
+              };
+              
+              try {
+                saveGame(finalGameState);
+              } catch (saveError) {
+                console.warn('Error saving final game state:', saveError);
+              }
+              
+              try {
+                soundManager.playSoundIfEnabled('gameOver');
+              } catch (error) {
+                console.warn('Game over sound error:', error);
+              }
+            }
+          } catch (gameOverError) {
+            console.warn('Error checking game over condition:', gameOverError);
+          }
+        } catch (resultError) {
+          console.warn('Error processing processFullColumnDrop result:', resultError);
         }
       } else {
         // Full column drop failed, should not happen if canMergeInFullColumn worked correctly
+        console.warn('Full column drop failed:', result);
         // Error handled silently
       }
     } catch (error) {
       // Error in handleFullColumnTileLanded - recover gracefully
       console.warn('FullColumnTileLanded error:', error);
       setIsTouchEnabled(true);
-      clearFallingRef.current();
+      // Safe cleanup of falling state
+      if (clearFallingRef.current && typeof clearFallingRef.current === 'function') {
+        try {
+          clearFallingRef.current();
+        } catch (cleanupError) {
+          console.warn('Error clearing falling state during error recovery:', cleanupError);
+        }
+      }
     }
   };
 
@@ -1044,11 +1359,21 @@ const DropNumberBoard = ({ navigation, route }) => {
    */
   const resetGame = () => {
     try {
-      setBoard(Array.from({ length: gridConfig.ROWS }, () => Array(gridConfig.COLS).fill(0)));
+      // Always use 6x4 grid
+      const safeRows = 6;
+      const safeCols = 4;
+      
+      setBoard(Array.from({ length: safeRows }, () => Array(safeCols).fill(0)));
       setScore(0);
       setGameOver(false);
-      setNextBlock(getRandomBlockValue());
-      setPreviewBlock(getRandomBlockValue());
+      
+      try {
+        setNextBlock(getRandomBlockValue());
+      } catch (error) {
+        console.warn('Error getting random block value in reset:', error);
+        setNextBlock(2);
+      }
+      
       setGameStats({
         tilesPlaced: 0,
         mergesPerformed: 0,
@@ -1057,36 +1382,69 @@ const DropNumberBoard = ({ navigation, route }) => {
         startTime: Date.now(),
       });
     
-          // Clear all animations
-      clearFallingRef.current();
-      clearMergeAnimationsRef.current();
+      // Clear all animations safely
+      if (clearFallingRef.current && typeof clearFallingRef.current === 'function') {
+        try {
+          clearFallingRef.current();
+        } catch (error) {
+          console.warn('Error clearing falling animations in reset:', error);
+        }
+      }
+      
+      if (clearMergeAnimationsRef.current && typeof clearMergeAnimationsRef.current === 'function') {
+        try {
+          clearMergeAnimationsRef.current();
+        } catch (error) {
+          console.warn('Error clearing merge animations in reset:', error);
+        }
+      }
     
-    // Floor system reset
-    setCurrentMinSpawn(2);
-    setFloorLevel(1);
-    setMaxTileAchieved(0);
+      // Floor system reset
+      setCurrentMinSpawn(2);
+      setFloorLevel(1);
+      setMaxTileAchieved(0);
     
-          // Clear saved game when resetting
+      // Clear saved game when resetting
       try {
         // Clear the saved game state
         const { clearSavedGame } = useGameStore();
-        clearSavedGame();
+        if (clearSavedGame && typeof clearSavedGame === 'function') {
+          clearSavedGame();
+        }
       } catch (error) {
         console.warn('Failed to clear saved game:', error);
       }
     
-    // Enable touch
-    setIsTouchEnabled(true);
+      // Enable touch
+      setIsTouchEnabled(true);
+      
+      // Show guide for new game
+      setShowGuide(true);
     } catch (error) {
       // Error in resetGame - recover gracefully
       console.warn('ResetGame error:', error);
       // Try to reset to a safe state
-      setBoard(Array.from({ length: gridConfig.ROWS }, () => Array(gridConfig.COLS).fill(0)));
-      setScore(0);
-      setGameOver(false);
-      setIsTouchEnabled(true);
+      try {
+        setBoard(Array.from({ length: 5 }, () => Array(4).fill(0)));
+        setScore(0);
+        setGameOver(false);
+        setIsTouchEnabled(true);
+      } catch (fallbackError) {
+        console.error('Critical error in resetGame fallback:', fallbackError);
+        // Last resort - force component re-render
+        setGameOver(true);
+      }
     }
   };
+
+  /**
+   * Force reset stuck falling tiles - emergency recovery function
+   */
+
+  
+
+  
+
 
   /**
    * Get current game difficulty based on board state
@@ -1148,56 +1506,119 @@ const DropNumberBoard = ({ navigation, route }) => {
       </View>
       
       <OptimizedNextBlock nextBlock={nextBlock} />
+      
 
+      
       {/* Game Over Overlay */}
       {gameOver && (
         <View style={styles.overlay}>
           <View style={styles.gameOverContainer}>
-            {/* Animated Game Over Title */}
-            <View style={styles.gameOverHeader}>
-              <Text style={styles.gameOverText}>MISSION ENDED</Text>
-              <View style={styles.gameOverUnderline} />
+            {/* Cosmic Background Pattern */}
+            <View style={styles.cosmicBackground}>
+              <Text style={styles.cosmicStar}>✦</Text>
+              <Text style={styles.cosmicStar}>✦</Text>
+              <Text style={styles.cosmicStar}>✦</Text>
             </View>
             
-            {/* Score Section */}
-            <View style={styles.scoreSection}>
-              <Text style={styles.finalScoreLabel}>FINAL SCORE</Text>
-              <Text style={styles.finalScoreText}>{score.toLocaleString()}</Text>
-              {score > highScore && (
-                <Text style={styles.newRecordText}>NEW RECORD!</Text>
+            {/* Enhanced Space-themed Title with Graffiti */}
+            <View style={styles.gameOverTitleContainer}>
+              <Text style={styles.gameOverTitle}>MISSION ENDED</Text>
+              <View style={styles.gameOverTitleUnderline} />
+              {/* Graffiti Elements */}
+              <View style={styles.graffitiContainer}>
+                <Text style={[styles.graffitiText, styles.graffitiStar1]}>✧</Text>
+                <Text style={[styles.graffitiText, styles.graffitiStar2]}>★</Text>
+                <Text style={[styles.graffitiText, styles.graffitiLightning]}>⚡</Text>
+                <Text style={[styles.graffitiText, styles.graffitiPlanet]}>🌍</Text>
+                <Text style={[styles.graffitiText, styles.graffitiRocket]}>🚀</Text>
+              </View>
+            </View>
+            
+            {/* Enhanced Score Section */}
+            <View style={styles.gameOverScoreSection}>
+              <Text style={styles.gameOverFinalScoreLabel}>FINAL SCORE</Text>
+              <Text style={styles.gameOverFinalScoreText}>
+                {typeof score === 'number' ? score.toLocaleString() : '0'}
+              </Text>
+              {typeof score === 'number' && typeof highScore === 'number' && score > highScore && (
+                <View style={styles.newRecordContainer}>
+                  <Text style={styles.newRecordText}>NEW RECORD!</Text>
+                  <View style={styles.newRecordGlow} />
+                </View>
               )}
             </View>
             
-            {/* Stats Grid */}
-            <View style={styles.statsGrid}>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{gameStats.tilesPlaced}</Text>
-                <Text style={styles.statLabel}>Tiles Placed</Text>
+            {/* Enhanced Stats Grid */}
+            <View style={styles.gameOverStatsGrid}>
+              {/* Left Graffiti */}
+              <View style={styles.leftGraffiti}>
+                <Text style={styles.sideGraffitiText}>✨</Text>
+                <Text style={styles.sideGraffitiText}>🌟</Text>
               </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>{gameStats.chainReactions}</Text>
-                <Text style={styles.statLabel}>Chain Reactions</Text>
+              
+              <View style={styles.gameOverStatItem}>
+                <View style={styles.gameOverStatIconContainer}>
+                  <Text style={styles.gameOverStatIcon}>🎯</Text>
+                </View>
+                <Text style={styles.gameOverStatValue}>
+                  {typeof gameStats?.tilesPlaced === 'number' ? gameStats.tilesPlaced : 0}
+                </Text>
+                <Text style={styles.gameOverStatLabel}>Tiles Placed</Text>
+              </View>
+              <View style={styles.gameOverStatDivider} />
+              <View style={styles.gameOverStatItem}>
+                <View style={styles.gameOverStatIconContainer}>
+                  <Text style={styles.gameOverStatIcon}>💥</Text>
+                </View>
+                <Text style={styles.gameOverStatValue}>
+                  {typeof gameStats?.chainReactions === 'number' ? gameStats.chainReactions : 0}
+                </Text>
+                <Text style={styles.gameOverStatLabel}>Chain Reactions</Text>
+              </View>
+              
+              {/* Right Graffiti */}
+              <View style={styles.rightGraffiti}>
+                <Text style={styles.sideGraffitiText}>🚀</Text>
+                <Text style={styles.sideGraffitiText}>⚡</Text>
               </View>
             </View>
             
-            {/* Action Button */}
-            <TouchableOpacity 
-              style={styles.restartBtn} 
-              onPress={() => {
-                try {
-                  resetGame();
-                } catch (error) {
-                  console.warn('Game over restart error:', error);
-                  // Force reset to safe state
-                  setBoard(Array.from({ length: gridConfig.ROWS }, () => Array(gridConfig.COLS).fill(0)));
-                  setScore(0);
-                  setGameOver(false);
-                }
-              }}
-            >
-              <Text style={styles.restartText}>PLAY AGAIN</Text>
-            </TouchableOpacity>
+            {/* Enhanced Action Button */}
+            <View style={styles.buttonAreaContainer}>
+              {/* Button Graffiti */}
+              <View style={styles.buttonGraffitiLeft}>
+                <Text style={styles.buttonGraffitiText}>🔥</Text>
+                <Text style={styles.buttonGraffitiText}>💫</Text>
+              </View>
+              
+              <TouchableOpacity 
+                style={styles.gameOverRestartBtn} 
+                onPress={() => {
+                  try {
+                    resetGame();
+                  } catch (error) {
+                    console.warn('Game over restart error:', error);
+                    // Force reset to safe state
+                    try {
+                      setBoard(Array.from({ length: 5 }, () => Array(4).fill(0)));
+                      setScore(0);
+                      setGameOver(false);
+                    } catch (fallbackError) {
+                      console.error('Critical error in game over restart fallback:', fallbackError);
+                    }
+                  }
+                }}
+              >
+                <View style={styles.gameOverButtonGlow} />
+                <Text style={styles.gameOverRestartText}>PLAY AGAIN</Text>
+              </TouchableOpacity>
+              
+              {/* Button Graffiti */}
+              <View style={styles.buttonGraffitiRight}>
+                <Text style={styles.buttonGraffitiText}>⭐</Text>
+                <Text style={styles.buttonGraffitiText}>🎮</Text>
+              </View>
+            </View>
           </View>
         </View>
       )}
@@ -1240,7 +1661,7 @@ const styles = StyleSheet.create({
   },
   nextBlockArea: {
     position: 'absolute',
-    bottom: screenWidth >= 768 ? 50 : 25, // Reduced bottom spacing to give more board space
+    bottom: screenWidth >= 768 ? 80 : 40, // Reverted back to original spacing
     left: '50%',
     transform: [{ translateX: screenWidth >= 768 ? -120 : -80 }], // Larger transform for iPad
     alignItems: 'center',
@@ -1375,15 +1796,23 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   
-  // Game over screen styles
+  // Game over screen styles - Matching Pause Modal Design System
   gameOverContainer: {
-    backgroundColor: 'rgba(30, 30, 40, 0.98)',
-    borderRadius: 16,
+    backgroundColor: 'rgba(16, 20, 36, 0.98)',
+    borderRadius: 20,
     padding: 30,
     alignItems: 'center',
     width: '90%',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    maxWidth: 400,
+    borderWidth: 2,
+    borderColor: 'rgba(74, 144, 226, 0.6)',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 25,
+    elevation: 20,
+    position: 'relative',
+    overflow: 'hidden',
   },
   gameOverHeader: {
     alignItems: 'center',
@@ -1481,6 +1910,296 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   
+
+
+  // Enhanced Game Over Styles - Matching Pause Modal Design System
+  gameOverTitleContainer: {
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  gameOverTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: 2,
+    textShadowColor: '#4A90E2',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
+  gameOverTitleUnderline: {
+    width: '60%',
+    height: 2,
+    backgroundColor: '#4A90E2',
+    borderRadius: 1,
+    marginTop: 8,
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  graffitiContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 15,
+    gap: 12,
+  },
+  graffitiText: {
+    fontSize: 24,
+    color: '#FFD700',
+    textShadowColor: '#FFD700',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
+    transform: [{ rotate: '15deg' }],
+  },
+  graffitiStar1: {
+    transform: [{ rotate: '-20deg' }],
+    color: '#FF6B6B',
+    textShadowColor: '#FF6B6B',
+  },
+  graffitiStar2: {
+    transform: [{ rotate: '25deg' }],
+    color: '#4ECDC4',
+    textShadowColor: '#4ECDC4',
+  },
+  graffitiLightning: {
+    transform: [{ rotate: '10deg' }],
+    color: '#FFE66D',
+    textShadowColor: '#FFE66D',
+  },
+  graffitiPlanet: {
+    transform: [{ rotate: '-15deg' }],
+    color: '#95E1D3',
+    textShadowColor: '#95E1D3',
+  },
+  graffitiRocket: {
+    transform: [{ rotate: '30deg' }],
+    color: '#F38181',
+    textShadowColor: '#F38181',
+  },
+  gameOverScoreSection: {
+    alignItems: 'center',
+    marginBottom: 35,
+  },
+  gameOverFinalScoreLabel: {
+    color: '#B0C4DE',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+    letterSpacing: 1,
+    textShadowColor: 'rgba(176, 196, 222, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
+  },
+  gameOverFinalScoreText: {
+    color: '#FFD700',
+    fontSize: 48,
+    fontWeight: '800',
+    textShadowColor: '#FFD700',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
+    letterSpacing: 2,
+  },
+  newRecordContainer: {
+    alignItems: 'center',
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(76, 175, 80, 0.6)',
+  },
+  newRecordText: {
+    color: '#4CAF50',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textShadowColor: 'rgba(76, 175, 80, 0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
+  },
+  newRecordGlow: {
+    position: 'absolute',
+    top: -2,
+    left: -2,
+    right: -2,
+    bottom: -2,
+    backgroundColor: 'rgba(76, 175, 80, 0.3)',
+    borderRadius: 22,
+    zIndex: -1,
+  },
+  gameOverStatsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 40,
+    gap: 32,
+  },
+  gameOverStatItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  gameOverStatIconContainer: {
+    width: 64,
+    height: 64,
+    backgroundColor: '#1a365d',
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: 'rgba(74, 144, 226, 0.6)',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  gameOverStatIcon: {
+    fontSize: 28,
+    color: '#FFD700',
+    textShadowColor: '#FFD700',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
+  },
+  gameOverStatValue: {
+    color: '#FFD700',
+    fontSize: 28,
+    fontWeight: '700',
+    textShadowColor: '#FFD700',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
+    marginBottom: 4,
+  },
+  gameOverStatLabel: {
+    color: '#B0C4DE',
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    textShadowColor: 'rgba(176, 196, 222, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 2,
+  },
+  gameOverStatDivider: {
+    width: 1,
+    height: '100%',
+    backgroundColor: '#555',
+  },
+  
+  // Side Graffiti Styles
+  leftGraffiti: {
+    position: 'absolute',
+    left: -30,
+    top: '50%',
+    transform: [{ translateY: -20 }],
+    alignItems: 'center',
+    gap: 8,
+  },
+  rightGraffiti: {
+    position: 'absolute',
+    right: -30,
+    top: '50%',
+    transform: [{ translateY: -20 }],
+    alignItems: 'center',
+    gap: 8,
+  },
+  sideGraffitiText: {
+    fontSize: 20,
+    color: '#FFD700',
+    textShadowColor: '#FFD700',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
+    transform: [{ rotate: '15deg' }],
+  },
+  
+  buttonAreaContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    width: '100%',
+  },
+  buttonGraffitiLeft: {
+    position: 'absolute',
+    left: -30,
+    alignItems: 'center',
+    gap: 8,
+  },
+  buttonGraffitiRight: {
+    position: 'absolute',
+    right: -30,
+    alignItems: 'center',
+    gap: 8,
+  },
+  buttonGraffitiText: {
+    fontSize: 18,
+    color: '#FFD700',
+    textShadowColor: '#FFD700',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
+    transform: [{ rotate: '20deg' }],
+  },
+  cosmicBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    opacity: 0.1,
+    zIndex: -1,
+  },
+  cosmicStar: {
+    fontSize: 16,
+    color: '#4A90E2',
+    textShadowColor: '#4A90E2',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
+  },
+  gameOverRestartBtn: {
+    backgroundColor: 'rgba(74, 144, 226, 0.3)',
+    borderWidth: 3,
+    borderColor: 'rgba(74, 144, 226, 0.8)',
+    paddingVertical: 20,
+    paddingHorizontal: 40,
+    borderRadius: 12,
+    marginVertical: 10,
+    minWidth: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  gameOverButtonGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(74, 144, 226, 0.1)',
+    borderRadius: 12,
+  },
+  gameOverRestartText: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 1.5,
+    textShadowColor: 'rgba(74, 144, 226, 0.8)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
+  },
 
 });
 

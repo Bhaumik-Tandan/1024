@@ -10,6 +10,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:audio": "node test-background-music.js",
     "generate-assets": "node scripts/generateSimpleSolarAssets.js"
   },
   "dependencies": {
@@ -22,7 +23,7 @@
     "@react-navigation/stack": "^7.4.2",
     "@sentry/react-native": "~6.14.0",
     "expo": "^53.0.20",
-    "expo-audio": "~0.4.8",
+    "expo-av": "~14.0.0",
     "expo-font": "~13.3.2",
     "expo-haptics": "^14.1.4",
     "expo-linear-gradient": "^14.1.5",

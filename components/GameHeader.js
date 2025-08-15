@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     paddingBottom: isTablet ? 8 : 6,
     backgroundColor: 'transparent',
     zIndex: 100,
-    marginTop: isTablet ? -5 : -8, // Negative margin to pull header up and reduce top space
+    marginTop: 0, // Reverted back to original spacing
   },
   
   // Record section

@@ -1,12 +1,12 @@
-# 🚀 Space Drop
+# 🚀 Cosmic Fusion
 
 **The Ultimate Space Adventure Game for Everyone!** 🌌
 
 Drop planets from space, merge them together, and create bigger worlds! Perfect for kids and space lovers of all ages.
 
-## ⭐ What is Space Drop?
+## ⭐ What is Cosmic Fusion?
 
-Space Drop is a fun and easy space game where you:
+Cosmic Fusion is a fun and easy space game where you:
 - 🪐 Drop planets from the sky
 - 🌟 Match same planets to make bigger ones
 - 🚀 Try to create the biggest space objects
@@ -69,7 +69,7 @@ yarn start
 ### For Kids:
 Just download and tap to play! It's that easy! 🎮
 
-## 🌟 Why Kids Love Space Drop
+## 🌟 Why Kids Love Cosmic Fusion
 
 - **Simple to learn** - Just tap to drop planets!
 - **Beautiful space graphics** - Like having your own universe
@@ -92,7 +92,7 @@ Just download and tap to play! It's that easy! 🎮
 - **Schools** teaching about space
 - **Anyone** who enjoys relaxing puzzle games
 
-## 🌌 The Space Drop Experience
+## 🌌 The Cosmic Fusion Experience
 
 Experience the wonder of space as you:
 - Watch stars zoom past like you're in a spaceship
@@ -102,9 +102,9 @@ Experience the wonder of space as you:
 
 ## 🚀 Join the Space Adventure!
 
-Download Space Drop today and start your cosmic journey! Perfect for curious kids, space fans, and anyone who wants to explore the universe one planet at a time.
+Download Cosmic Fusion today and start your cosmic journey! Perfect for curious kids, space fans, and anyone who wants to explore the universe one planet at a time.
 
-**Simple. Fun. Educational. Space Drop - Where Every Kid Can Be a Space Explorer!** 🌟
+**Simple. Fun. Educational. Cosmic Fusion - Where Every Kid Can Be a Space Explorer!** 🌟
 
 ---
 

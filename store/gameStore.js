@@ -16,20 +16,31 @@ const createGameStore = () => {
     currentScore: 0,
     highestBlock: null,
     
-
-    
     // Saved game state
     savedGame: null,
     hasSavedGame: false,
     
     // Actions with safe property access
-    toggleVibration: () => storeData.vibrationEnabled = !storeData.vibrationEnabled,
-    toggleSound: () => storeData.soundEnabled = !storeData.soundEnabled,
-    setSoundVolume: (volume) => storeData.soundVolume = Math.max(0, Math.min(1, volume || 0.7)),
-    toggleBackgroundMusic: () => storeData.backgroundMusicEnabled = !storeData.backgroundMusicEnabled,
-    setBackgroundMusicVolume: (volume) => storeData.backgroundMusicVolume = Math.max(0, Math.min(1, volume || 0.7)),
-    
-
+    toggleVibration: () => {
+      storeData.vibrationEnabled = !storeData.vibrationEnabled;
+      return storeData.vibrationEnabled;
+    },
+    toggleSound: () => {
+      storeData.soundEnabled = !storeData.soundEnabled;
+      return storeData.soundEnabled;
+    },
+    setSoundVolume: (volume) => {
+      storeData.soundVolume = Math.max(0, Math.min(1, volume || 0.7));
+      return storeData.soundVolume;
+    },
+    toggleBackgroundMusic: () => {
+      storeData.backgroundMusicEnabled = !storeData.backgroundMusicEnabled;
+      return storeData.backgroundMusicEnabled;
+    },
+    setBackgroundMusicVolume: (volume) => {
+      storeData.backgroundMusicVolume = Math.max(0, Math.min(1, volume || 0.7));
+      return storeData.backgroundMusicVolume;
+    },
     
     updateScore: (score) => {
       const currentHighScore = storeData.highScore || 0;
@@ -56,9 +67,7 @@ const createGameStore = () => {
           score: gameState.score || 0,
           record: gameState.record || 0,
           nextBlock: gameState.nextBlock || 2,
-          previewBlock: gameState.previewBlock || 2,
           gameStats: gameState.gameStats || {},
-
           timestamp: Date.now(),
         };
         storeData.savedGame = savedGameData;
@@ -85,7 +94,6 @@ const createGameStore = () => {
             const saved = localStorage.getItem('game-state');
             if (saved) {
               const parsed = JSON.parse(saved);
-
               return parsed;
             }
             return null;
@@ -93,7 +101,6 @@ const createGameStore = () => {
             return null;
           }
         }
-
         return storeData.savedGame || null;
       } catch (error) {
         return null;
@@ -132,6 +139,13 @@ const createGameStore = () => {
       storeData.savedGame = null;
       storeData.hasSavedGame = false;
     },
+    
+    // Enhanced getters for better reliability
+    getBackgroundMusicEnabled: () => storeData.backgroundMusicEnabled,
+    getBackgroundMusicVolume: () => storeData.backgroundMusicVolume,
+    getSoundEnabled: () => storeData.soundEnabled,
+    getSoundVolume: () => storeData.soundVolume,
+    getVibrationEnabled: () => storeData.vibrationEnabled,
   };
   
   return storeData;
@@ -144,7 +158,6 @@ if (Platform.OS === 'web') {
   // Simple store for web
   const gameStore = createGameStore();
   useGameStore = () => gameStore;
-
 } else {
   // Full zustand store with persist for native
   try {
@@ -154,125 +167,127 @@ if (Platform.OS === 'web') {
     useGameStore = create(
       persist(
         (set, get) => ({
-        // Game settings with explicit defaults
-        vibrationEnabled: true,
-        soundEnabled: true,
-        soundVolume: 0.7,
-        backgroundMusicEnabled: true,
-        backgroundMusicVolume: 0.7,
-        
-        // Game state
-        highScore: null,
-        currentScore: 0,
-        highestBlock: null,
-        
-
-        
-        // Saved game state
-        savedGame: null,
-        hasSavedGame: false,
-        
-        // Actions
-        toggleVibration: () => set((state) => ({ 
-          vibrationEnabled: !(state.vibrationEnabled ?? true) 
-        })),
-        toggleSound: () => set((state) => ({ 
-          soundEnabled: !(state.soundEnabled ?? true) 
-        })),
-        setSoundVolume: (volume) => set({ 
-          soundVolume: Math.max(0, Math.min(1, volume || 0.7)) 
-        }),
-        toggleBackgroundMusic: () => set((state) => ({ 
-          backgroundMusicEnabled: !(state.backgroundMusicEnabled ?? true) 
-        })),
-        setBackgroundMusicVolume: (volume) => set({ 
-          backgroundMusicVolume: Math.max(0, Math.min(1, volume || 0.7)) 
-        }),
-        
-        updateScore: (score) => {
-          const state = get();
-          const currentHighScore = state.highScore || 0;
-          if (score > currentHighScore) {
-            set({ highScore: score, currentScore: score });
-          } else {
-            set({ currentScore: score });
-          }
-        },
-        
-        updateHighestBlock: (blockValue) => {
-          const state = get();
-          const currentHighest = state.highestBlock || 0;
-          if (blockValue > currentHighest) {
-            set({ highestBlock: blockValue });
-          }
-        },
-        
-        saveGame: (gameState) => {
-          try {
-            const savedGameData = {
-              board: gameState.board || [],
-              score: gameState.score || 0,
-              record: gameState.record || 0,
-              nextBlock: gameState.nextBlock || 2,
-              previewBlock: gameState.previewBlock || 2,
-              gameStats: gameState.gameStats || {},
-              timestamp: Date.now(),
-            };
-            set({ 
-              savedGame: savedGameData,
-              hasSavedGame: true 
-            });
-          } catch (error) {
-            // Failed to save game silently
-          }
-        },
-        
-        loadSavedGame: () => {
-          try {
-            const { savedGame } = get();
-            return savedGame || null;
-          } catch (error) {
-            return null;
-          }
-        },
-        
-        clearSavedGame: () => {
-          try {
-            set({ 
-              savedGame: null,
-              hasSavedGame: false 
-            });
-          } catch (error) {
-            // Failed to clear saved game silently
-          }
-        },
-        
-
-        
-        resetGame: () => set({ currentScore: 0 }),
-        
-        resetAllSettings: () => set({
+          // Game settings with explicit defaults
           vibrationEnabled: true,
           soundEnabled: true,
           soundVolume: 0.7,
           backgroundMusicEnabled: true,
           backgroundMusicVolume: 0.7,
+          
+          // Game state
           highScore: null,
           currentScore: 0,
           highestBlock: null,
+          
+          // Saved game state
           savedGame: null,
           hasSavedGame: false,
+          
+          // Actions
+          toggleVibration: () => set((state) => ({ 
+            vibrationEnabled: !(state.vibrationEnabled ?? true) 
+          })),
+          toggleSound: () => set((state) => ({ 
+            soundEnabled: !(state.soundEnabled ?? true) 
+          })),
+          setSoundVolume: (volume) => set({ 
+            soundVolume: Math.max(0, Math.min(1, volume || 0.7)) 
+          }),
+          toggleBackgroundMusic: () => set((state) => ({ 
+            backgroundMusicEnabled: !(state.backgroundMusicEnabled ?? true) 
+          })),
+          setBackgroundMusicVolume: (volume) => set({ 
+            backgroundMusicVolume: Math.max(0, Math.min(1, volume || 0.7)) 
+          }),
+          
+          updateScore: (score) => {
+            const state = get();
+            const currentHighScore = state.highScore || 0;
+            if (score > currentHighScore) {
+              set({ highScore: score, currentScore: score });
+            } else {
+              set({ currentScore: score });
+            }
+          },
+          
+          updateHighestBlock: (blockValue) => {
+            const state = get();
+            const currentHighest = state.highestBlock || 0;
+            if (blockValue > currentHighest) {
+              set({ highestBlock: blockValue });
+            }
+          },
+          
+          saveGame: (gameState) => {
+            try {
+              const savedGameData = {
+                board: gameState.board || [],
+                score: gameState.score || 0,
+                record: gameState.record || 0,
+                nextBlock: gameState.nextBlock || 2,
+                gameStats: gameState.gameStats || {},
+                timestamp: Date.now(),
+              };
+              set({ 
+                savedGame: savedGameData,
+                hasSavedGame: true 
+              });
+            } catch (error) {
+              // Failed to save game silently
+            }
+          },
+          
+          loadSavedGame: () => {
+            try {
+              const { savedGame } = get();
+              return savedGame || null;
+            } catch (error) {
+              return null;
+            }
+          },
+          
+          clearSavedGame: () => {
+            try {
+              set({ 
+                savedGame: null,
+                hasSavedGame: false 
+              });
+            } catch (error) {
+              // Failed to clear saved game silently
+            }
+          },
+          
+          resetGame: () => set({ currentScore: 0 }),
+          
+          resetAllSettings: () => set({
+            vibrationEnabled: true,
+            soundEnabled: true,
+            soundVolume: 0.7,
+            backgroundMusicEnabled: true,
+            backgroundMusicVolume: 0.7,
+            highScore: null,
+            currentScore: 0,
+            highestBlock: null,
+            savedGame: null,
+            hasSavedGame: false,
+          }),
+          
+          // Enhanced getters for better reliability
+          getBackgroundMusicEnabled: () => get().backgroundMusicEnabled,
+          getBackgroundMusicVolume: () => get().backgroundMusicVolume,
+          getSoundEnabled: () => get().soundEnabled,
+          getSoundVolume: () => get().soundVolume,
+          getVibrationEnabled: () => get().vibrationEnabled,
         }),
-      }),
-      {
-        name: 'game-settings',
-        storage: createJSONStorage(() => AsyncStorage),
-      }
-    )
-  );
-
+        {
+          name: 'game-settings',
+          storage: createJSONStorage(() => AsyncStorage),
+        }
+      )
+    );
   } catch (error) {
     // Fallback to web store if native store fails
+    console.warn('Native store failed, falling back to web store:', error);
     const gameStore = createGameStore();
     useGameStore = () => gameStore;
   }

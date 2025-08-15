@@ -6,13 +6,13 @@
 
 import { Dimensions, Platform } from 'react-native';
 
-// Adaptive board configuration based on device and orientation
+/**
+ * Get board configuration for current device
+ * @returns {Object} Board configuration with ROWS and COLS
+ */
 export const getBoardConfig = () => {
-  // Use consistent 6x4 grid for all devices
-  return {
-    ROWS: 6,
-    COLS: 4
-  };
+  // Use consistent 5x4 grid for all devices
+  return { ROWS: 5, COLS: 4 };
 };
 
 // Get initial board configuration
@@ -28,7 +28,7 @@ export const GAME_CONFIG = {
   
   // Timing settings
   TIMING: {
-    SLOW_FALL_DURATION: 7000,      // 7 seconds for normal fall (now unused)
+    SLOW_FALL_DURATION: 2000,      // 2 seconds for normal fall (reduced from 7 seconds)
     FAST_DROP_DURATION: 600,       // 0.6 seconds for faster astronomical drops (reduced from 800ms)
     COSMIC_DROP_DURATION: 400,     // 0.4 seconds for even faster user-triggered drops (reduced from 500ms)
     MERGE_ANIMATION_DURATION: 120,  // Ultra fast merge animations for instant feedback
@@ -141,9 +141,8 @@ export const GAME_RULES = {
    * - No moves possible when all columns are full to the bottom
    */
   gameOver: {
-    condition: 'bottomRowFull',
-    checkRow: GAME_CONFIG.BOARD.ROWS - 1, // Bottom row index (row 5 for 6-row board)
-    allowPartialFill: false,
+    checkRow: 4, // row 4 for 5-row board
+    checkCol: 3, // column 3 for 4-column board
   },
   
 

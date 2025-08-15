@@ -573,7 +573,7 @@ export const SplashScreen = ({ onComplete }) => {
             }
           ]}
         >
-          SPACE
+          COSMIC
         </Animated.Text>
         <Animated.Text 
           style={[
@@ -583,7 +583,7 @@ export const SplashScreen = ({ onComplete }) => {
             }
           ]}
         >
-          DROP
+          FUSION
         </Animated.Text>
         <Animated.Text 
           style={[

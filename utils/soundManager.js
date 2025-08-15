@@ -9,19 +9,13 @@
  * 3. Reduced queue processing delays
  * 4. Sound completion timeouts
  * 5. Better prioritization for chain reactions
+ * 
+ * UPDATED: Now uses expo-av for better compatibility with Expo SDK 53
  */
 
 import { Platform } from 'react-native';
+import { Audio } from 'expo-av';
 import useGameStore from '../store/gameStore';
-
-// Only import Audio on native platforms
-let createAudioPlayer = null;
-let setAudioModeAsync = null;
-if (Platform.OS !== 'web') {
-  const audio = require('expo-audio');
-  createAudioPlayer = audio.createAudioPlayer;
-  setAudioModeAsync = audio.setAudioModeAsync;
-}
 
 class SoundManager {
   constructor() {
@@ -31,6 +25,7 @@ class SoundManager {
     this.gameOverPlayer = null;
     this.isInitialized = false;
     this.isWebPlatform = Platform.OS === 'web';
+    this.audioModeSet = false;
     
     // Enhanced sound queuing system with optimizations
     this.soundQueue = [];
@@ -82,17 +77,22 @@ class SoundManager {
     }
 
     try {
-      await setAudioModeAsync({
-        allowsRecording: false,
-        shouldPlayInBackground: true,
-        playsInSilentMode: true,
-        shouldDuckAndroid: true,
-        shouldRouteThroughEarpiece: false,
-      });
+      // Set audio mode only once
+      if (!this.audioModeSet) {
+        await Audio.setAudioModeAsync({
+          allowsRecording: false,
+          shouldPlayInBackground: true,
+          playsInSilentMode: true,
+          shouldDuckAndroid: true,
+          shouldRouteThroughEarpiece: false,
+        });
+        this.audioModeSet = true;
+      }
       
       this.createAudioPlayers();
       this.isInitialized = true;
     } catch (error) {
+      console.warn('SoundManager: Initialization failed:', error);
       this.isInitialized = false;
     }
   }
@@ -345,20 +345,38 @@ class SoundManager {
   }
 
   createAudioPlayers() {
-    if (this.isWebPlatform || !createAudioPlayer) {
+    if (this.isWebPlatform) {
       return;
     }
     
     try {
-      this.mergePlayer = createAudioPlayer(require('../assets/audio/mergeSound.wav'));
-      this.intermediateMergePlayer = createAudioPlayer(require('../assets/audio/intermediateMerge.wav'));
-      this.dropPlayer = createAudioPlayer(require('../assets/audio/drop.wav'));
-      this.gameOverPlayer = createAudioPlayer(require('../assets/audio/gameOver.wav'));
+      this.mergePlayer = new Audio.Sound();
+      this.intermediateMergePlayer = new Audio.Sound();
+      this.dropPlayer = new Audio.Sound();
+      this.gameOverPlayer = new Audio.Sound();
+      
+      // Load all sound files
+      this.loadAllSounds();
       
       const { soundVolume } = useGameStore.getState();
       this.updateVolumeLevels(soundVolume);
     } catch (error) {
-      // console.warn('OptimizedSoundManager: Failed to create audio players:', error);
+      console.warn('SoundManager: Failed to create audio players:', error);
+    }
+  }
+
+  async loadAllSounds() {
+    if (this.isWebPlatform) return;
+    
+    try {
+      await Promise.all([
+        this.mergePlayer.loadAsync(require('../assets/audio/mergeSound.wav')),
+        this.intermediateMergePlayer.loadAsync(require('../assets/audio/intermediateMerge.wav')),
+        this.dropPlayer.loadAsync(require('../assets/audio/drop.wav')),
+        this.gameOverPlayer.loadAsync(require('../assets/audio/gameOver.wav'))
+      ]);
+    } catch (error) {
+      console.warn('SoundManager: Failed to load some sound files:', error);
     }
   }
 
@@ -368,12 +386,12 @@ class SoundManager {
     try {
       const baseVolume = Math.max(0, Math.min(1, volume || 0.7));
       
-      if (this.mergePlayer) this.mergePlayer.volume = baseVolume * 0.7;
-      if (this.intermediateMergePlayer) this.intermediateMergePlayer.volume = baseVolume * 0.6;
-      if (this.dropPlayer) this.dropPlayer.volume = baseVolume * 0.9;
-      if (this.gameOverPlayer) this.gameOverPlayer.volume = baseVolume * 0.8;
+      if (this.mergePlayer) this.mergePlayer.setVolumeAsync(baseVolume * 0.7);
+      if (this.intermediateMergePlayer) this.intermediateMergePlayer.setVolumeAsync(baseVolume * 0.6);
+      if (this.dropPlayer) this.dropPlayer.setVolumeAsync(baseVolume * 0.9);
+      if (this.gameOverPlayer) this.gameOverPlayer.setVolumeAsync(baseVolume * 0.8);
     } catch (error) {
-      // console.warn('❌ OptimizedSoundManager: Failed to update volume levels:', error);
+      console.warn('SoundManager: Failed to update volume levels:', error);
     }
   }
 
@@ -382,10 +400,9 @@ class SoundManager {
     if (this.isWebPlatform || !this.mergePlayer) return;
     
     try {
-      this.mergePlayer.seekTo(0);
-      await this.mergePlayer.play();
+      await this.mergePlayer.replayAsync();
     } catch (error) {
-      // console.warn('OptimizedSoundManager: Failed to play merge sound:', error);
+      console.warn('SoundManager: Failed to play merge sound:', error);
       throw error;
     }
   }
@@ -394,10 +411,9 @@ class SoundManager {
     if (this.isWebPlatform || !this.intermediateMergePlayer) return;
     
     try {
-      this.intermediateMergePlayer.seekTo(0);
-      await this.intermediateMergePlayer.play();
+      await this.intermediateMergePlayer.replayAsync();
     } catch (error) {
-      // console.warn('OptimizedSoundManager: Failed to play intermediate merge sound:', error);
+      console.warn('SoundManager: Failed to play intermediate merge sound:', error);
       throw error;
     }
   }
@@ -406,10 +422,9 @@ class SoundManager {
     if (this.isWebPlatform || !this.dropPlayer) return;
     
     try {
-      this.dropPlayer.seekTo(0);
-      await this.dropPlayer.play();
+      await this.dropPlayer.replayAsync();
     } catch (error) {
-      // console.warn('OptimizedSoundManager: Failed to play drop sound:', error);
+      console.warn('SoundManager: Failed to play drop sound:', error);
       throw error;
     }
   }
@@ -418,10 +433,9 @@ class SoundManager {
     if (this.isWebPlatform || !this.gameOverPlayer) return;
     
     try {
-      this.gameOverPlayer.seekTo(0);
-      await this.gameOverPlayer.play();
+      await this.gameOverPlayer.replayAsync();
     } catch (error) {
-      // console.warn('OptimizedSoundManager: Failed to play game over sound:', error);
+      console.warn('SoundManager: Failed to play game over sound:', error);
       throw error;
     }
   }
@@ -430,10 +444,9 @@ class SoundManager {
     if (this.isWebPlatform || !this.dropPlayer) return;
     
     try {
-      this.dropPlayer.seekTo(0);
-      await this.dropPlayer.play();
+      await this.dropPlayer.replayAsync();
     } catch (error) {
-      // console.warn('OptimizedSoundManager: Failed to play pause/resume sound:', error);
+      console.warn('SoundManager: Failed to play pause/resume sound:', error);
       throw error;
     }
   }
@@ -481,10 +494,10 @@ class SoundManager {
     if (this.isWebPlatform) return;
     
     try {
-      if (this.mergePlayer) this.mergePlayer.pause();
-      if (this.intermediateMergePlayer) this.intermediateMergePlayer.pause();
-      if (this.dropPlayer) this.dropPlayer.pause();
-      if (this.gameOverPlayer) this.gameOverPlayer.pause();
+      if (this.mergePlayer) this.mergePlayer.stopAsync();
+      if (this.intermediateMergePlayer) this.intermediateMergePlayer.stopAsync();
+      if (this.dropPlayer) this.dropPlayer.stopAsync();
+      if (this.gameOverPlayer) this.gameOverPlayer.stopAsync();
       
       // Clear sound queue and tracking
       this.soundQueue = [];
@@ -508,7 +521,7 @@ class SoundManager {
         pauseResume: 0
       };
     } catch (error) {
-      // console.warn('OptimizedSoundManager: Failed to stop sounds:', error);
+      console.warn('SoundManager: Failed to stop sounds:', error);
     }
   }
 
@@ -517,23 +530,23 @@ class SoundManager {
     
     try {
       if (this.mergePlayer) {
-        this.mergePlayer.remove();
+        await this.mergePlayer.unloadAsync();
         this.mergePlayer = null;
       }
       if (this.intermediateMergePlayer) {
-        this.intermediateMergePlayer.remove();
+        await this.intermediateMergePlayer.unloadAsync();
         this.intermediateMergePlayer = null;
       }
       if (this.dropPlayer) {
-        this.dropPlayer.remove();
+        await this.dropPlayer.unloadAsync();
         this.dropPlayer = null;
       }
       if (this.gameOverPlayer) {
-        this.gameOverPlayer.remove();
+        await this.gameOverPlayer.unloadAsync();
         this.gameOverPlayer = null;
       }
     } catch (error) {
-      // console.warn('OptimizedSoundManager: Failed to unload sounds:', error);
+      console.warn('SoundManager: Failed to unload sounds:', error);
     }
   }
 
@@ -543,7 +556,7 @@ class SoundManager {
     try {
       this.updateVolumeLevels(volume);
     } catch (error) {
-      // console.warn('OptimizedSoundManager: Failed to set volume:', error);
+      console.warn('SoundManager: Failed to set volume:', error);
     }
   }
 
@@ -612,17 +625,41 @@ class SoundManager {
     };
   }
 
+  // Enhanced error recovery
+  async recoverFromError() {
+    console.log('SoundManager: Attempting error recovery...');
+    
+    try {
+      // Stop all sounds
+      await this.stopAllSounds();
+      
+      // Unload all players
+      await this.unloadAllSounds();
+      
+      // Reset state
+      this.isInitialized = false;
+      this.audioModeSet = false;
+      
+      // Reinitialize
+      await this.initialize();
+      
+      console.log('SoundManager: Error recovery completed');
+    } catch (error) {
+      console.warn('SoundManager: Error recovery failed:', error);
+    }
+  }
+
   // Legacy methods to maintain compatibility
   async loadMergeSound() {
-    // No longer needed with expo-audio, players are created in initialize
+    // No longer needed with expo-av, players are created in initialize
   }
 
   async loadIntermediateMergeSound() {
-    // No longer needed with expo-audio, players are created in initialize
+    // No longer needed with expo-av, players are created in initialize
   }
 
   async loadDropSound() {
-    // No longer needed with expo-audio, players are created in initialize
+    // No longer needed with expo-av, players are created in initialize
   }
 
   playSoundIfEnabled(soundType) {
@@ -632,34 +669,34 @@ class SoundManager {
   }
 
   logStatus() {
-    // console.log('OptimizedSoundManager Status:', this.getStatus());
+    // console.log('SoundManager Status:', this.getStatus());
   }
 
   // Test if sound system is working properly
   async testSoundSystem() {
     const status = this.getStatus();
-    // console.log('🔍 OptimizedSoundManager Test Results:', status);
+    console.log('🔍 SoundManager Test Results:', status);
     
     if (!status.isInitialized) {
-      // console.warn('❌ OptimizedSoundManager: Not initialized');
+      console.warn('❌ SoundManager: Not initialized');
       return false;
     }
     
     if (status.isWebPlatform) {
-      // console.log('✅ OptimizedSoundManager: Web platform - audio disabled');
+      console.log('✅ SoundManager: Web platform - audio disabled');
       return true; // Not an error on web
     }
     
     // Test if all players are created
     const allPlayersExist = Object.values(status.hasPlayers).every(exists => exists);
     if (!allPlayersExist) {
-      // console.warn('❌ OptimizedSoundManager: Some audio players are missing');
+      console.warn('❌ SoundManager: Some audio players are missing');
       return false;
     }
     
     // Test if sound is enabled
     if (!status.soundEnabled) {
-      // console.log('🔇 OptimizedSoundManager: Sound is disabled in settings');
+      console.log('🔇 SoundManager: Sound is disabled in settings');
       return true; // Not an error, just disabled
     }
     

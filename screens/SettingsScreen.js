@@ -26,13 +26,11 @@ const SettingsScreen = ({ navigation }) => {
     vibrationEnabled,
     soundEnabled,
     backgroundMusicEnabled,
-    backgroundMusicVolume,
     highScore,
     highestBlock,
     toggleVibration,
     toggleSound,
     toggleBackgroundMusic,
-    setBackgroundMusicVolume,
     clearAllData,
     resetOnboarding,
   } = useGameStore();
@@ -55,12 +53,15 @@ const SettingsScreen = ({ navigation }) => {
     ]).start();
   }, []);
 
-  useEffect(() => {
-    backgroundMusicManager.setVolume(backgroundMusicVolume);
-  }, [backgroundMusicVolume]);
+
 
   useEffect(() => {
-    backgroundMusicManager.updateSettings();
+    // Use enhanced store methods for better reliability
+    try {
+      backgroundMusicManager.updateSettings();
+    } catch (error) {
+      console.warn('Failed to update background music settings:', error);
+    }
   }, [backgroundMusicEnabled]);
 
   const handleClearData = () => {
@@ -205,48 +206,7 @@ const SettingsScreen = ({ navigation }) => {
                 />
               </View>
 
-              {/* Background Music Volume Control */}
-              {backgroundMusicEnabled && (
-                <View style={styles.settingItem}>
-                  <View style={styles.settingLeft}>
-                    <View style={styles.settingIconContainer}>
-                      <Ionicons 
-                        name="volume-medium" 
-                        size={22} 
-                        color="#4A90E2" 
-                      />
-                    </View>
-                    <View style={styles.settingTextContainer}>
-                      <Text style={styles.settingTitle}>Music Volume</Text>
-                      <Text style={styles.settingSubtitle}>
-                        Adjust ambient soundtrack level
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.volumeContainer}>
-                    <TouchableOpacity
-                      style={styles.volumeButton}
-                      onPress={() => setBackgroundMusicVolume(Math.max(0, backgroundMusicVolume - 0.1))}
-                    >
-                      <Ionicons name="remove" size={16} color="#4A90E2" />
-                    </TouchableOpacity>
-                    <View style={styles.volumeBar}>
-                      <View 
-                        style={[
-                          styles.volumeFill, 
-                          { width: `${backgroundMusicVolume * 100}%` }
-                        ]} 
-                      />
-                    </View>
-                    <TouchableOpacity
-                      style={styles.volumeButton}
-                      onPress={() => setBackgroundMusicVolume(Math.min(1, backgroundMusicVolume + 0.1))}
-                    >
-                      <Ionicons name="add" size={16} color="#4A90E2" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
+
 
               {/* Vibration Toggle */}
               <View style={styles.settingItem}>
@@ -499,31 +459,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  volumeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 10,
-    paddingHorizontal: 10,
-  },
 
-  volumeButton: {
-    padding: 10,
-  },
-
-  volumeBar: {
-    flex: 1,
-    height: 8,
-    backgroundColor: '#4A90E2',
-    borderRadius: 4,
-    marginHorizontal: 10,
-  },
-
-  volumeFill: {
-    height: '100%',
-    backgroundColor: '#4A90E2',
-    borderRadius: 4,
-  },
 
 
 });

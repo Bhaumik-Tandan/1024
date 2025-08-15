@@ -1,31 +1,17 @@
 import React, { useEffect } from 'react';
-import { View, Platform, Dimensions } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import { View, Dimensions } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import Navigator from './navigator';
 import soundManager from './utils/soundManager';
 import backgroundMusicManager from './utils/backgroundMusicManager';
-import * as Sentry from '@sentry/react-native';
-const getEnvVars = require('./env.config');
+import envConfig from './env.config';
 
-// Get environment configuration
-const envConfig = getEnvVars(__DEV__ ? 'development' : 'production');
-
-// Only initialize Sentry in production mode
+// Initialize Sentry only if enabled
 if (envConfig.SENTRY_ENABLED) {
+  const Sentry = require('@sentry/react-native');
   Sentry.init({
-    dsn: 'https://f8661e5fbc9058fc89e832f5719fcf29@o4507216589488128.ingest.us.sentry.io/4509838404812800',
-
-    // Adds more context data to events (IP address, cookies, user, etc.)
-    // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
-    sendDefaultPii: true,
-
-    // Configure Session Replay
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1,
-    integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
-
-    // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+    dsn: envConfig.SENTRY_DSN,
     // spotlight: __DEV__,
   });
 }
@@ -67,21 +53,48 @@ const AppComponent = function App() {
   useEffect(() => {
     const initializeAudio = async () => {
       try {
-        // Initialize sound manager (handles audio mode configuration internally)
+        console.log('🎵 Initializing audio systems...');
+        
+        // Initialize sound manager first (handles audio mode configuration internally)
+        console.log('🎵 Initializing sound manager...');
         await soundManager.initialize();
+        console.log('✅ Sound manager initialized');
         
         // Initialize background music manager
+        console.log('🎵 Initializing background music manager...');
         await backgroundMusicManager.initialize();
+        console.log('✅ Background music manager initialized');
         
-        // Start background music
+        // Start background music if enabled
+        console.log('🎵 Starting background music...');
         await backgroundMusicManager.play();
+        console.log('✅ Background music started');
         
         // Test sound system after initialization
-        setTimeout(() => {
-          soundManager.testSoundSystem();
+        setTimeout(async () => {
+          try {
+            const soundTestResult = await soundManager.testSoundSystem();
+            console.log('🎵 Sound system test result:', soundTestResult);
+            
+            // Also run background music diagnosis
+            await backgroundMusicManager.diagnoseSystem();
+          } catch (error) {
+            console.warn('🎵 Sound system test failed:', error);
+          }
         }, 1000); // Test after 1 second to ensure everything is loaded
+        
+        console.log('🎵 Audio initialization complete');
       } catch (error) {
-        // Audio initialization failed silently - continue without sound
+        console.warn('🎵 Audio initialization failed:', error);
+        
+        // Try to recover from initialization errors
+        try {
+          console.log('🎵 Attempting audio recovery...');
+          await backgroundMusicManager.recoverFromError();
+          await soundManager.recoverFromError();
+        } catch (recoveryError) {
+          console.warn('🎵 Audio recovery failed:', recoveryError);
+        }
       }
     };
 
@@ -89,9 +102,50 @@ const AppComponent = function App() {
     
     // Cleanup sound manager when app is unmounted
     return () => {
-      soundManager.unloadAllSounds();
-      backgroundMusicManager.cleanup();
+      console.log('🎵 Cleaning up audio systems...');
+      try {
+        soundManager.unloadAllSounds();
+        backgroundMusicManager.cleanup();
+        console.log('✅ Audio cleanup complete');
+      } catch (error) {
+        console.warn('🎵 Audio cleanup failed:', error);
+      }
     };
+  }, []);
+
+  // Debug methods for troubleshooting
+  const debugAudio = async () => {
+    console.log('🔍 Debugging audio system...');
+    try {
+      await backgroundMusicManager.diagnoseSystem();
+      await soundManager.testSoundSystem();
+    } catch (error) {
+      console.error('Debug failed:', error);
+    }
+  };
+
+  const forcePlayMusic = async () => {
+    console.log('🔊 Force playing background music...');
+    try {
+      await backgroundMusicManager.forcePlay();
+    } catch (error) {
+      console.error('Force play failed:', error);
+    }
+  };
+
+  // Add debug methods to global scope for console access
+  useEffect(() => {
+    if (__DEV__) {
+      global.debugAudio = debugAudio;
+      global.forcePlayMusic = forcePlayMusic;
+      global.backgroundMusicManager = backgroundMusicManager;
+      global.soundManager = soundManager;
+      console.log('🔧 Debug methods available in console:');
+      console.log('  - debugAudio() - Run audio system diagnosis');
+      console.log('  - forcePlayMusic() - Force play background music');
+      console.log('  - backgroundMusicManager - Access background music manager');
+      console.log('  - soundManager - Access sound manager');
+    }
   }, []);
 
   return (

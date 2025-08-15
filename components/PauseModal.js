@@ -8,21 +8,68 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { vibrateOnButtonPress } from '../utils/vibration';
 import useGameStore from '../store/gameStore';
+import backgroundMusicManager from '../utils/backgroundMusicManager';
 
 const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
-  const { vibrationEnabled, soundEnabled, toggleVibration, toggleSound } = useGameStore();
+  const { 
+    vibrationEnabled, 
+    soundEnabled, 
+    backgroundMusicEnabled,
+    toggleVibration, 
+    toggleSound,
+    toggleBackgroundMusic 
+  } = useGameStore();
 
   const handleButtonPress = (action) => {
     vibrateOnButtonPress();
     action();
   };
 
+  const handleContinue = async () => {
+    vibrateOnButtonPress();
+    try {
+      // Resume background music if it was enabled
+      if (backgroundMusicEnabled) {
+        await backgroundMusicManager.play();
+      }
+      // Call the original onResume function
+      onResume();
+    } catch (error) {
+      console.warn('Failed to resume background music:', error);
+      // Still continue the game even if music resume fails
+      onResume();
+    }
+  };
+
+  const handleBackgroundMusicToggle = async () => {
+    vibrateOnButtonPress();
+    try {
+      if (backgroundMusicEnabled) {
+        // Music is currently enabled, so pause it
+        await backgroundMusicManager.pause();
+      } else {
+        // Music is currently disabled, so play it
+        await backgroundMusicManager.play();
+      }
+      // Toggle the state in the store
+      toggleBackgroundMusic();
+    } catch (error) {
+      console.warn('Failed to toggle background music:', error);
+      // Still toggle the state even if the music control fails
+      toggleBackgroundMusic();
+    }
+  };
+
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
+
           
           {/* Enhanced Space-themed Title */}
           <View style={styles.titleContainer}>
@@ -30,57 +77,48 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
             <View style={styles.titleUnderline} />
           </View>
           
-          {/* Settings Section */}
-          <View style={styles.settingsSection}>
-            <Text style={styles.settingsTitle}>Ship Systems</Text>
-            
-            {/* Vibration Toggle */}
-            <Pressable
-              style={[styles.settingItem, vibrationEnabled && styles.settingItemActive]}
-              onPress={() => handleButtonPress(toggleVibration)}
-            >
-              <View style={styles.settingLeft}>
-                <MaterialCommunityIcons 
-                  name="vibrate" 
-                  size={20} 
-                  color={vibrationEnabled ? '#4A90E2' : '#666'} 
-                />
-                <Text style={[styles.settingText, vibrationEnabled && styles.settingTextActive]}>
-                  Haptic Feedback
-                </Text>
-              </View>
-              <View style={[styles.toggle, vibrationEnabled && styles.toggleActive]}>
-                <View style={[styles.toggleIndicator, vibrationEnabled && styles.toggleIndicatorActive]} />
-              </View>
-            </Pressable>
-            
-            {/* Sound Toggle */}
-            <Pressable
-              style={[styles.settingItem, soundEnabled && styles.settingItemActive]}
-              onPress={() => handleButtonPress(toggleSound)}
-            >
-              <View style={styles.settingLeft}>
-                <Ionicons 
-                  name={soundEnabled ? "volume-medium" : "volume-mute"} 
-                  size={20} 
-                  color={soundEnabled ? '#4A90E2' : '#666'} 
-                />
-                <Text style={[styles.settingText, soundEnabled && styles.settingTextActive]}>
-                  Sound Effects
-                </Text>
-              </View>
-              <View style={[styles.toggle, soundEnabled && styles.toggleActive]}>
-                <View style={[styles.toggleIndicator, soundEnabled && styles.toggleIndicatorActive]} />
-              </View>
-            </Pressable>
-          </View>
+          {/* Toggle Buttons Row */}
+          <View style={styles.toggleRow}>
+              {/* Background Music Toggle */}
+              <Pressable
+                style={styles.toggleButton}
+                onPress={handleBackgroundMusicToggle}
+              >
+                <View style={styles.toggleIconBackground}>
+                  <FontAwesome name="music" size={28} color="#FFFFFF" />
+                  {!backgroundMusicEnabled && <View style={styles.disabledLine} />}
+                </View>
+              </Pressable>
+              
+              {/* Sound Effects Toggle */}
+              <Pressable
+                style={styles.toggleButton}
+                onPress={() => handleButtonPress(toggleSound)}
+              >
+                <View style={styles.toggleIconBackground}>
+                  <AntDesign name="sound" size={28} color="#FFFFFF" />
+                  {!soundEnabled && <View style={styles.disabledLine} />}
+                </View>
+              </Pressable>
+
+              {/* Vibration Toggle */}
+              <Pressable
+                style={styles.toggleButton}
+                onPress={() => handleButtonPress(toggleVibration)}
+              >
+                <View style={styles.toggleIconBackground}>
+                  <MaterialIcons name="vibration" size={28} color="#FFFFFF" />
+                  {!vibrationEnabled && <View style={styles.disabledLine} />}
+                </View>
+              </Pressable>
+            </View>
           
           {/* Action Buttons */}
           <View style={styles.buttonContainer}>
             {/* Large Resume Button */}
             <Pressable
               style={[styles.button, styles.primaryButton]}
-              onPress={() => handleButtonPress(onResume)}
+              onPress={handleContinue}
             >
               <View style={styles.buttonGlow} />
               <Ionicons name="play" size={28} color="#FFFFFF" style={styles.buttonIcon} />
@@ -116,10 +154,12 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    // Premium backdrop blur effect
+    backdropFilter: 'blur(10px)',
   },
   
   modalContainer: {
@@ -128,13 +168,16 @@ const styles = StyleSheet.create({
     padding: 30,
     width: '90%',
     maxWidth: 400,
-    borderWidth: 1,
-    borderColor: 'rgba(74, 144, 226, 0.3)',
+    borderWidth: 2,
+    borderColor: 'rgba(74, 144, 226, 0.6)',
     shadowColor: '#4A90E2',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    elevation: 15,
+    shadowOpacity: 0.8,
+    shadowRadius: 25,
+    elevation: 20,
+    // Add premium gradient overlay
+    position: 'relative',
+    overflow: 'hidden',
   },
   
   titleContainer: {
@@ -166,101 +209,97 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   
-  settingsSection: {
-    marginBottom: 30,
-  },
+
   
-  settingsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#B0C4DE',
-    marginBottom: 15,
-    letterSpacing: 1,
-    textShadowColor: 'rgba(176, 196, 222, 0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 4,
-  },
+
   
-  settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  toggleButton: {
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-    backgroundColor: 'rgba(26, 42, 78, 0.6)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  
-  settingItemActive: {
-    backgroundColor: 'rgba(74, 144, 226, 0.15)',
-    borderColor: 'rgba(74, 144, 226, 0.3)',
-    shadowColor: '#4A90E2',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 5,
-  },
-  
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  
-  settingText: {
-    fontSize: 16,
-    color: '#999',
-    marginLeft: 12,
-    fontWeight: '500',
-  },
-  
-  settingTextActive: {
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(74, 144, 226, 0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 4,
-  },
-  
-  toggle: {
-    width: 50,
-    height: 26,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 13,
-    padding: 2,
     justifyContent: 'center',
-  },
-  
-  toggleActive: {
-    backgroundColor: 'rgba(74, 144, 226, 0.6)',
-    shadowColor: '#4A90E2',
+    padding: 8,
+    backgroundColor: 'transparent',
+    borderRadius: 24,
+    borderWidth: 0,
+    shadowColor: 'transparent',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   
-  toggleIndicator: {
-    width: 22,
-    height: 22,
-    backgroundColor: '#666',
-    borderRadius: 11,
-    alignSelf: 'flex-start',
-  },
-  
-  toggleIndicatorActive: {
-    backgroundColor: '#FFFFFF',
-    alignSelf: 'flex-end',
-    shadowColor: '#4A90E2',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
+  toggleIconBackground: {
+    width: 56,
+    height: 56,
+    backgroundColor: '#1a365d',
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 3,
   },
   
+  toggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 40,
+    gap: 32,
+  },
+  
+  toggleButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 4,
+    backgroundColor: 'transparent',
+    borderRadius: 32,
+    borderWidth: 0,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  
+  toggleIconBackground: {
+    width: 64,
+    height: 64,
+    backgroundColor: '#1a365d',
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    // Premium border effect
+    borderWidth: 2,
+    borderColor: 'rgba(74, 144, 226, 0.6)',
+    // Enhanced shadows for premium look
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  
+  disabledLine: {
+    position: 'absolute',
+    width: 34,
+    height: 3,
+    backgroundColor: '#FF4444',
+    borderRadius: 1.5,
+    transform: [{ rotate: '45deg' }],
+    shadowColor: '#FF4444',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  
   buttonContainer: {
-    gap: 8,
+    gap: 16,
+    marginBottom: 20,
   },
   
   button: {
@@ -374,6 +413,44 @@ const styles = StyleSheet.create({
     color: '#B0C4DE',
     letterSpacing: 0.5,
   },
+  
+  buttonGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 25,
+    shadowColor: 'rgba(255, 255, 255, 0.3)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 15,
+    elevation: 5,
+  },
+  
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  
+  footerLink: {
+    fontSize: 14,
+    color: '#B0C4DE',
+    fontWeight: '600',
+    textDecorationLine: 'none',
+    letterSpacing: 0.5,
+    // Premium text effect
+    textShadowColor: 'rgba(176, 196, 222, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 4,
+  },
+  
+
 });
 
 export default PauseModal; 

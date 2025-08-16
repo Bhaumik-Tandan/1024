@@ -61,13 +61,7 @@
           "organization": "amigo-o4"
         }
       ],
-      [
-        "@react-native-firebase/app",
-        {
-          "android_package_name": "com.space.drop",
-          "ios_bundle_id": "com.space.drop"
-        }
-      ]
+      "expo-firebase-core"
     ]
   }
 }

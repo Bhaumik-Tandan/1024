@@ -12,10 +12,8 @@ const firebaseConfig = {
   bundleId: "com.space.drop"
 };
 
-module.exports = { firebaseConfig };
-
 // Analytics configuration
-export const analyticsConfig = {
+const analyticsConfig = {
   // Enable analytics collection by default
   analyticsCollectionEnabled: true,
   
@@ -30,7 +28,7 @@ export const analyticsConfig = {
 };
 
 // Privacy settings for anonymous analytics
-export const privacySettings = {
+const privacySettings = {
   // Don't collect user identifiers
   collectUserId: false,
   
@@ -42,4 +40,10 @@ export const privacySettings = {
   
   // Only collect anonymous usage data
   dataCollectionLevel: 'anonymous',
+};
+
+module.exports = { 
+  firebaseConfig, 
+  analyticsConfig, 
+  privacySettings 
 };

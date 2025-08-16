@@ -60,8 +60,7 @@
           "project": "1024-hp",
           "organization": "amigo-o4"
         }
-      ],
-      "expo-firebase-core"
+      ]
     ]
   }
 }

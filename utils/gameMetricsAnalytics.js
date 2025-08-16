@@ -25,7 +25,7 @@ class GameMetricsAnalytics {
       // Get existing metrics
       await this.loadExistingMetrics();
       
-      console.log('📊 Game Metrics Analytics initialized');
+  
     } catch (error) {
       console.error('Failed to initialize Game Metrics Analytics:', error);
     }
@@ -114,7 +114,7 @@ class GameMetricsAnalytics {
       // Track retention metrics
       await this.trackRetentionMetrics();
 
-      console.log('📊 Session started:', this.sessionId);
+
     } catch (error) {
       console.error('Error starting session:', error);
     }
@@ -151,7 +151,7 @@ class GameMetricsAnalytics {
       // Save updated metrics
       await this.saveMetrics();
 
-      console.log('📊 Session ended:', this.sessionId, 'Duration:', sessionDurationMinutes.toFixed(2), 'minutes');
+
     } catch (error) {
       console.error('Error ending session:', error);
     }
@@ -373,7 +373,7 @@ class GameMetricsAnalytics {
       await AsyncStorage.removeItem('analytics_metrics');
       await AsyncStorage.removeItem('analytics_user_id');
       await AsyncStorage.removeItem('analytics_first_launch');
-      console.log('📊 Metrics reset');
+
     } catch (error) {
       console.error('Error resetting metrics:', error);
     }

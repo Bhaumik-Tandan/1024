@@ -159,8 +159,8 @@ export const SocialSystem = ({
   };
 
   const getPlanetName = (value) => {
-    // Handle infinity case
-    if (value === '∞' || value === Infinity) {
+    // Handle black hole case
+    if (value === 8388608 || value === '∞' || value === Infinity) {
       return 'Black Hole';
     }
     

@@ -1,8 +1,9 @@
-import analytics from '@react-native-firebase/analytics';
-
+// Firebase Analytics Service - Only loads in production
 class FirebaseAnalyticsService {
   constructor() {
     this.isInitialized = false;
+    this.analytics = null;
+    this.crashlytics = null;
     this.init();
   }
 
@@ -10,27 +11,46 @@ class FirebaseAnalyticsService {
     try {
       // Only initialize Firebase Analytics in production mode
       if (__DEV__) {
-        console.log('📊 Firebase Analytics disabled in development mode');
-        return;
+              return;
       }
 
       // Check if we're on iOS (since we only want iOS for now)
       const { Platform } = require('react-native');
       if (Platform.OS !== 'ios') {
-        console.log('📊 Firebase Analytics only enabled on iOS');
-        return;
+              return;
       }
 
-      // Disable analytics collection for users under 13 (COPPA compliance)
-      await analytics().setAnalyticsCollectionEnabled(true);
-      
-      // Set user properties for anonymous analytics
-      await analytics().setUserProperty('user_type', 'anonymous');
-      await analytics().setUserProperty('app_version', '1.0.2');
-      await analytics().setUserProperty('platform', 'ios');
-      
-      this.isInitialized = true;
-      console.log('📊 Firebase Analytics initialized successfully on iOS');
+      // Dynamically import Firebase modules only in production
+      try {
+        const analytics = require('@react-native-firebase/analytics').default;
+        const crashlytics = require('@react-native-firebase/crashlytics').default;
+        
+        this.analytics = analytics;
+        this.crashlytics = crashlytics;
+        
+        // Disable analytics collection for users under 13 (COPPA compliance)
+        await this.analytics().setAnalyticsCollectionEnabled(true);
+        
+        // Initialize Crashlytics
+        await this.crashlytics().setCrashlyticsCollectionEnabled(true);
+        
+        // Set user properties for anonymous analytics
+        await this.analytics().setUserProperty('user_type', 'anonymous');
+        await this.analytics().setUserProperty('app_version', '1.0.2');
+        await this.analytics().setUserProperty('platform', 'ios');
+        
+        // Set Crashlytics user properties
+        await this.crashlytics().setUserId('anonymous_user');
+        await this.crashlytics().setAttribute('user_type', 'anonymous');
+        await this.crashlytics().setAttribute('app_version', '1.0.2');
+        await this.crashlytics().setAttribute('platform', 'ios');
+        
+        this.isInitialized = true;
+  
+      } catch (importError) {
+        console.warn('📊 Firebase modules not available:', importError.message);
+        return;
+      }
     } catch (error) {
       console.error('Failed to initialize Firebase Analytics:', error);
     }
@@ -38,7 +58,7 @@ class FirebaseAnalyticsService {
 
   // Track game events without personal data
   async trackGameEvent(eventName, parameters = {}) {
-    if (!this.isInitialized) {
+    if (!this.isInitialized || !this.analytics) {
       console.warn('Firebase Analytics not initialized yet');
       return;
     }
@@ -51,10 +71,18 @@ class FirebaseAnalyticsService {
         // Add any other safe parameters you want to track
       };
 
-      await analytics().logEvent(eventName, safeParameters);
-      console.log(`Analytics event logged: ${eventName}`, safeParameters);
+      await this.analytics().logEvent(eventName, safeParameters);
+
     } catch (error) {
       console.error(`Failed to log analytics event ${eventName}:`, error);
+      // Log error to Crashlytics if available
+      if (this.crashlytics) {
+        try {
+          await this.crashlytics().recordError(error);
+        } catch (crashlyticsError) {
+          console.error('Failed to log error to Crashlytics:', crashlyticsError);
+        }
+      }
     }
   }
 
@@ -107,7 +135,7 @@ class FirebaseAnalyticsService {
   // Track screen views
   async trackScreenView(screenName) {
     try {
-      await analytics().logScreenView({
+      await this.analytics().logScreenView({
         screen_name: screenName,
         screen_class: screenName,
       });
@@ -121,7 +149,7 @@ class FirebaseAnalyticsService {
     if (!this.isInitialized) return;
     
     try {
-      await analytics().setUserProperty(key, value);
+      await this.analytics().setUserProperty(key, value);
     } catch (error) {
       console.error(`Failed to set user property ${key}:`, error);
     }
@@ -129,7 +157,7 @@ class FirebaseAnalyticsService {
 
   // Get analytics instance for advanced usage
   getAnalyticsInstance() {
-    return analytics();
+    return this.analytics();
   }
 }
 

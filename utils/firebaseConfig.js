@@ -21,7 +21,7 @@ const analyticsConfig = {
   personalizedAdsEnabled: false,
   
   // Enable crashlytics if you want crash reporting
-  crashlyticsEnabled: false,
+  crashlyticsEnabled: true,
   
   // Performance monitoring
   performanceMonitoringEnabled: false,

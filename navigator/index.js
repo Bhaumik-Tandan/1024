@@ -5,7 +5,7 @@ import PAGES from '../constants/pages';
 import DropNumberBoard from '../screens/DropNumberBoard';
 import HomeScreen from '../screens/HomeScreen';
 import SettingsScreen from '../screens/SettingsScreen';
-import GameTilesPreviewScreen from '../screens/SolarSystemPreviewScreen';
+import PreviewModeScreen from '../screens/PreviewModeScreen';
 import { NavigationContainer } from '@react-navigation/native';
 
 const Stack = createNativeStackNavigator();
@@ -40,7 +40,7 @@ const RootNavigator = () => (
                     options={{
                         headerShown: false,
                     }}
-                    component={GameTilesPreviewScreen}
+                    component={PreviewModeScreen}
                 />
             </Stack.Group>
         </Stack.Navigator>

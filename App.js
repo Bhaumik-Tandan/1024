@@ -6,8 +6,19 @@ import Navigator from './navigator';
 import soundManager from './utils/soundManager';
 import backgroundMusicManager from './utils/backgroundMusicManager';
 import envConfig from './env.config';
-import firebaseAnalytics from './utils/firebaseAnalytics';
-import gameMetricsAnalytics from './utils/gameMetricsAnalytics';
+// Conditional Firebase import - only in production
+let firebaseAnalytics = null;
+let gameMetricsAnalytics = null;
+
+// Only import Firebase services in production
+if (!__DEV__) {
+  try {
+    firebaseAnalytics = require('./utils/firebaseAnalytics').default;
+    gameMetricsAnalytics = require('./utils/gameMetricsAnalytics').default;
+  } catch (error) {
+    console.warn('📊 Firebase services not available:', error.message);
+  }
+}
 
 // Initialize Sentry only if enabled
 if (envConfig.SENTRY_ENABLED) {
@@ -55,28 +66,21 @@ const AppComponent = function App() {
   useEffect(() => {
     const initializeAudio = async () => {
       try {
-        console.log('🎵 Initializing audio systems...');
+
         
         // Initialize sound manager first (handles audio mode configuration internally)
-        console.log('🎵 Initializing sound manager...');
         await soundManager.initialize();
-        console.log('✅ Sound manager initialized');
         
         // Initialize background music manager
-        console.log('🎵 Initializing background music manager...');
         await backgroundMusicManager.initialize();
-        console.log('✅ Background music manager initialized');
         
         // Start background music if enabled
-        console.log('🎵 Starting background music...');
         await backgroundMusicManager.play();
-        console.log('✅ Background music started');
         
         // Test sound system after initialization
         setTimeout(async () => {
           try {
-            const soundTestResult = await soundManager.testSoundSystem();
-            console.log('🎵 Sound system test result:', soundTestResult);
+            await soundManager.testSoundSystem();
             
             // Also run background music diagnosis
             await backgroundMusicManager.diagnoseSystem();
@@ -84,14 +88,11 @@ const AppComponent = function App() {
             console.warn('🎵 Sound system test failed:', error);
           }
         }, 1000); // Test after 1 second to ensure everything is loaded
-        
-        console.log('🎵 Audio initialization complete');
       } catch (error) {
         console.warn('🎵 Audio initialization failed:', error);
         
         // Try to recover from initialization errors
         try {
-          console.log('🎵 Attempting audio recovery...');
           await backgroundMusicManager.recoverFromError();
           await soundManager.recoverFromError();
         } catch (recoveryError) {
@@ -107,24 +108,25 @@ const AppComponent = function App() {
       try {
         // Only initialize in production mode
         if (__DEV__) {
-          console.log('📊 Firebase Analytics disabled in development mode');
+          return;
+        }
+
+        // Check if Firebase services are available
+        if (!firebaseAnalytics) {
           return;
         }
 
         // Only initialize on iOS
         if (Platform.OS !== 'ios') {
-          console.log('📊 Firebase Analytics only enabled on iOS');
           return;
         }
 
-        console.log('📊 Initializing Firebase Analytics on iOS...');
         // Firebase Analytics is auto-initialized in the service
         // Track app launch
         await firebaseAnalytics.trackGameEvent('app_launch', {
           app_version: '1.0.2',
           platform: Platform.OS,
         });
-        console.log('✅ Firebase Analytics initialized on iOS');
       } catch (error) {
         console.warn('📊 Firebase Analytics initialization failed:', error);
       }
@@ -133,12 +135,13 @@ const AppComponent = function App() {
     // Initialize Game Metrics Analytics (always enabled for tracking)
     const initializeGameMetrics = async () => {
       try {
-        console.log('📊 Initializing Game Metrics Analytics...');
-        
+        // Only initialize if service is available
+        if (!gameMetricsAnalytics) {
+          return;
+        }
+
         // Start the first session
         await gameMetricsAnalytics.startSession();
-        
-        console.log('✅ Game Metrics Analytics initialized');
       } catch (error) {
         console.warn('📊 Game Metrics Analytics initialization failed:', error);
       }
@@ -148,21 +151,19 @@ const AppComponent = function App() {
     initializeGameMetrics();
     
     // Cleanup sound manager when app is unmounted
-    return () => {
-      console.log('🎵 Cleaning up audio systems...');
+    return async () => {
       try {
         soundManager.unloadAllSounds();
         backgroundMusicManager.cleanup();
-        console.log('✅ Audio cleanup complete');
       } catch (error) {
         console.warn('🎵 Audio cleanup failed:', error);
       }
       
       // End analytics session
-      console.log('📊 Ending analytics session...');
       try {
-        gameMetricsAnalytics.endSession();
-        console.log('✅ Analytics session ended');
+        if (gameMetricsAnalytics) {
+          await gameMetricsAnalytics.endSession();
+        }
       } catch (error) {
         console.warn('📊 Analytics session cleanup failed:', error);
       }
@@ -171,7 +172,6 @@ const AppComponent = function App() {
 
   // Debug methods for troubleshooting
   const debugAudio = async () => {
-    console.log('🔍 Debugging audio system...');
     try {
       await backgroundMusicManager.diagnoseSystem();
       await soundManager.testSoundSystem();
@@ -181,7 +181,6 @@ const AppComponent = function App() {
   };
 
   const forcePlayMusic = async () => {
-    console.log('🔊 Force playing background music...');
     try {
       await backgroundMusicManager.forcePlay();
     } catch (error) {
@@ -196,11 +195,6 @@ const AppComponent = function App() {
       global.forcePlayMusic = forcePlayMusic;
       global.backgroundMusicManager = backgroundMusicManager;
       global.soundManager = soundManager;
-      console.log('🔧 Debug methods available in console:');
-      console.log('  - debugAudio() - Run audio system diagnosis');
-      console.log('  - forcePlayMusic() - Force play background music');
-      console.log('  - backgroundMusicManager - Access background music manager');
-      console.log('  - soundManager - Access sound manager');
     }
   }, []);
 

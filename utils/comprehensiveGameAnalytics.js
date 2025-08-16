@@ -64,7 +64,7 @@ class ComprehensiveGameAnalytics {
       // Load existing state
       await this.loadAnalyticsState();
       
-      console.log('🎯 Comprehensive Game Analytics initialized');
+  
     } catch (error) {
       console.error('Failed to initialize Comprehensive Game Analytics:', error);
     }

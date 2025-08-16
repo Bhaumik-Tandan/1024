@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -26,6 +26,29 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
     toggleBackgroundMusic 
   } = useGameStore();
 
+  // Local state for immediate visual feedback
+  const [localMusicEnabled, setLocalMusicEnabled] = useState(backgroundMusicEnabled);
+  const [localSoundEnabled, setLocalSoundEnabled] = useState(soundEnabled);
+  const [localVibrationEnabled, setLocalVibrationEnabled] = useState(vibrationEnabled);
+
+  // Press states for immediate visual feedback
+  const [musicPressed, setMusicPressed] = useState(false);
+  const [soundPressed, setSoundPressed] = useState(false);
+  const [vibrationPressed, setVibrationPressed] = useState(false);
+
+  // Sync local state with store state
+  useEffect(() => {
+    setLocalMusicEnabled(backgroundMusicEnabled);
+  }, [backgroundMusicEnabled]);
+
+  useEffect(() => {
+    setLocalSoundEnabled(soundEnabled);
+  }, [soundEnabled]);
+
+  useEffect(() => {
+    setLocalVibrationEnabled(vibrationEnabled);
+  }, [vibrationEnabled]);
+
   const handleButtonPress = (action) => {
     vibrateOnButtonPress();
     action();
@@ -34,9 +57,9 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
   const handleContinue = async () => {
     vibrateOnButtonPress();
     try {
-      // Resume background music if it was enabled
+      // Resume background music if it was enabled by syncing with store
       if (backgroundMusicEnabled) {
-        await backgroundMusicManager.play();
+        await backgroundMusicManager.forceSyncWithStore();
       }
       // Call the original onResume function
       onResume();
@@ -49,29 +72,47 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
 
   const handleBackgroundMusicToggle = async () => {
     vibrateOnButtonPress();
+    
+    // Store the current state before toggling for analytics
+    const previousState = backgroundMusicEnabled;
+    
+    // Immediately update local state for instant visual feedback
+    const newMusicState = !localMusicEnabled;
+    setLocalMusicEnabled(newMusicState);
+    
     try {
-      if (backgroundMusicEnabled) {
-        // Music is currently enabled, so pause it
-        await backgroundMusicManager.pause();
-        // Track audio pause for analytics
-        comprehensiveGameAnalytics.trackAudioPlayback('pause', 'background_music', true);
-      } else {
-        // Music is currently disabled, so play it
-        await backgroundMusicManager.play();
-        // Track audio play for analytics
-        comprehensiveGameAnalytics.trackAudioPlayback('play', 'background_music', true);
-      }
       // Toggle the state in the store
-      toggleBackgroundMusic();
+      const storeNewState = toggleBackgroundMusic();
+      
+      // Ensure local state matches store state
+      if (storeNewState !== newMusicState) {
+        setLocalMusicEnabled(storeNewState);
+      }
       
       // Track audio setting change for analytics
-      comprehensiveGameAnalytics.trackAudioSettingChange('backgroundMusic', backgroundMusicEnabled, !backgroundMusicEnabled);
+      comprehensiveGameAnalytics.trackAudioSettingChange('backgroundMusic', previousState, storeNewState);
+      
+      // Force the music manager to sync with the new store state
+      await backgroundMusicManager.forceSyncWithStore();
+      
+      // Track audio playback for analytics
+      if (storeNewState) {
+        comprehensiveGameAnalytics.trackAudioPlayback('play', 'background_music', true);
+      } else {
+        comprehensiveGameAnalytics.trackAudioPlayback('pause', 'background_music', true);
+      }
+      
     } catch (error) {
       console.warn('Failed to toggle background music:', error);
       // Track error for analytics
       comprehensiveGameAnalytics.trackError('background_music_toggle_failed', error.message);
-      // Still toggle the state even if the music control fails
-      toggleBackgroundMusic();
+      
+      // Revert both local and store state if music control fails
+      setLocalMusicEnabled(previousState);
+      // Only revert store if it actually changed
+      if (backgroundMusicEnabled !== previousState) {
+        toggleBackgroundMusic(); // Toggle back to original state
+      }
     }
   };
 
@@ -88,52 +129,91 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
           </View>
           
           {/* Toggle Buttons Row */}
-          <View style={styles.toggleRow}>
+          <View style={styles.toggleRowContainer}>
+            <View style={styles.toggleRow}>
               {/* Background Music Toggle */}
               <Pressable
-                style={styles.toggleButton}
+                style={[
+                  styles.toggleButton,
+                  musicPressed && styles.toggleButtonPressed
+                ]}
                 onPress={handleBackgroundMusicToggle}
+                onPressIn={() => setMusicPressed(true)}
+                onPressOut={() => setMusicPressed(false)}
               >
-                <View style={styles.toggleIconBackground}>
-                  <FontAwesome name="music" size={28} color="#FFFFFF" />
-                  {!backgroundMusicEnabled && <View style={styles.disabledLine} />}
+                <View style={[styles.toggleIconBackground, localMusicEnabled && styles.toggleIconBackgroundActive]}>
+                  <FontAwesome name="music" size={22} color="#FFFFFF" />
+                  {!localMusicEnabled && <View style={[styles.disabledLine, { opacity: localMusicEnabled ? 0 : 1 }]} />}
                 </View>
               </Pressable>
               
               {/* Sound Effects Toggle */}
               <Pressable
-                style={styles.toggleButton}
+                style={[
+                  styles.toggleButton,
+                  soundPressed && styles.toggleButtonPressed
+                ]}
                 onPress={() => {
                   handleButtonPress(() => {
-                    // Track sound toggle for analytics
-                    comprehensiveGameAnalytics.trackAudioSettingChange('sound', soundEnabled, !soundEnabled);
-                    toggleSound();
+                    // Immediately update local state for instant visual feedback
+                    const newSoundState = !localSoundEnabled;
+                    setLocalSoundEnabled(newSoundState);
+                    
+                    try {
+                      // Track sound toggle for analytics
+                      comprehensiveGameAnalytics.trackAudioSettingChange('sound', soundEnabled, newSoundState);
+                      toggleSound();
+                    } catch (error) {
+                      console.warn('Failed to toggle sound:', error);
+                      // Revert local state if toggle fails
+                      setLocalSoundEnabled(!newSoundState);
+                    }
                   });
                 }}
+                onPressIn={() => setSoundPressed(true)}
+                onPressOut={() => setSoundPressed(false)}
               >
-                <View style={styles.toggleIconBackground}>
-                  <AntDesign name="sound" size={28} color="#FFFFFF" />
-                  {!soundEnabled && <View style={styles.disabledLine} />}
+                <View style={[styles.toggleIconBackground, localSoundEnabled && styles.toggleIconBackgroundActive]}>
+                  <AntDesign name="sound" size={22} color="#FFFFFF" />
+                  {!localSoundEnabled && <View style={[styles.disabledLine, { opacity: localSoundEnabled ? 0 : 1 }]} />}
                 </View>
               </Pressable>
 
               {/* Vibration Toggle */}
               <Pressable
-                style={styles.toggleButton}
+                style={[
+                  styles.toggleButton,
+                  vibrationPressed && styles.toggleButtonPressed
+                ]}
                 onPress={() => {
                   handleButtonPress(() => {
-                    // Track vibration toggle for analytics
-                    comprehensiveGameAnalytics.trackAudioSettingChange('vibration', vibrationEnabled, !vibrationEnabled);
-                    toggleVibration();
+                    // Immediately update local state for instant visual feedback
+                    const newVibrationState = !localVibrationEnabled;
+                    setLocalVibrationEnabled(newVibrationState);
+                    
+                    try {
+                      // Track vibration toggle for analytics
+                      comprehensiveGameAnalytics.trackAudioSettingChange('vibration', vibrationEnabled, newVibrationState);
+                      toggleVibration();
+                    } catch (error) {
+                      console.warn('Failed to toggle vibration:', error);
+                      // Revert local state if toggle fails
+                      setLocalVibrationEnabled(!newVibrationState);
+                    }
                   });
                 }}
+                onPressIn={() => setVibrationPressed(true)}
+                onPressOut={() => setVibrationPressed(false)}
               >
-                <View style={styles.toggleIconBackground}>
-                  <MaterialIcons name="vibration" size={28} color="#FFFFFF" />
-                  {!vibrationEnabled && <View style={styles.disabledLine} />}
+                <View style={[styles.toggleIconBackground, localVibrationEnabled && styles.toggleIconBackgroundActive]}>
+                  <MaterialIcons name="vibration" size={22} color="#FFFFFF" />
+                  {!localVibrationEnabled && <View style={[styles.disabledLine, { opacity: localVibrationEnabled ? 0 : 1 }]} />}
                 </View>
               </Pressable>
+              
+
             </View>
+          </View>
           
           {/* Action Buttons */}
           <View style={styles.buttonContainer}>
@@ -235,10 +315,34 @@ const styles = StyleSheet.create({
   
 
   
+
+  
+  toggleRowContainer: {
+    backgroundColor: 'rgba(16, 20, 36, 0.3)',
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 30,
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 144, 226, 0.3)',
+    // Premium metallic container effect
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  
+  toggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 24,
+  },
+  
   toggleButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 8,
+    padding: 2,
     backgroundColor: 'transparent',
     borderRadius: 24,
     borderWidth: 0,
@@ -247,76 +351,61 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
     shadowRadius: 0,
     elevation: 0,
+    // Add press effect
+    transform: [{ scale: 1 }],
+    // Smooth transitions for all properties
+    transition: 'all 0.15s ease',
+    // Enhanced press feedback
+    activeOpacity: 0.7,
   },
   
+  toggleButtonPressed: {
+    transform: [{ scale: 0.95 }], // Slightly smaller when pressed
+    opacity: 0.8, // Slightly transparent when pressed
+  },
+
   toggleIconBackground: {
-    width: 56,
-    height: 56,
-    backgroundColor: '#1a365d',
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    backgroundColor: 'rgba(16, 20, 36, 0.95)',
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  
-  toggleRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 40,
-    gap: 32,
-  },
-  
-  toggleButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 4,
-    backgroundColor: 'transparent',
-    borderRadius: 32,
-    borderWidth: 0,
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-  },
-  
-  toggleIconBackground: {
-    width: 64,
-    height: 64,
-    backgroundColor: '#1a365d',
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    // Premium border effect
+    // Premium metallic border effect
     borderWidth: 2,
-    borderColor: 'rgba(74, 144, 226, 0.6)',
-    // Enhanced shadows for premium look
+    borderColor: 'rgba(74, 144, 226, 0.7)',
+    // Enhanced metallic shadows for premium look
     shadowColor: '#4A90E2',
-    shadowOffset: { width: 0, height: 0 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.5,
-    shadowRadius: 10,
+    shadowRadius: 12,
     elevation: 8,
+    // Metallic gradient overlay effect
+    overflow: 'hidden',
+    // Add subtle metallic texture
+    backgroundImage: 'linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(16, 20, 36, 0.95) 50%, rgba(74, 144, 226, 0.05) 100%)',
+    // Inner metallic glow
+    boxShadow: 'inset 0 1px 3px rgba(255, 255, 255, 0.1), inset 0 -1px 3px rgba(0, 0, 0, 0.3)',
   },
   
   disabledLine: {
     position: 'absolute',
-    width: 34,
-    height: 3,
+    width: 28,
+    height: 2.5,
     backgroundColor: '#FF4444',
-    borderRadius: 1.5,
+    borderRadius: 1.25,
     transform: [{ rotate: '45deg' }],
     shadowColor: '#FF4444',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
-    shadowRadius: 2,
+    shadowRadius: 3,
     elevation: 2,
+    // Premium disabled indicator
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 68, 68, 0.8)',
+    // Smooth transitions
+    transition: 'opacity 0.15s ease',
   },
   
   buttonContainer: {
@@ -436,20 +525,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   
-  buttonGlow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 25,
-    shadowColor: 'rgba(255, 255, 255, 0.3)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 15,
-    elevation: 5,
-  },
+
   
   footer: {
     flexDirection: 'row',
@@ -472,6 +548,19 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   
+
+
+  toggleIconBackgroundActive: {
+    borderColor: 'rgba(74, 144, 226, 1)',
+    backgroundColor: 'rgba(74, 144, 226, 0.15)',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 16,
+    elevation: 12,
+    // Enhanced metallic glow effect
+    borderWidth: 2.5,
+  },
 
 });
 

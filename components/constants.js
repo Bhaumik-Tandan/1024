@@ -5,8 +5,6 @@
  * 
  * Visual styling for the ultimate space puzzle experience
  * Featuring real planets ordered by size - NO ELEMENTS, ONLY PLANETS
- * 
- * Grid Configuration: 6 rows × 4 columns for all devices
  */
 
 import { Dimensions, Platform } from 'react-native';
@@ -17,20 +15,41 @@ const { width, height } = Dimensions.get('window');
 const isTablet = width >= 768;
 const isLandscape = width > height;
 
-// Grid configuration - 5 rows for better gameplay balance
-const STATIC_GRID_CONFIG = {
-  ROWS: 5,
-  COLS: 4,
+// Calculate static grid configuration to avoid render-time updates
+const getStaticGridConfig = () => {
+  if (isTablet) {
+    if (isLandscape) {
+      return { ROWS: 5, COLS: 7 }; // Reduced rows for landscape iPad
+    } else {
+      return { ROWS: 5, COLS: 5 }; // Reduced rows for portrait iPad
+    }
+  } else {
+    return { ROWS: 5, COLS: 4 }; // Keep original for phones
+  }
 };
 
-// Export the constants directly
+// Static grid configuration
+const STATIC_GRID_CONFIG = getStaticGridConfig();
+
+// Export static values to avoid render-time calculations
 export const ROWS = STATIC_GRID_CONFIG.ROWS;
 export const COLS = STATIC_GRID_CONFIG.COLS;
 
-// Get current grid configuration based on device and orientation
-const getCurrentGridConfig = () => {
-  // Use consistent 5x4 grid for all devices
-  return { ROWS: 5, COLS: 4 };
+// Export function for dynamic updates (used only in orientation change handlers)
+export const getCurrentGridConfig = () => {
+  const { width, height } = Dimensions.get('window');
+  const isTablet = width >= 768;
+  const isLandscape = width > height;
+  
+  if (isTablet) {
+    if (isLandscape) {
+      return { ROWS: 5, COLS: 7 }; // Reduced rows for landscape iPad
+    } else {
+      return { ROWS: 5, COLS: 5 }; // Reduced rows for portrait iPad
+    }
+  } else {
+    return { ROWS: 5, COLS: 4 }; // Keep original for phones
+  }
 };
 
 // UI Layout Constants - with web fallbacks
@@ -55,45 +74,58 @@ export const { width: screenWidth, height: screenHeight } = getDimensions();
 // Web-responsive sizing
 const getResponsiveSizing = () => {
   if (Platform.OS === 'web') {
-    // For web, use consistent sizing for 6x4 grid
+    // For web, use smaller fixed sizes for better desktop experience
     const maxGameWidth = 480; // Maximum game width on web
     const cellMargin = 6;
     const cellSize = Math.floor((maxGameWidth - 40 - (COLS - 1) * cellMargin) / COLS);
     return {
-      cellSize: Math.min(cellSize, 75), // Slightly larger for 6x4 grid
+      cellSize: Math.min(cellSize, 70), // Cap cell size at 70px for web
       cellMargin: cellMargin
     };
   } else {
-    // Consistent sizing for 6x4 grid across all devices
+    // Enhanced mobile/tablet sizing with iPad-specific optimizations
     const isTablet = screenWidth >= 768; // iPad and larger tablets
     const isLargeTablet = screenWidth >= 1024; // iPad Pro and larger
+    const isLandscape = screenWidth > screenHeight;
     
     let maxGameWidth;
     let cellMargin;
     
     if (isTablet) {
-      // Use consistent approach for all tablet orientations
-      maxGameWidth = Math.min(900, screenWidth * 0.9); // Optimized for 6x4 grid
-      cellMargin = 8; // Consistent spacing
+      if (isLandscape) {
+        // iPad landscape: Use most of the screen width for larger grid
+        maxGameWidth = Math.min(1200, screenWidth * 0.95); // Much larger game area
+        cellMargin = 8; // Adequate spacing for larger grid
+      } else {
+        // iPad portrait: Much larger game area for better utilization
+        maxGameWidth = Math.min(800, screenWidth * 0.95); // Significantly increased
+        cellMargin = 10; // More spacing for larger cells
+      }
     } else {
       // Phones - use most of screen width
       maxGameWidth = screenWidth - 40;
-      cellMargin = Math.max(3, Math.floor(screenWidth * 0.01));
+      cellMargin = Math.max(2, Math.floor(screenWidth * 0.008));
     }
     
-    // Calculate cell size based on 6x4 grid dimensions
+    // Calculate cell size based on grid dimensions
     const availableWidth = maxGameWidth - (COLS - 1) * cellMargin;
     let cellSize = Math.floor(availableWidth / COLS);
     
-    // Set consistent min/max cell sizes for 6x4 grid
+    // Set much larger min/max cell sizes for iPad
     if (isTablet) {
-      // Tablet: Optimized for 6x4 grid
-      cellSize = Math.min(cellSize, 140); // Good size for 6 rows
-      cellSize = Math.max(cellSize, 100); // Minimum size for visibility
+      if (isLandscape) {
+        // Landscape iPad: Larger cells even for bigger grid
+        cellSize = Math.min(cellSize, 130); // Increased max for more vertical space
+        cellSize = Math.max(cellSize, 90);  // Increased min
+      } else {
+        // Portrait iPad: Much larger cells for excellent visibility
+        cellSize = Math.min(cellSize, 160); // Increased max for more vertical space
+        cellSize = Math.max(cellSize, 120); // Increased min
+      }
     } else {
-      // Phone: Ensure good touch targets for 6x4 grid
-      cellSize = Math.min(cellSize, 110); // Good size for 6 rows
-      cellSize = Math.max(cellSize, 70); // Minimum size for touch
+      // Phone: Ensure good touch targets
+      cellSize = Math.min(cellSize, 120);
+      cellSize = Math.max(cellSize, 60);
     }
     
     return { 
@@ -115,19 +147,17 @@ export const getCellTop = (row) => row * (CELL_SIZE + CELL_MARGIN);
 
 /**
  * ===========================
- * FAMOUS CELESTIAL BODIES OF THE UNIVERSE (ORDERED BY ACTUAL MASS)
+ * FAMOUS CELESTIAL BODIES OF THE UNIVERSE (ORDERED BY SIZE)
  * ===========================
  * Using famous astronomical objects that people recognize
  * Classic 2048 numbering: 2, 4, 8, 16, 32, 64, 128, 256...
- * FIXED: Now properly ordered by mass for logical progression
  */
 export const PLANET_TYPES = {
-  // 🌑 Famous Small Bodies (Smallest to Largest)
+  // 🌑 Famous Small Bodies
   2: {
     type: 'pluto',
     name: 'Pluto',
     diameter: '2,377 km',
-    mass: '1.31 × 10²² kg',
     description: 'The famous dwarf planet in our outer solar system, reclassified in 2006 but still beloved by many.',
     facts: [
       'Dwarf planet in the Kuiper Belt',
@@ -141,7 +171,6 @@ export const PLANET_TYPES = {
     type: 'moon',
     name: 'Moon',
     diameter: '3,474 km',
-    mass: '7.35 × 10²² kg',
     description: 'Earth\'s only natural satellite, the fifth largest moon in the Solar System and crucial for life on Earth.',
     facts: [
       'Responsible for Earth\'s tides',
@@ -151,12 +180,11 @@ export const PLANET_TYPES = {
     ]
   },
   
-  // 🪐 Planets (in actual mass order)
+  // 🪐 Planets (in size order)
   8: {
     type: 'mercury',
     name: 'Mercury',
     diameter: '4,880 km',
-    mass: '3.30 × 10²³ kg',
     description: 'The smallest planet in our solar system and closest to the Sun, with extreme temperature variations.',
     facts: [
       'Closest planet to the Sun',
@@ -170,7 +198,6 @@ export const PLANET_TYPES = {
     type: 'mars',
     name: 'Mars',
     diameter: '6,779 km',
-    mass: '6.42 × 10²³ kg',
     description: 'The Red Planet, our neighbor that may have once harbored life and is the target of future human missions.',
     facts: [
       'Known as the Red Planet',
@@ -184,7 +211,6 @@ export const PLANET_TYPES = {
     type: 'venus',
     name: 'Venus',
     diameter: '12,104 km',
-    mass: '4.87 × 10²⁴ kg',
     description: 'Earth\'s twin in size but with a hellish greenhouse atmosphere, the hottest planet in our solar system.',
     facts: [
       'Hottest planet: 462°C surface temperature',
@@ -198,7 +224,6 @@ export const PLANET_TYPES = {
     type: 'earth',
     name: 'Earth',
     diameter: '12,742 km',
-    mass: '5.97 × 10²⁴ kg',
     description: 'Our home planet, the only known world with life, featuring liquid water and a protective atmosphere.',
     facts: [
       'Only known planet with life',
@@ -209,24 +234,9 @@ export const PLANET_TYPES = {
   },
   
   128: {
-    type: 'uranus',
-    name: 'Uranus',
-    diameter: '50,724 km',
-    mass: '8.68 × 10²⁵ kg',
-    description: 'The tilted ice giant that rotates on its side, with faint rings and 27 known moons.',
-    facts: [
-      'Rotates on its side (98° tilt)',
-      'Coldest planetary atmosphere',
-      'Has faint ring system',
-      '27 known moons'
-    ]
-  },
-  
-  256: {
     type: 'neptune',
     name: 'Neptune',
     diameter: '49,244 km',
-    mass: '1.02 × 10²⁶ kg',
     description: 'The windiest planet with supersonic winds, this ice giant is the outermost planet in our solar system.',
     facts: [
       'Windiest planet: winds up to 2,100 km/h',
@@ -236,26 +246,36 @@ export const PLANET_TYPES = {
     ]
   },
   
+  256: {
+    type: 'uranus',
+    name: 'Uranus',
+    diameter: '50,724 km',
+    description: 'The tilted ice giant that rotates on its side, with faint rings and 27 known moons.',
+    facts: [
+      'Rotates on its side (98° tilt)',
+      'Coldest planetary atmosphere',
+      'Has faint ring system',
+      '27 known moons'
+    ]
+  },
+  
   512: {
     type: 'saturn',
     name: 'Saturn',
     diameter: '116,460 km',
-    mass: '5.68 × 10²⁶ kg',
     description: 'The ringed planet, famous for its spectacular ring system and 146 known moons including Titan.',
     facts: [
       'Most spectacular ring system',
       'Less dense than water',
       '146 known moons',
       'Hexagonal storm at north pole'
-    ],
-    rings: true
+    ]
   },
   
   1024: {
     type: 'jupiter',
     name: 'Jupiter',
     diameter: '139,820 km',
-    mass: '1.90 × 10²⁷ kg',
     description: 'The king of planets, largest in our solar system with the famous Great Red Spot storm.',
     facts: [
       'Largest planet in our solar system',
@@ -265,178 +285,11 @@ export const PLANET_TYPES = {
     ]
   },
   
-  // ☀️ Stars and Stellar Objects (in increasing mass)
+  // ☀️ Famous Stars (in increasing size)
   2048: {
-    type: 'milky_way',
-    name: 'Milky Way',
-    diameter: '~105,000 light-years',
-    mass: '~1.5 × 10⁴² kg',
-    description: 'Our home galaxy, containing 200-400 billion stars and the solar system we call home.',
-    facts: [
-      'Our home galaxy',
-      '200-400 billion stars',
-      'Spiral galaxy',
-      'Diameter 105,000 light-years'
-    ],
-    glow: true,
-    primary: '#FFFFFF', // Pure white for maximum brightness
-    accent: '#87CEEB',  // Light blue accent for realistic galaxy appearance
-    surface: 'people_imagine_milky_way', // What people think Milky Way looks like
-    rotation: 'gentle', // Gentle, majestic rotation
-    complexity: 'beyond_maximum', // Beyond maximum complexity
-    spiralArms: 4, // Four major spiral arms
-    starClusters: true, // Bright star-forming regions
-    dustLanes: true, // Dark cosmic dust lanes
-    centralBulge: true, // Bright central bulge
-    starFormation: true, // Active star formation
-    globularClusters: true, // Globular star clusters
-    darkMatter: true, // Dark matter halo effect
-    interstellarGas: true, // Interstellar gas clouds
-    supernovaRemnants: true, // Supernova remnant effects
-    colorGradient: ['#FFFFFF', '#FFFFE0', '#87CEEB', '#4682B4', '#191970'], // White to yellow to blue gradient
-    luminosity: 'beyond_extreme', // Beyond extreme brightness
-    detailLevel: 'people_expectation', // What people expect to see
-    starCount: '400_billion', // 400 billion stars
-    gasClouds: true, // Interstellar gas clouds
-    molecularClouds: true, // Dense molecular clouds
-    openClusters: true, // Open star clusters
-    planetaryNebulae: true, // Planetary nebulae
-    blackHoles: true, // Central supermassive black hole
-    darkNebulae: true, // Dark nebulae
-    emissionNebulae: true, // Emission nebulae
-    reflectionNebulae: true, // Reflection nebulae
-    spiralDensity: 'maximum', // Maximum spiral arm density
-    galacticHalo: true, // Galactic halo effects
-    brightCenter: 'super_bright', // Super bright center like people expect
-    starsAroundCenter: true, // Stars scattered around center
-    spiralStarPattern: true, // Stars follow spiral pattern
-    individualStars: true, // Individual stars visible
-    starBrightness: 'varying', // Varying star brightness
-    starSizes: 'different', // Different star sizes
-    starColors: 'multicolor', // Multicolor stars
-    nebulaDetails: 'ultra_detailed', // Ultra detailed nebulae
-    dustLaneDetails: 'prominent', // Prominent dust lanes
-    starClusterDetails: 'individual_stars', // Individual stars in clusters
-    galacticCore: 'brilliant', // Brilliant galactic core
-    spiralArmDefinition: 'crystal_clear', // Crystal clear spiral arms
-    starDistribution: 'natural', // Natural star distribution
-    cosmicBeauty: 'breathtaking' // Breathtaking cosmic beauty
-  },
-  
-  4096: {
-    type: 'rigel',
-    name: 'Rigel',
-    diameter: '~100 million km',
-    mass: '~2.0 × 10³⁰ kg',
-    description: 'A bright blue supergiant star in the constellation Orion, one of the most luminous stars in our galaxy.',
-    facts: [
-      'Blue supergiant in Orion',
-      'One of brightest stars',
-      '860 light-years from Earth',
-      '7th brightest star in night sky'
-    ],
-    glow: true,
-    primary: '#FFD700', // Bright gold - much more appealing
-    accent: '#FFA500',  // Orange accent - warm and beautiful
-    surface: 'beautiful_star', // Beautiful star rendering
-    rotation: 'elegant', // Elegant, graceful rotation
-    complexity: 'beautiful', // Beautiful complexity
-    rotationSpeed: 2.0, // Elegant rotation speed
-    stellarCorona: true, // Stellar corona effect
-    energyPulses: true, // Energy pulse waves
-    magneticStorms: true, // Magnetic storm effects
-    stellarFlare: true, // Stellar flare eruptions
-    colorGradient: ['#FFD700', '#FFA500', '#FF8C00', '#FF4500'], // Gold to orange to red gradient
-    luminosity: 'beautiful', // Beautiful brightness
-    detailLevel: 'gorgeous', // Gorgeous detail level
-    atmosphere: 'stellar', // Stellar atmosphere effects
-    radiation: 'beautiful', // Beautiful radiation visualization
-    stellarWind: 'elegant', // Elegant stellar wind
-    starAppearance: 'magnificent', // Magnificent star appearance
-    visualImpact: 'stunning', // Stunning visual impact
-    colorHarmony: 'perfect', // Perfect color harmony
-    starBeauty: 'breathtaking', // Breathtaking star beauty
-    cosmicElegance: 'supreme', // Supreme cosmic elegance
-    stellarGrace: 'divine', // Divine stellar grace
-    starMagnificence: 'legendary', // Legendary star magnificence
-    visualPerfection: 'absolute', // Absolute visual perfection
-    starGrandeur: 'majestic', // Majestic star grandeur
-    cosmicBeauty: 'transcendent' // Transcendent cosmic beauty
-  },
-  
-  8192: {
-    type: 'sirius',
-    name: 'Sirius',
-    diameter: '~2.38 million km',
-    mass: '~4.0 × 10³⁰ kg',
-    description: 'The brightest star in our night sky, also known as the Dog Star, visible from almost anywhere on Earth.',
-    facts: [
-      'Brightest star in night sky',
-      'Also called the Dog Star',
-      'Visible from almost anywhere on Earth',
-      'Located 8.6 light-years away'
-    ],
-    glow: true,
-    primary: '#FFFFFF', // Pure white
-    accent: '#F0F8FF'   // Alice blue accent
-  },
-  
-  16384: {
-    type: 'orion_nebula',
-    name: 'Orion Nebula',
-    diameter: '~24 light-years',
-    mass: '~2,000 × 10³⁰ kg',
-    description: 'One of the brightest nebulae visible to the naked eye, a stellar nursery where new stars are born.',
-    facts: [
-      'Visible to naked eye',
-      'Stellar nursery for new stars',
-      'Located in Orion constellation',
-      '1,344 light-years away'
-    ],
-    glow: true,
-    primary: '#9370DB', // Purple nebula
-    accent: '#8A2BE2'   // Blue violet accent
-  },
-  
-  32768: {
-    type: 'quasar',
-    name: 'Quasar',
-    diameter: '~1 light-year',
-    mass: '~10⁹ × 10³⁰ kg',
-    description: 'A supermassive black hole with an extremely bright accretion disk - one of the most luminous objects in the universe.',
-    facts: [
-      'Brightest objects in universe',
-      'Powered by supermassive black holes',
-      'Located at galaxy centers',
-      'Emits intense radiation'
-    ],
-    glow: true,
-    primary: '#FF4500', // Bright red-orange
-    accent: '#FFD700'   // Gold accent
-  },
-  
-  65536: {
-    type: 'vega',
-    name: 'Vega',
-    diameter: '~3.2 solar diameters',
-    mass: '~2.1 × 10³⁰ kg',
-    description: 'The brightest star in the Lyra constellation, a blue-white main sequence star that is one of the most luminous stars visible from Earth.',
-    facts: [
-      'Brightest star in Lyra',
-      'Blue-white main sequence star',
-      '25 light-years from Earth',
-      '5th brightest star in night sky'
-    ],
-    glow: true,
-    primary: '#FFD700', // Bright gold
-    accent: '#FFA500'   // Orange accent
-  },
-  
-  131072: {
     type: 'polaris',
     name: 'Polaris',
     diameter: '~6.4 million km',
-    mass: '~6.4 × 10³⁰ kg',
     description: 'The North Star, the brightest star in Ursa Minor and a reliable guide for navigation throughout history.',
     facts: [
       'Known as the North Star',
@@ -449,46 +302,10 @@ export const PLANET_TYPES = {
     accent: '#4169E1'   // Royal blue accent
   },
   
-  262144: {
-    type: 'andromeda',
-    name: 'Andromeda Galaxy',
-    diameter: '~220,000 light-years',
-    mass: '~1.5 × 10⁴² kg',
-    description: 'Our nearest major galaxy neighbor, a beautiful spiral galaxy visible to the naked eye on clear nights.',
-    facts: [
-      'Nearest major galaxy to Milky Way',
-      'Larger than our galaxy',
-      'Visible to naked eye',
-      '2.5 million light-years away'
-    ],
-    glow: true,
-    primary: '#E6E6FA', // Lavender white
-    accent: '#9370DB'   // Medium purple accent
-  },
-  
-  // 🌟 Ultimate Cosmic Objects
-  524288: {
-    type: 'pulsar',
-    name: 'Pulsar',
-    diameter: '~20 km',
-    mass: '~2 × 10³⁰ kg',
-    description: 'A rapidly rotating neutron star that emits regular pulses of radiation, like a cosmic lighthouse.',
-    facts: [
-      'Rotates hundreds of times per second',
-      'Emits regular radio pulses',
-      'Remnant of supernova explosion',
-      'Most accurate cosmic clocks'
-    ],
-    glow: true,
-    primary: '#00CED1', // Bright cyan for pulsar
-    accent: '#20B2AA'   // Sea green accent
-  },
-  
-  1048576: {
+  4096: {
     type: 'sun',
     name: 'Sun',
     diameter: '1.392 million km',
-    mass: '1.99 × 10³⁰ kg',
     description: 'Our home star, a yellow dwarf that provides energy for life on Earth and dominates our solar system.',
     facts: [
       'Our home star',
@@ -501,29 +318,107 @@ export const PLANET_TYPES = {
     accent: '#FF8C00'   // Dark orange for better contrast
   },
   
-  2097152: {
-    type: 'andromeda',
-    name: 'Andromeda Galaxy',
-    diameter: '~220,000 light-years',
-    mass: '~1.5 × 10⁴² kg',
-    description: 'Our nearest major galaxy neighbor, a beautiful spiral galaxy visible to the naked eye on clear nights.',
+  8192: {
+    type: 'sirius',
+    name: 'Sirius',
+    diameter: '~2.38 million km',
+    description: 'The brightest star in our night sky, also known as the Dog Star, visible from almost anywhere on Earth.',
     facts: [
-      'Nearest major galaxy to Milky Way',
-      'Larger than our galaxy',
-      'Visible to naked eye',
-      '2.5 million light-years away'
+      'Brightest star in night sky',
+      'Also called the Dog Star',
+      'Visible from almost anywhere on Earth',
+      'Located 8.6 light-years away'
     ],
     glow: true,
-    primary: '#E6E6FA', // Lavender white
-    accent: '#9370DB'   // Medium purple accent
+    primary: '#87CEEB',
+    accent: '#4169E1'
+  },
+  
+  16384: {
+    type: 'orion_nebula',
+    name: 'Orion Nebula',
+    diameter: '~24 light-years',
+    description: 'One of the brightest nebulae visible to the naked eye, a stellar nursery where new stars are born.',
+    facts: [
+      'Visible to naked eye',
+      'Stellar nursery for new stars',
+      'Located in Orion constellation',
+      '1,344 light-years away'
+    ],
+    glow: true,
+    primary: '#9370DB',
+    accent: '#8A2BE2'
+  },
+  
+  32768: {
+    type: 'pleiades',
+    name: 'Pleiades',
+    diameter: '~8 light-years',
+    description: 'The Seven Sisters, a beautiful star cluster visible to the naked eye, featured in many cultures and myths.',
+    facts: [
+      'Also called Seven Sisters',
+      'Visible to naked eye',
+      'Featured in many cultures',
+      '444 light-years away'
+    ],
+    glow: true,
+    primary: '#87CEEB',
+    accent: '#00BFFF'
+  },
+  
+  65536: {
+    type: 'milky_way',
+    name: 'Milky Way',
+    diameter: '~105,000 light-years',
+    description: 'Our home galaxy, containing 200-400 billion stars and the solar system we call home.',
+    facts: [
+      'Our home galaxy',
+      '200-400 billion stars',
+      'Spiral galaxy',
+      'Diameter 105,000 light-years'
+    ],
+    glow: true,
+    primary: '#483D8B',
+    accent: '#6A5ACD'
+  },
+  
+  131072: {
+    type: 'quasar',
+    name: 'Quasar',
+    diameter: '~1 billion km',
+    description: 'The brightest objects in the universe, powered by supermassive black holes at the center of galaxies.',
+    facts: [
+      'Brightest objects in universe',
+      'Powered by black holes',
+      'Found in distant galaxies',
+      'Emits massive energy'
+    ],
+    glow: true,
+    primary: '#FF1493', // Deep pink for quasar
+    accent: '#FF69B4'   // Hot pink accent
+  },
+  
+  262144: {
+    type: 'supernova',
+    name: 'Supernova',
+    diameter: '~100 million km',
+    description: 'The explosive death of a massive star, one of the most powerful events in the universe.',
+    facts: [
+      'Explosive star death',
+      'Brighter than entire galaxies',
+      'Creates heavy elements',
+      'Most powerful cosmic event'
+    ],
+    glow: true,
+    primary: '#FF4500', // Bright red-orange for supernova
+    accent: '#FF6347'   // Tomato red accent
   },
   
   // 🕳️ Ultimate Black Hole (Final Form)
-  '∞': {
-    type: 'black_hole',
+  1048576: {
+    type: 'ultimate_black_hole',
     name: 'Black Hole',
     diameter: '∞',
-    mass: '∞',
     description: 'The ultimate cosmic entity - a black hole of infinite density that consumes everything and represents the end of all things.',
     facts: [
       'Infinite density and gravity',
@@ -534,7 +429,7 @@ export const PLANET_TYPES = {
     glow: true,
     primary: '#000000',
     accent: '#9932CC',
-    special: 'black_hole',
+    special: 'ultimate_black_hole',
     infinitySymbol: true
   }
 };
@@ -551,14 +446,9 @@ export const getPlanetType = (value) => {
     return PLANET_TYPES[numericValue];
   }
   
-  // Special handling for infinity symbol
-  if (value === '∞' && PLANET_TYPES['∞']) {
-    return PLANET_TYPES['∞'];
-  }
-  
   // For values beyond our defined types, create progressive variations
-  if (numericValue > 2097152) {
-    // Beyond the last numeric planet - create cosmic variations
+  if (numericValue > 1048576) {
+    // Beyond ultimate black hole - create cosmic variations
     const cosmicTypes = [
       { primary: '#FF1493', accent: '#FF69B4', name: 'Cosmic Anomaly', type: 'cosmic_anomaly' },
       { primary: '#00CED1', accent: '#20B2AA', name: 'Quantum Singularity', type: 'quantum_singularity' },
@@ -567,12 +457,11 @@ export const getPlanetType = (value) => {
       { primary: '#FFD700', accent: '#FFA500', name: 'Stellar Core', type: 'stellar_core' }
     ];
     
-    const index = (numericValue - 2097153) % cosmicTypes.length;
+    const index = (numericValue - 1048577) % cosmicTypes.length;
     return {
       ...cosmicTypes[index],
       glow: true,
       diameter: 'Beyond measurement',
-      mass: 'Beyond measurement',
       description: 'A mysterious cosmic entity beyond our understanding.',
       facts: ['Beyond current physics', 'Unknown properties', 'Cosmic mystery', 'Infinite possibilities'],
       special: 'cosmic_mystery'
@@ -590,7 +479,6 @@ export const getPlanetType = (value) => {
     moons: 0,
     glow: false,
     diameter: 'Unknown',
-    mass: 'Unknown',
     description: 'This celestial body is beyond our current knowledge.',
     facts: 'Keep exploring to discover more about the universe!',
     special: 'mysterious'

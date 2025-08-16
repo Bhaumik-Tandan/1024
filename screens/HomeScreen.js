@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import useGameStore from '../store/gameStore';
 import ContinuousStarfield from '../components/MovingStarfield';
-import SolarSystemView from '../components/SolarSystemView';
+
 import { formatPlanetValue } from '../utils/helpers';
 import { getPlanetType } from '../components/constants';
 import comprehensiveGameAnalytics from '../utils/comprehensiveGameAnalytics';
@@ -194,8 +194,7 @@ const HomeScreen = ({ navigation }) => {
         {/* Static star field */}
         <StarField count={35} />
         
-        {/* Realistic Solar System View */}
-        <SolarSystemView opacity={0.5} scale={0.8} />
+
       </View>
       
       <Animated.View 
@@ -216,6 +215,9 @@ const HomeScreen = ({ navigation }) => {
                 opacity: titleShimmerOpacity,
               }
             ]}
+            numberOfLines={1}
+            adjustsFontSizeToFit={true}
+            minimumFontScale={0.8}
           >
             COSMIC
           </Animated.Text>
@@ -226,6 +228,9 @@ const HomeScreen = ({ navigation }) => {
                 opacity: titleShimmerOpacity,
               }
             ]}
+            numberOfLines={1}
+            adjustsFontSizeToFit={true}
+            minimumFontScale={0.8}
           >
             FUSION
           </Animated.Text>
@@ -293,7 +298,7 @@ const HomeScreen = ({ navigation }) => {
               onPress={() => navigation.navigate('Solar System Preview')}
               activeOpacity={0.8}
             >
-              <Text style={styles.quaternaryButtonText}>GAME TILES</Text>
+              <Text style={styles.quaternaryButtonText}>PREVIEW MODE</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -369,36 +374,48 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: Math.min(40, width * 0.1), // Responsive padding
     zIndex: 10,
+    width: '100%', // Ensure full width usage
   },
   
   titleContainer: {
     alignItems: 'center',
-    marginBottom: 60,
+    marginBottom: Math.min(60, height * 0.08), // Responsive margin
+    width: '100%', // Full width to contain responsive text
+    paddingHorizontal: Math.min(20, width * 0.05), // Responsive padding
+    maxWidth: width * 0.95, // Ensure container fits on screen
   },
   
   gameTitle: {
-    fontSize: 72,
+    fontSize: Math.min(72, width * 0.12), // Smaller responsive font size
     fontWeight: '900',
     color: '#FFFFFF',
     textAlign: 'center',
-    letterSpacing: 8,
+    letterSpacing: Math.min(6, width * 0.015), // Reduced letter spacing
     textShadowColor: '#4A90E2',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 25,
+    textShadowRadius: Math.min(20, width * 0.05), // Responsive shadow
     marginBottom: -10,
+    flexWrap: 'nowrap', // Prevent text wrapping
+    maxWidth: width * 0.85, // Tighter width constraint
+    includeFontPadding: false, // Remove extra font padding
+    textAlignVertical: 'center', // Better vertical alignment
+    lineHeight: Math.min(72, width * 0.12) * 1.1, // Proper line height
+    height: Math.min(72, width * 0.12) * 1.1, // Fixed height to prevent wrapping
   },
   
   gameSubtitle: {
-    fontSize: 24,
+    fontSize: Math.min(24, width * 0.05), // Responsive font size
     fontWeight: '300',
     color: '#B0C4DE',
     textAlign: 'center',
-    letterSpacing: 4,
+    letterSpacing: Math.min(4, width * 0.01), // Responsive letter spacing
     textShadowColor: '#9B59B6',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 12,
+    textShadowRadius: Math.min(12, width * 0.03), // Responsive shadow
+    flexWrap: 'nowrap', // Prevent text wrapping
+    maxWidth: width * 0.9, // Ensure subtitle fits within screen width
   },
   
   statsContainer: {

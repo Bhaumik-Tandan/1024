@@ -23,9 +23,9 @@ import PlanetTile from './PlanetTile';
 const isTablet = screenWidth >= 768;
 const responsiveSpacing = {
   boardPadding: isTablet ? 12 : 4,
-  boardMargin: isTablet ? 15 : 5,
-  gridRowMargin: isTablet ? 15 : 5,
-  cellMargin: isTablet ? 4 : 2,
+  boardMargin: isTablet ? 8 : 4,
+  gridRowMargin: isTablet ? 8 : 4,
+  cellMargin: isTablet ? 3 : 1,
 };
 
 // Runtime measured positions for accurate column detection
@@ -252,35 +252,30 @@ const GameGrid = React.memo(({
         ))}
       </View>
 
-      {/* Falling astronomical body - Show both preview and falling tiles */}
-      {falling && falling.anim && falling.col !== undefined && (
+      {/* Falling astronomical body - FIXED positioning for perfect alignment */}
+      {falling && !falling.inPreview && falling.anim && falling.col !== undefined && (
         <Animated.View
           style={{
             position: 'absolute',
             left: getCellLeft(falling.col), // Left edge of the cell
-            top: falling.anim, // Use animation value directly for positioning
+            top: getCellTop(-1), // Start above the grid
             width: CELL_SIZE,
             height: CELL_SIZE,
             justifyContent: 'center',
             alignItems: 'center',
+            transform: [
+              {
+                translateY: falling.anim,
+              },
+            ],
             zIndex: 1000,
-            // Add subtle glow effect for preview tiles
-            ...(falling.inPreview && {
-              shadowColor: '#4A90E2',
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.6,
-              shadowRadius: 8,
-              elevation: 8,
-            }),
-            // Ensure falling tile doesn't appear below the grid area
-            maxHeight: (ROWS * (CELL_SIZE + CELL_MARGIN)),
           }}
         >
           <PlanetTile 
             value={falling.value}
             size={CELL_SIZE}
             isOrbiting={true}
-            orbitSpeed={falling.inPreview ? 1 : 2} // Slower rotation for preview tiles
+            orbitSpeed={2} // Faster rotation while falling
           />
         </Animated.View>
       )}
@@ -526,19 +521,14 @@ const GameGrid = React.memo(({
 
 const styles = StyleSheet.create({
   board: {
-    flex: 1,
-    marginTop: isTablet ? 20 : 15, // Original spacing for 5-row grid
-    marginBottom: isTablet ? 15 : 5, // Original spacing for 5-row grid
-    padding: responsiveSpacing.boardPadding,
-    backgroundColor: 'transparent',
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: 'rgba(74, 144, 226, 0.3)',
-    shadowColor: '#4A90E2',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
+    position: 'relative',
+    backgroundColor: 'transparent', // Completely transparent background
+    borderRadius: 0, // No border radius
+    padding: responsiveSpacing.boardPadding, // Responsive padding for iPad
+    margin: responsiveSpacing.boardMargin, // Responsive margin for iPad
+    alignSelf: 'center',
+    marginTop: isTablet ? 20 : 15, // Larger top margin for iPad
+    marginBottom: isTablet ? 15 : 5, // Larger bottom margin for iPad
   },
   boardDark: {
     backgroundColor: 'transparent', // Remove dark background

@@ -6,13 +6,33 @@
 
 import { Dimensions, Platform } from 'react-native';
 
-/**
- * Get board configuration for current device
- * @returns {Object} Board configuration with ROWS and COLS
- */
+// Adaptive board configuration based on device and orientation
 export const getBoardConfig = () => {
-  // Use consistent 5x4 grid for all devices
-  return { ROWS: 5, COLS: 4 };
+  const { width, height } = Dimensions.get('window');
+  const isTablet = width >= 768; // iPad and larger tablets
+  const isLandscape = width > height;
+
+  if (isTablet) {
+    if (isLandscape) {
+      // iPad landscape: More columns, same rows to leave space for UI
+      return {
+        ROWS: 5,
+        COLS: 7
+      };
+    } else {
+      // iPad portrait: More columns, same rows to leave space for next preview
+      return {
+        ROWS: 5,
+        COLS: 5
+      };
+    }
+  } else {
+    // Phone: Keep original compact size
+    return {
+      ROWS: 5,
+      COLS: 4
+    };
+  }
 };
 
 // Get initial board configuration
@@ -28,7 +48,7 @@ export const GAME_CONFIG = {
   
   // Timing settings
   TIMING: {
-    SLOW_FALL_DURATION: 2000,      // 2 seconds for normal fall (reduced from 7 seconds)
+    SLOW_FALL_DURATION: 7000,      // 7 seconds for normal fall (now unused)
     FAST_DROP_DURATION: 600,       // 0.6 seconds for faster astronomical drops (reduced from 800ms)
     COSMIC_DROP_DURATION: 400,     // 0.4 seconds for even faster user-triggered drops (reduced from 500ms)
     MERGE_ANIMATION_DURATION: 120,  // Ultra fast merge animations for instant feedback
@@ -141,8 +161,9 @@ export const GAME_RULES = {
    * - No moves possible when all columns are full to the bottom
    */
   gameOver: {
-    checkRow: 4, // row 4 for 5-row board
-    checkCol: 3, // column 3 for 4-column board
+    condition: 'bottomRowFull',
+    checkRow: GAME_CONFIG.BOARD.ROWS - 1, // Bottom row index (row 4 for 5-row board)
+    allowPartialFill: false,
   },
   
 

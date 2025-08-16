@@ -25,32 +25,54 @@ class BackgroundMusicManager {
     this.updateFromStore();
   }
 
-  updateFromStore() {
+  async updateFromStore() {
     try {
       const store = useGameStore.getState();
-      console.log('BackgroundMusicManager: Store values - backgroundMusicEnabled:', store.backgroundMusicEnabled);
-      // Use fixed volume since volume control is removed from settings
-      this.currentVolume = 0.7; // Fixed volume - no longer controlled from settings
-      this.isEnabled = store.backgroundMusicEnabled !== false; // Default to true
-      console.log('BackgroundMusicManager: Updated values - isEnabled:', this.isEnabled, 'currentVolume:', this.currentVolume);
+      const newEnabledState = store.backgroundMusicEnabled;
+      const newVolumeState = store.backgroundMusicVolume;
+      
+      // Check if state actually changed
+      const enabledChanged = this.isEnabled !== newEnabledState;
+      const volumeChanged = this.currentVolume !== newVolumeState;
+      
+      // Update local state
+      this.isEnabled = newEnabledState !== false; // Default to true
+      this.currentVolume = newVolumeState || 0.6; // Use store volume or default
+      
+      // If music was disabled and we're currently playing, stop it
+      if (!this.isEnabled && this.isPlaying) {
+        this.pause();
+      }
+      
+      // If music was enabled and we're not playing, start it (if initialized)
+      if (this.isEnabled && !this.isPlaying && this.isInitialized) {
+        this.play();
+      }
+      
+      // Update volume if changed
+      if (volumeChanged && this.musicPlayer && this.isInitialized) {
+        try {
+          await this.musicPlayer.setVolumeAsync(this.currentVolume);
+        } catch (volumeError) {
+          console.warn('BackgroundMusicManager: Failed to update volume:', volumeError);
+        }
+      }
+      
     } catch (error) {
       console.warn('BackgroundMusicManager: Failed to get store values:', error);
       // Fallback defaults
-      this.currentVolume = 0.7; // Fixed volume
+      this.currentVolume = 0.6;
       this.isEnabled = true;
     }
   }
 
   async initialize() {
     if (this.isWebPlatform) {
-      console.log('BackgroundMusicManager: Web platform detected, skipping initialization');
       this.isInitialized = true;
       return;
     }
 
     try {
-      console.log('BackgroundMusicManager: Initializing audio mode...');
-      
       // Set audio mode only once
       if (!this.audioModeSet) {
         await Audio.setAudioModeAsync({
@@ -61,7 +83,6 @@ class BackgroundMusicManager {
           shouldRouteThroughEarpiece: false,
         });
         this.audioModeSet = true;
-        console.log('BackgroundMusicManager: Audio mode set successfully');
       }
       
       // Create and load music player - wait for completion
@@ -70,7 +91,7 @@ class BackgroundMusicManager {
       // Only mark as initialized if music player was created successfully
       if (this.musicPlayer) {
         this.isInitialized = true;
-        console.log('BackgroundMusicManager: Initialization complete');
+        console.log('BackgroundMusicManager: Successfully initialized');
       } else {
         console.warn('BackgroundMusicManager: Music player creation failed, not initialized');
         this.isInitialized = false;
@@ -78,41 +99,39 @@ class BackgroundMusicManager {
     } catch (error) {
       console.warn('Background music initialization failed:', error);
       this.isInitialized = false;
+      // Don't throw - just log and continue
     }
   }
 
   async createMusicPlayer() {
     if (this.isWebPlatform) {
-      console.log('BackgroundMusicManager: Cannot create music player - web platform');
       return;
     }
 
     try {
-      console.log('BackgroundMusicManager: Creating music player...');
+      console.log('🎵 Creating music player...');
       
       // Create sound object with expo-av
       this.musicPlayer = new Audio.Sound();
-      console.log('BackgroundMusicManager: Music player created:', this.musicPlayer);
+      console.log('🎵 Music player created:', this.musicPlayer);
       
       // Set up event listeners
       this.musicPlayer.setOnPlaybackStatusUpdate((status) => {
-        console.log('BackgroundMusicManager: Playback status update:', status);
+        console.log('🎵 Playback status update:', status);
         if (status.isLoaded && status.didJustFinish) {
           // Loop the music when it ends
           if (this.musicPlayer && this.isPlaying) {
-            console.log('BackgroundMusicManager: Music finished, replaying...');
             this.musicPlayer.replayAsync().catch(error => {
               console.warn('BackgroundMusicManager: Failed to replay music:', error);
             });
           }
         }
       });
-      console.log('BackgroundMusicManager: Playback status listener set');
       
       // Load the background music and wait for completion
+      console.log('🎵 Loading background music...');
       await this.loadBackgroundMusic();
-      
-      console.log('BackgroundMusicManager: Music player setup complete');
+      console.log('🎵 Background music loaded successfully');
     } catch (error) {
       console.warn('Failed to create music player:', error);
       this.musicPlayer = null;
@@ -122,18 +141,16 @@ class BackgroundMusicManager {
 
   async loadBackgroundMusic() {
     if (this.isWebPlatform || !this.musicPlayer) {
-      console.log('BackgroundMusicManager: Cannot load music - web platform or no music player');
       return;
     }
 
     try {
-      console.log('BackgroundMusicManager: Loading background music...');
-      
+      console.log('🎵 Loading audio file: ../assets/audio/background.mp3');
       await this.musicPlayer.loadAsync(
         require('../assets/audio/background.mp3'),
         { shouldPlay: false, isLooping: true }
       );
-      console.log('BackgroundMusicManager: Background music loaded successfully');
+      console.log('🎵 Audio file loaded successfully');
     } catch (error) {
       console.warn('Failed to load background music:', error);
       // Try to unload and recreate if loading fails
@@ -149,60 +166,66 @@ class BackgroundMusicManager {
   }
 
   async play() {
-    console.log('BackgroundMusicManager: Play requested, enabled:', this.isEnabled, 'initialized:', this.isInitialized);
-    if (!this.isEnabled || !this.isInitialized) {
-      console.log('BackgroundMusicManager: Cannot play - not enabled or not initialized');
+    // Always update from store first to get latest state
+    await this.updateFromStore();
+    
+    if (!this.isEnabled) {
       return;
     }
-
-    this.updateFromStore();
-    console.log('BackgroundMusicManager: Volume from store:', this.currentVolume);
     
+    if (!this.isInitialized) {
+      await this.initialize();
+      if (!this.isInitialized) {
+        return;
+      }
+    }
+
     if (this.isWebPlatform) {
       // Web fallback - just set playing state
       this.isPlaying = true;
-      console.log('BackgroundMusicManager: Web platform - setting playing state to true');
       return;
     }
 
     if (!this.musicPlayer) {
-      console.log('BackgroundMusicManager: No music player, initializing...');
-      await this.initialize();
+      await this.createMusicPlayer();
       if (!this.musicPlayer) {
-        console.log('BackgroundMusicManager: Failed to create music player');
         return;
       }
     }
 
     try {
-      console.log('BackgroundMusicManager: Playing music with volume:', this.currentVolume);
-      
       // Check if music is already loaded
       const status = await this.musicPlayer.getStatusAsync();
-      console.log('BackgroundMusicManager: Current music status:', status);
       
       if (!status.isLoaded) {
-        console.log('BackgroundMusicManager: Music not loaded, loading now...');
         await this.loadBackgroundMusic();
       }
       
-      // Set volume
-      console.log('BackgroundMusicManager: Setting volume to:', this.currentVolume);
-      await this.musicPlayer.setVolumeAsync(this.currentVolume);
-      
-      // Play the music
-      console.log('BackgroundMusicManager: Starting playback...');
-      const playResult = await this.musicPlayer.playAsync();
-      console.log('BackgroundMusicManager: Play result:', playResult);
-      
-      this.isPlaying = true;
-      console.log('BackgroundMusicManager: Music started successfully');
+      // Set volume only if player exists
+      if (this.musicPlayer) {
+        try {
+          await this.musicPlayer.setVolumeAsync(this.currentVolume);
+          
+          // Play the music
+          const playResult = await this.musicPlayer.playAsync();
+          console.log('🎵 Background music play result:', playResult);
+          
+          // Set playing state to true only if play was successful
+          this.isPlaying = true;
+        } catch (volumeError) {
+          console.warn('BackgroundMusicManager: Volume or play failed:', volumeError);
+          // Continue without volume setting
+          this.isPlaying = false;
+        }
+      } else {
+        console.warn('BackgroundMusicManager: No music player available');
+        this.isPlaying = false;
+      }
       
       // Verify it's actually playing
       setTimeout(async () => {
         try {
-          const currentStatus = await this.musicPlayer.getStatusAsync();
-          console.log('BackgroundMusicManager: Music status after 1 second:', currentStatus);
+          await this.musicPlayer.getStatusAsync();
         } catch (error) {
           console.warn('BackgroundMusicManager: Failed to get status after play:', error);
         }
@@ -219,6 +242,8 @@ class BackgroundMusicManager {
         }
         this.musicPlayer = null;
       }
+      // Reset initialization state to allow retry
+      this.isInitialized = false;
     }
   }
 
@@ -264,8 +289,10 @@ class BackgroundMusicManager {
       const stepDuration = duration / steps;
       const volumeStep = this.currentVolume / steps;
       
-      await this.musicPlayer.setVolumeAsync(0);
-      await this.musicPlayer.playAsync();
+      if (this.musicPlayer) {
+        await this.musicPlayer.setVolumeAsync(0);
+        await this.musicPlayer.playAsync();
+      }
       this.isPlaying = true;
       
       let currentVolume = 0;
@@ -334,7 +361,7 @@ class BackgroundMusicManager {
   }
 
   async updateSettings() {
-    this.updateFromStore();
+    await this.updateFromStore();
     
     if (this.isEnabled) {
       if (!this.isPlaying) {
@@ -364,6 +391,107 @@ class BackgroundMusicManager {
     
     this.isInitialized = false;
     this.audioModeSet = false;
+  }
+
+  // Simple test method to verify functionality
+  async testPlay() {
+    console.log('BackgroundMusicManager: Testing play functionality...');
+    
+    try {
+      // Force initialization if needed
+      if (!this.isInitialized) {
+        console.log('BackgroundMusicManager: Initializing for test...');
+        await this.initialize();
+      }
+      
+      // Try to play
+      await this.play();
+      
+      // Check status after play attempt
+      const status = this.getStatus();
+      console.log('BackgroundMusicManager: Test play completed, status:', status);
+      
+      return status;
+    } catch (error) {
+      console.error('BackgroundMusicManager: Test play failed:', error);
+      throw error;
+    }
+  }
+
+  // Get current status for debugging
+  getStatus() {
+    return {
+      isEnabled: this.isEnabled,
+      isPlaying: this.isPlaying,
+      isInitialized: this.isInitialized,
+      isWebPlatform: this.isWebPlatform,
+      currentVolume: this.currentVolume,
+      hasMusicPlayer: !!this.musicPlayer,
+      audioModeSet: this.audioModeSet
+    };
+  }
+
+  // Check if music manager is synced with store
+  isSyncedWithStore() {
+    try {
+      const store = useGameStore.getState();
+      const storeEnabled = store.backgroundMusicEnabled;
+      const storeVolume = store.backgroundMusicVolume;
+      
+      const enabledSynced = this.isEnabled === (storeEnabled !== false);
+      const volumeSynced = Math.abs(this.currentVolume - (storeVolume || 0.7)) < 0.01;
+      const playingSynced = this.isEnabled ? this.isPlaying : !this.isPlaying;
+      
+      console.log('BackgroundMusicManager: Sync check - enabled:', enabledSynced, 'volume:', volumeSynced, 'playing:', playingSynced);
+      
+      return enabledSynced && volumeSynced && playingSynced;
+    } catch (error) {
+      console.warn('BackgroundMusicManager: Failed to check sync status:', error);
+      return false;
+    }
+  }
+
+  // Force sync with store state
+  async forceSyncWithStore() {
+    console.log('BackgroundMusicManager: Force syncing with store...');
+    
+    try {
+      // Get latest state from store
+      const store = useGameStore.getState();
+      const storeEnabled = store.backgroundMusicEnabled;
+      const storeVolume = store.backgroundMusicVolume;
+      
+      console.log('BackgroundMusicManager: Store state - enabled:', storeEnabled, 'volume:', storeVolume);
+      console.log('BackgroundMusicManager: Current local state - enabled:', this.isEnabled, 'playing:', this.isPlaying);
+      
+      // Update local state
+      this.isEnabled = storeEnabled !== false;
+      this.currentVolume = storeVolume || 0.7;
+      
+      console.log('BackgroundMusicManager: Updated local state - enabled:', this.isEnabled, 'volume:', this.currentVolume);
+      
+      // Take action based on store state
+      if (this.isEnabled) {
+        if (!this.isPlaying) {
+          console.log('BackgroundMusicManager: Store says music should be playing, starting...');
+          await this.play();
+        } else {
+          console.log('BackgroundMusicManager: Music is already playing, no action needed');
+        }
+      } else {
+        if (this.isPlaying) {
+          console.log('BackgroundMusicManager: Store says music should be stopped, stopping...');
+          await this.pause();
+        } else {
+          console.log('BackgroundMusicManager: Music is already stopped, no action needed');
+        }
+      }
+      
+      console.log('BackgroundMusicManager: Force sync completed successfully');
+    } catch (error) {
+      console.warn('BackgroundMusicManager: Force sync failed:', error);
+      throw error; // Re-throw to let caller handle
+    }
   }
 
   // Enhanced error recovery

@@ -61,14 +61,7 @@
           "organization": "amigo-o4"
         }
       ],
-      [
-        "expo-build-properties",
-        {
-          "ios": {
-            "useModularHeaders": true
-          }
-        }
-      ]
+
     ]
   }
 }

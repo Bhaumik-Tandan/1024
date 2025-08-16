@@ -17,7 +17,9 @@
           },
           "env": {
               "ENV": "development",
-              "SENTRY_AUTH_TOKEN": "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"
+              "SENTRY_AUTH_TOKEN": "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",
+              "USE_FRAMEWORKS": "static",
+              "RCT_NEW_ARCH_ENABLED": "0"
           }
       },
       "staging": {
@@ -32,7 +34,9 @@
           },
           "env": {
               "ENV": "staging",
-              "SENTRY_AUTH_TOKEN": "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"
+              "SENTRY_AUTH_TOKEN": "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",
+              "USE_FRAMEWORKS": "static",
+              "RCT_NEW_ARCH_ENABLED": "0"
           }
       },
       "productionTest": {
@@ -47,8 +51,10 @@
           },
           "env": {
               "ENV": "productionTest",
-              "SENTRY_AUTH_TOKEN": "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"
-          }
+              "SENTRY_AUTH_TOKEN": "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",
+              "USE_FRAMEWORKS": "static",
+              "RCT_NEW_ARCH_ENABLED": "0"
+            }
       },
       "production": {
           "distribution": "store",
@@ -65,7 +71,9 @@
           },
           "env": {
               "ENV": "production",
-              "SENTRY_AUTH_TOKEN": "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"
+              "SENTRY_AUTH_TOKEN": "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",
+              "USE_FRAMEWORKS": "static",
+              "RCT_NEW_ARCH_ENABLED": "0"
           }
       }
   },

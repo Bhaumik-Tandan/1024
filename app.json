@@ -60,6 +60,14 @@
           "project": "1024-hp",
           "organization": "amigo-o4"
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useModularHeaders": true
+          }
+        }
       ]
     ]
   }

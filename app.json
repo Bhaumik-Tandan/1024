@@ -2,7 +2,7 @@
   "expo": {
     "name": "Cosmic Fusion",
     "slug": "1024-game",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "default",
     "icon": "./assets/icons/icon.png",
     "userInterfaceStyle": "dark",
@@ -22,7 +22,7 @@
         "backgroundColor": "#0A0A1A"
       },
       "bundleIdentifier": "com.space.drop",
-      "buildNumber": "5",
+      "buildNumber": "6",
       "infoPlist": {
         "UIBackgroundModes": [],
         "FirebaseAppDelegateProxyEnabled": false

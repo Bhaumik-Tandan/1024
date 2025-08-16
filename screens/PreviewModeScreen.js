@@ -18,15 +18,15 @@ const { width, height } = Dimensions.get('window');
 // Create a matrix with blocks above 64
 const createPreviewMatrix = () => {
   const matrix = [];
-  const values = [128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288, 1048576, 2097152, 4194304, 8388608];
+  const values = [128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 1048576];
   
-  let valueIndex = 0;
+  // Create a 6x4 grid (24 positions)
   for (let row = 0; row < ROWS; row++) {
     const rowData = [];
     for (let col = 0; col < COLS; col++) {
-      if (valueIndex < values.length) {
-        rowData.push(values[valueIndex]);
-        valueIndex++;
+      const index = row * COLS + col;
+      if (index < values.length) {
+        rowData.push(values[index]);
       } else {
         rowData.push(0); // Empty space
       }

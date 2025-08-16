@@ -212,18 +212,19 @@ const PlanetTile = ({ value, isOrbiting = true, orbitSpeed = 1, size, isCollidin
           flex: 0, // Prevent text from expanding
           marginBottom: 0, // Remove any bottom margin
         }} numberOfLines={1} adjustsFontSizeToFit={true} minimumFontScale={0.7}>
-          {value === 8388608 ? '∞' : 
+          {planet.infinitySymbol || value === 8388608 ? '∞' : 
            value === '∞' || value === Infinity ? '∞' : 
-           value > 16000 ? Math.floor(value / 1000) + 'k' : value.toString()}
+           value > 16000 && value < 1048576 ? Math.floor(value / 1000) + 'k' : 
+           value >= 1048576 ? '∞' : value.toString()}
         </Text>
         </View>
       </View>
       
-      {/* Infinity Symbol Overlay for Ultimate Black Hole */}
-      {value === 8388608 && (
+      {/* Infinity Symbol Overlay for Infinity Planets */}
+      {(planet.infinitySymbol || value === 8388608 || value >= 1048576) && (
         <View style={{
           position: 'absolute',
-          top: Math.max(-planetSize * 0.15, -tileSize * 0.08), // Keep well within tile bounds
+          top: Math.max(-planetSize * 0.1, -tileSize * 0.05), // Better positioning
           left: 0,
           right: 0,
           alignItems: 'center',
@@ -234,16 +235,16 @@ const PlanetTile = ({ value, isOrbiting = true, orbitSpeed = 1, size, isCollidin
         }}>
           <Text style={{
             color: '#FFD700',
-            fontSize: Math.min(planetSize * 0.3, tileSize * 0.25, 48), // Responsive size with max limit
+            fontSize: Math.min(planetSize * 0.4, tileSize * 0.35, 64), // Larger, more prominent
             fontWeight: 'bold',
             textAlign: 'center',
             textShadowColor: 'rgba(0,0,0,0.9)',
-            textShadowOffset: { width: 1, height: 1 }, // Reduced shadow for smaller screens
-            textShadowRadius: 2,
-            elevation: 10,
+            textShadowOffset: { width: 2, height: 2 }, // More prominent shadow
+            textShadowRadius: 4,
+            elevation: 15,
             includeFontPadding: false, // Prevent text overflow
             textAlignVertical: 'center',
-            lineHeight: Math.min(planetSize * 0.3, tileSize * 0.25, 48), // Match font size for centering
+            lineHeight: Math.min(planetSize * 0.4, tileSize * 0.35, 64), // Match font size for centering
           }}>
             ∞
           </Text>

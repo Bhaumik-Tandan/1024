@@ -347,7 +347,11 @@ export const PLANET_TYPES = {
     ],
     glow: true,
     primary: '#9370DB',
-    accent: '#8A2BE2'
+    accent: '#8A2BE2',
+    special: 'nebula',
+    atmosphere: true,
+    rings: false,
+    moons: 0
   },
   
   32768: {
@@ -431,7 +435,9 @@ export const PLANET_TYPES = {
     accent: '#9932CC',
     special: 'ultimate_black_hole',
     infinitySymbol: true
-  }
+  },
+  
+
 };
 
 /**
@@ -448,11 +454,8 @@ export const getPlanetType = (value) => {
   
   // For values beyond our defined types, create progressive variations
   if (numericValue > 1048576) {
-    // Beyond ultimate black hole - create cosmic variations
+    // Beyond black hole - create cosmic variations
     const cosmicTypes = [
-      { primary: '#FF1493', accent: '#FF69B4', name: 'Cosmic Anomaly', type: 'cosmic_anomaly' },
-      { primary: '#00CED1', accent: '#20B2AA', name: 'Quantum Singularity', type: 'quantum_singularity' },
-      { primary: '#FF4500', accent: '#FF6347', name: 'Nova Remnant', type: 'nova_remnant' },
       { primary: '#9370DB', accent: '#8A2BE2', name: 'Dark Matter Cluster', type: 'dark_matter' },
       { primary: '#FFD700', accent: '#FFA500', name: 'Stellar Core', type: 'stellar_core' }
     ];
@@ -461,10 +464,11 @@ export const getPlanetType = (value) => {
     return {
       ...cosmicTypes[index],
       glow: true,
-      diameter: 'Beyond measurement',
+      diameter: '∞',
       description: 'A mysterious cosmic entity beyond our understanding.',
       facts: ['Beyond current physics', 'Unknown properties', 'Cosmic mystery', 'Infinite possibilities'],
-      special: 'cosmic_mystery'
+      special: 'cosmic_mystery',
+      infinitySymbol: true
     };
   }
   

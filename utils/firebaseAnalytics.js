@@ -11,13 +11,15 @@ class FirebaseAnalyticsService {
     try {
       // Only initialize Firebase Analytics in production mode
       if (__DEV__) {
-              return;
+        console.log('📊 Firebase Analytics disabled in development mode');
+        return;
       }
 
       // Check if we're on iOS (since we only want iOS for now)
       const { Platform } = require('react-native');
       if (Platform.OS !== 'ios') {
-              return;
+        console.log('📊 Firebase Analytics only enabled for iOS');
+        return;
       }
 
       // Dynamically import Firebase modules only in production
@@ -46,6 +48,7 @@ class FirebaseAnalyticsService {
         await this.crashlytics().setAttribute('platform', 'ios');
         
         this.isInitialized = true;
+        console.log('📊 Firebase Analytics initialized successfully');
   
       } catch (importError) {
         console.warn('📊 Firebase modules not available:', importError.message);
@@ -158,6 +161,11 @@ class FirebaseAnalyticsService {
   // Get analytics instance for advanced usage
   getAnalyticsInstance() {
     return this.analytics();
+  }
+
+  // Get crashlytics instance for advanced usage
+  getCrashlyticsInstance() {
+    return this.crashlytics();
   }
 }
 

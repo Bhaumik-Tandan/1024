@@ -20,6 +20,7 @@ import { getPlanetType } from '../components/constants';
 import soundManager from '../utils/soundManager';
 import backgroundMusicManager from '../utils/backgroundMusicManager';
 import { formatPlanetValue } from '../utils/helpers';
+import comprehensiveGameAnalytics from '../utils/comprehensiveGameAnalytics';
 
 const SettingsScreen = ({ navigation }) => {
   const {
@@ -51,6 +52,9 @@ const SettingsScreen = ({ navigation }) => {
         useNativeDriver: true,
       }),
     ]).start();
+    
+    // Track settings screen view for analytics
+    comprehensiveGameAnalytics.trackScreenView('Settings');
   }, []);
 
 
@@ -173,7 +177,11 @@ const SettingsScreen = ({ navigation }) => {
                 </View>
                 <Switch
                   value={soundEnabled}
-                  onValueChange={toggleSound}
+                  onValueChange={(newValue) => {
+                    // Track sound toggle for analytics
+                    comprehensiveGameAnalytics.trackAudioSettingChange('sound', soundEnabled, newValue);
+                    toggleSound();
+                  }}
                   trackColor={{ false: "#767577", true: "rgba(74, 144, 226, 0.3)" }}
                   thumbColor={soundEnabled ? "#4A90E2" : "#f4f3f4"}
                   ios_backgroundColor="#3e3e3e"
@@ -199,7 +207,11 @@ const SettingsScreen = ({ navigation }) => {
                 </View>
                 <Switch
                   value={backgroundMusicEnabled}
-                  onValueChange={toggleBackgroundMusic}
+                  onValueChange={(newValue) => {
+                    // Track background music toggle for analytics
+                    comprehensiveGameAnalytics.trackAudioSettingChange('backgroundMusic', backgroundMusicEnabled, newValue);
+                    toggleBackgroundMusic();
+                  }}
                   trackColor={{ false: "#767577", true: "rgba(74, 144, 226, 0.3)" }}
                   thumbColor={backgroundMusicEnabled ? "#4A90E2" : "#f4f3f4"}
                   ios_backgroundColor="#3e3e3e"
@@ -227,7 +239,11 @@ const SettingsScreen = ({ navigation }) => {
                 </View>
                 <Switch
                   value={vibrationEnabled}
-                  onValueChange={toggleVibration}
+                  onValueChange={(newValue) => {
+                    // Track vibration toggle for analytics
+                    comprehensiveGameAnalytics.trackAudioSettingChange('vibration', vibrationEnabled, newValue);
+                    toggleVibration();
+                  }}
                   trackColor={{ false: "#767577", true: "rgba(74, 144, 226, 0.3)" }}
                   thumbColor={vibrationEnabled ? "#4A90E2" : "#f4f3f4"}
                   ios_backgroundColor="#3e3e3e"

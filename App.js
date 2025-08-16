@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
-import { View, Dimensions } from 'react-native';
+import { View, Dimensions, Platform } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import Navigator from './navigator';
 import soundManager from './utils/soundManager';
 import backgroundMusicManager from './utils/backgroundMusicManager';
 import envConfig from './env.config';
+import firebaseAnalytics from './utils/firebaseAnalytics';
+import gameMetricsAnalytics from './utils/gameMetricsAnalytics';
 
 // Initialize Sentry only if enabled
 if (envConfig.SENTRY_ENABLED) {
@@ -100,6 +102,51 @@ const AppComponent = function App() {
 
     initializeAudio();
     
+    // Initialize Firebase Analytics (only in production on iOS)
+    const initializeAnalytics = async () => {
+      try {
+        // Only initialize in production mode
+        if (__DEV__) {
+          console.log('📊 Firebase Analytics disabled in development mode');
+          return;
+        }
+
+        // Only initialize on iOS
+        if (Platform.OS !== 'ios') {
+          console.log('📊 Firebase Analytics only enabled on iOS');
+          return;
+        }
+
+        console.log('📊 Initializing Firebase Analytics on iOS...');
+        // Firebase Analytics is auto-initialized in the service
+        // Track app launch
+        await firebaseAnalytics.trackGameEvent('app_launch', {
+          app_version: '1.0.2',
+          platform: Platform.OS,
+        });
+        console.log('✅ Firebase Analytics initialized on iOS');
+      } catch (error) {
+        console.warn('📊 Firebase Analytics initialization failed:', error);
+      }
+    };
+    
+    // Initialize Game Metrics Analytics (always enabled for tracking)
+    const initializeGameMetrics = async () => {
+      try {
+        console.log('📊 Initializing Game Metrics Analytics...');
+        
+        // Start the first session
+        await gameMetricsAnalytics.startSession();
+        
+        console.log('✅ Game Metrics Analytics initialized');
+      } catch (error) {
+        console.warn('📊 Game Metrics Analytics initialization failed:', error);
+      }
+    };
+    
+    initializeAnalytics();
+    initializeGameMetrics();
+    
     // Cleanup sound manager when app is unmounted
     return () => {
       console.log('🎵 Cleaning up audio systems...');
@@ -109,6 +156,15 @@ const AppComponent = function App() {
         console.log('✅ Audio cleanup complete');
       } catch (error) {
         console.warn('🎵 Audio cleanup failed:', error);
+      }
+      
+      // End analytics session
+      console.log('📊 Ending analytics session...');
+      try {
+        gameMetricsAnalytics.endSession();
+        console.log('✅ Analytics session ended');
+      } catch (error) {
+        console.warn('📊 Analytics session cleanup failed:', error);
       }
     };
   }, []);

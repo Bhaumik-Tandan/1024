@@ -24,8 +24,10 @@
       "bundleIdentifier": "com.space.drop",
       "buildNumber": "5",
       "infoPlist": {
-        "UIBackgroundModes": []
-      }
+        "UIBackgroundModes": [],
+        "FirebaseAppDelegateProxyEnabled": false
+      },
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
@@ -57,6 +59,13 @@
           "url": "https://sentry.io/",
           "project": "1024-hp",
           "organization": "amigo-o4"
+        }
+      ],
+      [
+        "@react-native-firebase/app",
+        {
+          "android_package_name": "com.space.drop",
+          "ios_bundle_id": "com.space.drop"
         }
       ]
     ]

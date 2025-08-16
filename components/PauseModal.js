@@ -14,6 +14,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { vibrateOnButtonPress } from '../utils/vibration';
 import useGameStore from '../store/gameStore';
 import backgroundMusicManager from '../utils/backgroundMusicManager';
+import comprehensiveGameAnalytics from '../utils/comprehensiveGameAnalytics';
 
 const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
   const { 
@@ -52,14 +53,23 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
       if (backgroundMusicEnabled) {
         // Music is currently enabled, so pause it
         await backgroundMusicManager.pause();
+        // Track audio pause for analytics
+        comprehensiveGameAnalytics.trackAudioPlayback('pause', 'background_music', true);
       } else {
         // Music is currently disabled, so play it
         await backgroundMusicManager.play();
+        // Track audio play for analytics
+        comprehensiveGameAnalytics.trackAudioPlayback('play', 'background_music', true);
       }
       // Toggle the state in the store
       toggleBackgroundMusic();
+      
+      // Track audio setting change for analytics
+      comprehensiveGameAnalytics.trackAudioSettingChange('backgroundMusic', backgroundMusicEnabled, !backgroundMusicEnabled);
     } catch (error) {
       console.warn('Failed to toggle background music:', error);
+      // Track error for analytics
+      comprehensiveGameAnalytics.trackError('background_music_toggle_failed', error.message);
       // Still toggle the state even if the music control fails
       toggleBackgroundMusic();
     }
@@ -93,7 +103,13 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
               {/* Sound Effects Toggle */}
               <Pressable
                 style={styles.toggleButton}
-                onPress={() => handleButtonPress(toggleSound)}
+                onPress={() => {
+                  handleButtonPress(() => {
+                    // Track sound toggle for analytics
+                    comprehensiveGameAnalytics.trackAudioSettingChange('sound', soundEnabled, !soundEnabled);
+                    toggleSound();
+                  });
+                }}
               >
                 <View style={styles.toggleIconBackground}>
                   <AntDesign name="sound" size={28} color="#FFFFFF" />
@@ -104,7 +120,13 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
               {/* Vibration Toggle */}
               <Pressable
                 style={styles.toggleButton}
-                onPress={() => handleButtonPress(toggleVibration)}
+                onPress={() => {
+                  handleButtonPress(() => {
+                    // Track vibration toggle for analytics
+                    comprehensiveGameAnalytics.trackAudioSettingChange('vibration', vibrationEnabled, !vibrationEnabled);
+                    toggleVibration();
+                  });
+                }}
               >
                 <View style={styles.toggleIconBackground}>
                   <MaterialIcons name="vibration" size={28} color="#FFFFFF" />

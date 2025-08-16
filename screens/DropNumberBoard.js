@@ -57,6 +57,7 @@ import {
 } from '../components/constants';
 import { vibrateOnTouch } from '../utils/vibration';
 import useGameStore from '../store/gameStore';
+import comprehensiveGameAnalytics from '../utils/comprehensiveGameAnalytics';
 
 
 
@@ -306,9 +307,12 @@ const DropNumberBoard = ({ navigation, route }) => {
     loadGame();
   }, [loadSavedGame]);
 
-  // Save game when user leaves the screen
+  // Track screen view and save game when user leaves the screen
   useFocusEffect(
     React.useCallback(() => {
+      // Track when game screen comes into focus
+      comprehensiveGameAnalytics.trackScreenView('Drop Number Board');
+      
       return () => {
         // Save game state when leaving the screen
         if (isMounted && !gameOver) {
@@ -332,6 +336,8 @@ const DropNumberBoard = ({ navigation, route }) => {
             saveGame(gameState);
           } catch (error) {
             console.warn('Failed to save game on screen leave:', error);
+            // Track error for analytics
+            comprehensiveGameAnalytics.trackError('save_game_failed', error.message);
           }
         }
       };
@@ -404,6 +410,9 @@ const DropNumberBoard = ({ navigation, route }) => {
       setIsPaused(true);
       soundManager.playSoundIfEnabled('pauseResume');
       
+      // Track game pause for analytics
+      comprehensiveGameAnalytics.trackGamePause();
+      
       // Save game state when pausing
       const gameState = {
         board,
@@ -419,6 +428,8 @@ const DropNumberBoard = ({ navigation, route }) => {
     } catch (error) {
       console.warn('Pause error:', error);
       setIsPaused(true); // Still pause even if sound fails
+      // Track error for analytics
+      comprehensiveGameAnalytics.trackError('pause_failed', error.message);
     }
   };
 
@@ -426,6 +437,9 @@ const DropNumberBoard = ({ navigation, route }) => {
     try {
       setIsPaused(false);
       soundManager.playSoundIfEnabled('pauseResume');
+      
+      // Track game resume for analytics
+      comprehensiveGameAnalytics.trackGameResume();
       
       // Ensure background music is in sync with game state
       const { backgroundMusicEnabled } = useGameStore.getState();
@@ -447,22 +461,32 @@ const DropNumberBoard = ({ navigation, route }) => {
       }, 100);
     } catch (error) {
       console.warn('Resume error:', error);
-      setIsPaused(false); // Still resume even if sound fails
+      setIsPaused(false); // Still resume even if error fails
+      // Track error for analytics
+      comprehensiveGameAnalytics.trackError('resume_failed', error.message);
     }
   };
   
   const handleRestart = () => {
     try {
+      // Track game restart for analytics
+      comprehensiveGameAnalytics.trackGameRestart();
+      
       resetGame(); // Use the local reset function for comprehensive game reset
       setIsPaused(false); // Dismiss modal after restarting
     } catch (error) {
       console.warn('Restart error:', error);
       setIsPaused(false); // Still dismiss modal even if restart fails
+      // Track error for analytics
+      comprehensiveGameAnalytics.trackError('restart_failed', error.message);
     }
   }
 
   const handleHome = () => {
     try {
+      // Track navigation to home for analytics
+      comprehensiveGameAnalytics.trackScreenView('Home', 'Drop Number Board');
+      
       // Save game state before going home
       const gameState = {
         board,
@@ -484,6 +508,8 @@ const DropNumberBoard = ({ navigation, route }) => {
       // Still dismiss modal and navigate even if save fails
       setIsPaused(false);
       navigation.navigate('Home');
+      // Track error for analytics
+      comprehensiveGameAnalytics.trackError('home_navigation_failed', error.message);
     }
   };
 
@@ -538,6 +564,10 @@ const DropNumberBoard = ({ navigation, route }) => {
       // Only spawn the very first tile when game starts (score = 0, tilesPlaced = 0)
       if (score === 0 && gameStats.tilesPlaced === 0) {
         console.log('🎯 Game loop spawning first tile only');
+        
+        // Track game start for analytics
+        comprehensiveGameAnalytics.trackGameStart('normal', 'standard');
+        
         spawnNewTile();
         
         // Show guide for the very first tile
@@ -549,6 +579,8 @@ const DropNumberBoard = ({ navigation, route }) => {
       
     } catch (error) {
       console.warn('❌ Error in game loop:', error);
+      // Track error for analytics
+      comprehensiveGameAnalytics.trackError('game_loop_failed', error.message);
       // Clear any invalid state
       if (clearFallingRef.current && typeof clearFallingRef.current === 'function') {
         try {
@@ -566,6 +598,13 @@ const DropNumberBoard = ({ navigation, route }) => {
   useEffect(() => {
     return () => {
       setIsMounted(false);
+      
+      // Track game end for analytics when component unmounts
+      if (score > 0 || gameStats.tilesPlaced > 0) {
+        const gameDuration = Date.now() - gameStats.startTime;
+        comprehensiveGameAnalytics.trackGameEnd(score, maxTileAchieved, gameDuration, 'user_navigation');
+      }
+      
       if (touchTimeoutRef.current) {
         clearTimeout(touchTimeoutRef.current);
       }
@@ -577,7 +616,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       // Clear merge animations
       clearMergeAnimationsRef.current();
     };
-  }, []); // Empty dependency array - only run on unmount
+  }, [falling, score, gameStats, maxTileAchieved]); // Add dependencies for analytics
 
 
 
@@ -920,6 +959,9 @@ const DropNumberBoard = ({ navigation, route }) => {
       const blockValue = nextBlock;
       console.log('Creating preview tile with value:', blockValue);
       
+      // Track tile spawn for analytics
+      comprehensiveGameAnalytics.trackTileDrop(blockValue, spawnCol, spawnRow, true);
+      
       // Create falling tile with animation - start from below the grid (bottom) in preview mode
       const anim = new Animated.Value((ROWS) * (CELL_SIZE + CELL_MARGIN)); // Start from below the grid
       const fallingTile = {
@@ -941,6 +983,8 @@ const DropNumberBoard = ({ navigation, route }) => {
       
     } catch (error) {
       console.warn('❌ Error in spawnNewTile:', error);
+      // Track error for analytics
+      comprehensiveGameAnalytics.trackError('spawn_new_tile_failed', error.message);
     }
   };
 

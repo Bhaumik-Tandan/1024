@@ -15,6 +15,7 @@ import ContinuousStarfield from '../components/MovingStarfield';
 import SolarSystemView from '../components/SolarSystemView';
 import { formatPlanetValue } from '../utils/helpers';
 import { getPlanetType } from '../components/constants';
+import comprehensiveGameAnalytics from '../utils/comprehensiveGameAnalytics';
 
 const getDimensions = () => {
   if (Platform.OS === 'web') {
@@ -136,6 +137,9 @@ const HomeScreen = ({ navigation }) => {
       ])
     );
     titleShimmer.start();
+
+    // Track home screen view for analytics
+    comprehensiveGameAnalytics.trackScreenView('Home');
 
     return () => titleShimmer.stop();
   }, []);

@@ -5,14 +5,17 @@ const ENV = {
   development: {
     ENV: 'development',
     SENTRY_ENABLED: false,
+    SENTRY_DSN: '',
   },
   production: {
     ENV: 'production',
     SENTRY_ENABLED: true,
+    SENTRY_DSN: 'https://your-sentry-dsn-here.sentry.io/4509838404812800',
   },
   staging: {
     ENV: 'staging',
     SENTRY_ENABLED: false,
+    SENTRY_DSN: '',
   },
 };
 

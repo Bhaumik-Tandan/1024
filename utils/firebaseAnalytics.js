@@ -137,10 +137,11 @@ class FirebaseAnalyticsService {
 
   // Track screen views
   async trackScreenView(screenName) {
-    // Temporarily disabled for iOS build testing
-    console.log(`📊 Firebase Analytics temporarily disabled - Screen: ${screenName}`);
-    return;
-    
+    if (!this.isInitialized || !this.analytics) {
+      console.warn('Firebase Analytics not initialized yet');
+      return;
+    }
+
     try {
       await this.analytics().logScreenView({
         screen_name: screenName,

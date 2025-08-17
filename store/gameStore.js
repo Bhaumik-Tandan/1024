@@ -1,5 +1,6 @@
 import { create } from './helpers';
 import { Platform } from 'react-native';
+import { createTutorialSlice } from './tutorialSlice';
 
 // For web, use a simple store without persistence to avoid issues
 const createGameStore = () => {
@@ -15,6 +16,51 @@ const createGameStore = () => {
     highScore: null,
     currentScore: 0,
     highestBlock: null,
+    
+    // Tutorial state
+    isActive: false,
+    currentStep: 1,
+    allowedLaneIndex: 2, // Center lane by default
+    isGameFrozen: false,
+    
+    // Tutorial actions
+    startTutorial: function() {
+      storeData.isActive = true;
+      storeData.currentStep = 1;
+      storeData.allowedLaneIndex = 2;
+      storeData.isGameFrozen = true;
+    },
+    
+    nextStep: function() {
+      if (storeData.currentStep < 3) {
+        storeData.currentStep = storeData.currentStep + 1;
+        storeData.allowedLaneIndex = storeData.currentStep === 1 ? 3 : 2;
+      } else {
+        storeData.endTutorial();
+      }
+    },
+    
+    endTutorial: function() {
+      storeData.isActive = false;
+      storeData.currentStep = 1;
+      storeData.allowedLaneIndex = 2;
+      storeData.isGameFrozen = false;
+    },
+    
+    setAllowedLane: function(laneIndex) {
+      storeData.allowedLaneIndex = laneIndex;
+    },
+    
+    setGameFrozen: function(frozen) {
+      storeData.isGameFrozen = frozen;
+    },
+    
+    resetTutorial: function() {
+      storeData.isActive = false;
+      storeData.currentStep = 1;
+      storeData.allowedLaneIndex = 2;
+      storeData.isGameFrozen = false;
+    },
     
 
     
@@ -131,6 +177,12 @@ const createGameStore = () => {
       storeData.highestBlock = null;
       storeData.savedGame = null;
       storeData.hasSavedGame = false;
+      
+      // Reset tutorial state
+      storeData.isActive = false;
+      storeData.currentStep = 1;
+      storeData.allowedLaneIndex = 2;
+      storeData.isGameFrozen = false;
     },
   };
   
@@ -165,6 +217,9 @@ if (Platform.OS === 'web') {
         highScore: null,
         currentScore: 0,
         highestBlock: null,
+        
+        // Tutorial state
+        ...createTutorialSlice(),
         
 
         

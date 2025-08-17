@@ -369,12 +369,13 @@ const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = fa
         };
       case 'jupiter':
         return {
-          colors: ['#FF8C42', '#FF7538', '#E76F51'],
+          colors: ['#EDE3CC', '#E1D4B6', '#C9B28A', '#A77F57', '#7B5636'],
           style: { 
             borderWidth: 3, 
-            borderColor: '#FFA500',
-            shadowColor: '#FF8C42',
-            shadowOpacity: 0.9
+            borderColor: '#C67A3E',
+            shadowColor: '#A77F57',
+            shadowOpacity: 0.9,
+            special: 'jupiter_premium'
           }
         };
       case 'polaris':
@@ -603,37 +604,57 @@ const RealisticPlanet = ({ planet, size, value, pulseScaleAnim, isColliding = fa
           left: size * 0.1,
           width: size * 0.8,
           height: size * 0.8,
-          borderRadius: size / 2,
+          borderRadius: size * 0.4,
           backgroundColor: '#000000',
-          borderWidth: 0,
+          borderWidth: 2,
+          borderColor: '#9932CC',
+          opacity: 0.9,
         }} />
         
-        {/* Purple accretion disk glow around the void */}
+        {/* Purple energy ring around the void */}
         <View style={{
           position: 'absolute',
-          top: -size * 0.1,
-          left: -size * 0.1,
-          width: size * 1.2,
-          height: size * 1.2,
-          borderRadius: size * 0.6,
+          top: -size * 0.05,
+          left: -size * 0.05,
+          width: size * 1.1,
+          height: size * 1.1,
+          borderRadius: size * 0.55,
           borderWidth: 3,
           borderColor: '#9932CC',
           backgroundColor: 'transparent',
           opacity: 0.6,
         }} />
         
-        {/* Inner void - completely black center */}
+        {/* Energy particles swirling around the black hole */}
         <View style={{
           position: 'absolute',
-          top: size * 0.25,
-          left: size * 0.25,
-          width: size * 0.5,
-          height: size * 0.5,
-          borderRadius: size * 0.25,
-          backgroundColor: '#000000',
+          top: size * 0.2,
+          right: size * 0.15,
+          width: size * 0.15,
+          height: size * 0.15,
+          borderRadius: size * 0.075,
+          backgroundColor: '#9932CC',
+          opacity: 0.8,
+          transform: [{ rotate: '45deg' }],
+        }} />
+        
+        <View style={{
+          position: 'absolute',
+          bottom: size * 0.25,
+          left: size * 0.2,
+          width: size * 0.1,
+          height: size * 0.1,
+          borderRadius: size * 0.05,
+          backgroundColor: '#9932CC',
+          opacity: 0.7,
         }} />
       </View>
     );
+  }
+
+  // Special rendering for Jupiter - Premium realistic version
+  if (planet.type === 'jupiter' && gradient.style.special === 'jupiter_premium') {
+    return <PremiumJupiter size={size} />;
   }
 
   // Normal planet rendering
@@ -1047,6 +1068,468 @@ const OrbitingMoons = ({ planetSize, moonCount, rotationAnim }) => {
         );
       })}
     </>
+  );
+};
+
+/**
+ * Premium Jupiter Component - Cinematic atmospheric rendering
+ * Implements the premium color palette with advanced atmospheric bands, storms, and lighting
+ */
+const PremiumJupiter = ({ size }) => {
+  // Import Jupiter constants
+  const { JUPITER_COLORS, JUPITER_BANDS, JUPITER_LIGHTING } = require('./constants');
+  
+  return (
+    <View style={{
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: JUPITER_COLORS.deepBrown, // Deep base color
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      
+      {/* Base atmospheric layer - deep brown foundation */}
+      <View style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: JUPITER_COLORS.deepBrown,
+      }} />
+      
+      {/* Atmospheric Band 1: Deep brown to brown transition */}
+      <View style={{
+        position: 'absolute',
+        top: size * 0.05,
+        left: size * 0.08,
+        width: size * 0.84,
+        height: size * 0.45,
+        borderRadius: size * 0.42,
+        backgroundColor: JUPITER_COLORS.brown,
+        shadowColor: JUPITER_COLORS.deepBrown,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.8,
+        shadowRadius: 4,
+        elevation: 8,
+      }} />
+      
+      {/* Atmospheric Band 2: Brown to tan transition */}
+      <View style={{
+        position: 'absolute',
+        top: size * 0.15,
+        left: size * 0.12,
+        width: size * 0.76,
+        height: size * 0.35,
+        borderRadius: size * 0.175,
+        backgroundColor: JUPITER_COLORS.tan,
+        shadowColor: JUPITER_COLORS.brown,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.6,
+        shadowRadius: 3,
+        elevation: 6,
+      }} />
+      
+      {/* Atmospheric Band 3: Tan to cream transition */}
+      <View style={{
+        position: 'absolute',
+        top: size * 0.25,
+        left: size * 0.15,
+        width: size * 0.7,
+        height: size * 0.3,
+        borderRadius: size * 0.15,
+        backgroundColor: JUPITER_COLORS.cream,
+        shadowColor: JUPITER_COLORS.tan,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.5,
+        shadowRadius: 2,
+        elevation: 4,
+      }} />
+      
+      {/* Atmospheric Band 4: Cream to light cream (highlights) */}
+      <View style={{
+        position: 'absolute',
+        top: size * 0.35,
+        left: size * 0.18,
+        width: size * 0.64,
+        height: size * 0.25,
+        borderRadius: size * 0.125,
+        backgroundColor: JUPITER_COLORS.creamLight,
+        shadowColor: JUPITER_COLORS.cream,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.4,
+        shadowRadius: 2,
+        elevation: 3,
+      }} />
+      
+      {/* Atmospheric turbulence layer 1 - orange accents */}
+      <View style={{
+        position: 'absolute',
+        top: size * 0.2,
+        left: size * 0.25,
+        width: size * 0.5,
+        height: size * 0.12,
+        backgroundColor: JUPITER_COLORS.orangeMute,
+        borderRadius: size * 0.06,
+        opacity: 0.7,
+        transform: [{ rotate: '20deg' }],
+        shadowColor: JUPITER_COLORS.orangeMute,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.6,
+        shadowRadius: 3,
+        elevation: 5,
+      }} />
+      
+      {/* Atmospheric turbulence layer 2 - more orange accents */}
+      <View style={{
+        position: 'absolute',
+        top: size * 0.6,
+        left: size * 0.15,
+        width: size * 0.4,
+        height: size * 0.1,
+        backgroundColor: JUPITER_COLORS.orangeMute,
+        borderRadius: size * 0.05,
+        opacity: 0.6,
+        transform: [{ rotate: '-15deg' }],
+        shadowColor: JUPITER_COLORS.orangeMute,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.5,
+        shadowRadius: 2,
+        elevation: 4,
+      }} />
+      
+      {/* Atmospheric turbulence layer 3 - subtle orange */}
+      <View style={{
+        position: 'absolute',
+        top: size * 0.45,
+        right: size * 0.2,
+        width: size * 0.3,
+        height: size * 0.08,
+        backgroundColor: JUPITER_COLORS.orangeMute,
+        borderRadius: size * 0.04,
+        opacity: 0.5,
+        transform: [{ rotate: '45deg' }],
+        shadowColor: JUPITER_COLORS.orangeMute,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.4,
+        shadowRadius: 2,
+        elevation: 3,
+      }} />
+      
+      {/* Great Red Spot - Major storm system with enhanced depth */}
+      <View style={{
+        position: 'absolute',
+        top: size * 0.3,
+        right: size * 0.12,
+        width: size * JUPITER_BANDS.greatRedSpot.radius,
+        height: size * JUPITER_BANDS.greatRedSpot.radius * 0.65, // More oval
+        backgroundColor: JUPITER_BANDS.greatRedSpot.baseColor,
+        borderRadius: size * JUPITER_BANDS.greatRedSpot.radius * 0.325,
+        transform: [{ rotate: '18deg' }], // More tilted
+        shadowColor: JUPITER_BANDS.greatRedSpot.shadowRing,
+        shadowOffset: { width: 2, height: 4 },
+        shadowOpacity: 0.9,
+        shadowRadius: 8,
+        elevation: 12,
+      }}>
+        {/* Inner storm swirl - enhanced */}
+        <View style={{
+          position: 'absolute',
+          top: size * 0.08,
+          left: size * 0.08,
+          width: size * 0.09,
+          height: size * 0.09,
+          backgroundColor: JUPITER_BANDS.greatRedSpot.innerSwirl,
+          borderRadius: size * 0.045,
+          opacity: 0.9,
+          shadowColor: JUPITER_BANDS.greatRedSpot.shadowRing,
+          shadowOffset: { width: 1, height: 2 },
+          shadowOpacity: 0.8,
+          shadowRadius: 4,
+          elevation: 6,
+        }} />
+        
+        {/* Secondary storm swirl */}
+        <View style={{
+          position: 'absolute',
+          top: size * 0.25,
+          right: size * 0.1,
+          width: size * 0.06,
+          height: size * 0.06,
+          backgroundColor: JUPITER_BANDS.greatRedSpot.innerSwirl,
+          borderRadius: size * 0.03,
+          opacity: 0.8,
+          shadowColor: JUPITER_BANDS.greatRedSpot.shadowRing,
+          shadowOffset: { width: 1, height: 1 },
+          shadowOpacity: 0.7,
+          shadowRadius: 2,
+          elevation: 4,
+        }} />
+        
+        {/* Storm shadow ring - enhanced depth */}
+        <View style={{
+          position: 'absolute',
+          top: -size * 0.03,
+          left: -size * 0.03,
+          width: size * 0.21,
+          height: size * 0.71,
+          borderWidth: 3,
+          borderColor: JUPITER_BANDS.greatRedSpot.shadowRing,
+          borderRadius: size * 0.105,
+          backgroundColor: 'transparent',
+          opacity: 0.8,
+          shadowColor: JUPITER_BANDS.greatRedSpot.shadowRing,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.6,
+          shadowRadius: 4,
+          elevation: 8,
+        }} />
+      </View>
+      
+      {/* Enhanced White Oval Storms with depth */}
+      {JUPITER_BANDS.storms.whiteOvals.colors.map((color, index) => (
+        <View
+          key={`white-oval-${index}`}
+          style={{
+            position: 'absolute',
+            top: size * (0.15 + index * 0.18),
+            left: size * (0.2 + index * 0.12),
+            width: size * JUPITER_BANDS.storms.whiteOvals.sizes[index],
+            height: size * JUPITER_BANDS.storms.whiteOvals.sizes[index] * 0.75,
+            backgroundColor: color,
+            borderRadius: size * JUPITER_BANDS.storms.whiteOvals.sizes[index] * 0.375,
+            transform: [{ rotate: `${-12 + index * 8}deg` }],
+            opacity: 0.95,
+            shadowColor: '#000',
+            shadowOffset: { width: 1, height: 2 },
+            shadowOpacity: 0.6,
+            shadowRadius: 4,
+            elevation: 6,
+          }}
+        />
+      ))}
+      
+      {/* Enhanced Dark Spots with depth */}
+      {JUPITER_BANDS.storms.darkSpots.colors.map((color, index) => (
+        <View
+          key={`dark-spot-${index}`}
+          style={{
+            position: 'absolute',
+            top: size * (0.12 + index * 0.14),
+            left: size * (0.55 + index * 0.1),
+            width: size * JUPITER_BANDS.storms.darkSpots.sizes[index],
+            height: size * JUPITER_BANDS.storms.darkSpots.sizes[index],
+            backgroundColor: color,
+            borderRadius: size * JUPITER_BANDS.storms.darkSpots.sizes[index] * 0.5,
+            opacity: 0.9,
+            shadowColor: '#000',
+            shadowOffset: { width: 1, height: 2 },
+            shadowOpacity: 0.7,
+            shadowRadius: 3,
+            elevation: 5,
+          }}
+        />
+      ))}
+      
+      {/* Additional atmospheric detail - subtle bands */}
+      <View style={{
+        position: 'absolute',
+        top: size * 0.75,
+        left: size * 0.1,
+        width: size * 0.8,
+        height: size * 0.08,
+        backgroundColor: JUPITER_COLORS.brown,
+        borderRadius: size * 0.04,
+        opacity: 0.8,
+        shadowColor: JUPITER_COLORS.deepBrown,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.6,
+        shadowRadius: 2,
+        elevation: 4,
+      }} />
+      
+      {/* Enhanced limb darkening effect (radial vignette) */}
+      <View style={{
+        position: 'absolute',
+        top: -size * 0.15,
+        left: -size * 0.15,
+        width: size * 1.3,
+        height: size * 1.3,
+        borderRadius: size * 0.65,
+        backgroundColor: 'transparent',
+        borderWidth: size * 0.15,
+        borderColor: 'rgba(0,0,0,0.15)',
+        opacity: 0.9,
+      }} />
+      
+      {/* Enhanced terminator effect (day/night transition) */}
+      <View style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: 'transparent',
+        borderWidth: size * 0.35,
+        borderColor: 'rgba(0,0,0,0.3)',
+        borderLeftColor: 'transparent',
+        borderTopColor: 'transparent',
+        opacity: 0.8,
+      }} />
+      
+      {/* Enhanced fresnel rim effect (subtle warm rim) */}
+      <View style={{
+        position: 'absolute',
+        top: -size * 0.015,
+        left: -size * 0.015,
+        width: size * 1.03,
+        height: size * 1.03,
+        borderRadius: size * 0.515,
+        backgroundColor: 'transparent',
+        borderWidth: size * 0.015,
+        borderColor: 'rgba(255,240,220,0.04)',
+        opacity: 0.9,
+      }} />
+      
+      {/* Enhanced sun side tint (additive lighting) */}
+      <View style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        opacity: 0.8,
+      }} />
+      
+      {/* Additional atmospheric haze layer */}
+      <View style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: 'rgba(255,255,255,0.02)',
+        opacity: 0.7,
+      }} />
+      
+      {/* Final atmospheric glow layer */}
+      <View style={{
+        position: 'absolute',
+        top: -size * 0.05,
+        left: -size * 0.05,
+        width: size * 1.1,
+        height: size * 1.1,
+        borderRadius: size * 0.55,
+        backgroundColor: 'transparent',
+        borderWidth: size * 0.05,
+        borderColor: 'rgba(255,255,255,0.03)',
+        opacity: 0.8,
+      }} />
+      
+      {/* Premium atmospheric cloud wisps */}
+      <View style={{
+        position: 'absolute',
+        top: size * 0.18,
+        left: size * 0.22,
+        width: size * 0.25,
+        height: size * 0.06,
+        backgroundColor: JUPITER_COLORS.stormWhite,
+        borderRadius: size * 0.03,
+        opacity: 0.4,
+        transform: [{ rotate: '35deg' }],
+      }} />
+      
+      <View style={{
+        position: 'absolute',
+        top: size * 0.52,
+        left: size * 0.35,
+        width: size * 0.2,
+        height: size * 0.05,
+        backgroundColor: JUPITER_COLORS.stormWhite,
+        borderRadius: size * 0.025,
+        opacity: 0.3,
+        transform: [{ rotate: '-25deg' }],
+      }} />
+      
+      <View style={{
+        position: 'absolute',
+        top: size * 0.68,
+        right: size * 0.25,
+        width: size * 0.18,
+        height: size * 0.04,
+        backgroundColor: JUPITER_COLORS.stormWhite,
+        borderRadius: size * 0.02,
+        opacity: 0.35,
+        transform: [{ rotate: '15deg' }],
+      }} />
+      
+      {/* Enhanced storm system details */}
+      <View style={{
+        position: 'absolute',
+        top: size * 0.28,
+        left: size * 0.45,
+        width: size * 0.12,
+        height: size * 0.08,
+        backgroundColor: JUPITER_COLORS.orangeMute,
+        borderRadius: size * 0.04,
+        opacity: 0.6,
+        transform: [{ rotate: '60deg' }],
+        shadowColor: JUPITER_COLORS.orangeMute,
+        shadowOffset: { width: 1, height: 2 },
+        shadowOpacity: 0.5,
+        shadowRadius: 3,
+        elevation: 4,
+      }} />
+      
+      {/* Additional atmospheric band detail */}
+      <View style={{
+        position: 'absolute',
+        top: size * 0.82,
+        left: size * 0.05,
+        width: size * 0.9,
+        height: size * 0.06,
+        backgroundColor: JUPITER_COLORS.deepBrown,
+        borderRadius: size * 0.03,
+        opacity: 0.9,
+        shadowColor: JUPITER_COLORS.deepBrown,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.7,
+        shadowRadius: 3,
+        elevation: 5,
+      }} />
+      
+      {/* Premium atmospheric depth layer */}
+      <View style={{
+        position: 'absolute',
+        top: size * 0.1,
+        left: size * 0.05,
+        width: size * 0.9,
+        height: size * 0.8,
+        borderRadius: size * 0.4,
+        backgroundColor: 'transparent',
+        borderWidth: size * 0.02,
+        borderColor: 'rgba(0,0,0,0.1)',
+        opacity: 0.6,
+      }} />
+      
+      {/* Final premium atmospheric sheen */}
+      <View style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: 'rgba(255,255,255,0.015)',
+        opacity: 0.8,
+      }} />
+    </View>
   );
 };
 

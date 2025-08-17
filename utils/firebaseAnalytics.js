@@ -10,15 +10,15 @@ class FirebaseAnalyticsService {
   async init() {
     try {
       // Only initialize Firebase Analytics in production mode
-      if (__DEV__) {
-        console.log('📊 Firebase Analytics disabled in development mode');
-        return;
-      }
+          if (__DEV__) {
+      // Firebase Analytics disabled in development mode
+      return;
+    }
 
       // Check if we're on iOS (since we only want iOS for now)
       const { Platform } = require('react-native');
       if (Platform.OS !== 'ios') {
-        console.log('📊 Firebase Analytics only enabled for iOS');
+        // Firebase Analytics only enabled for iOS
         return;
       }
 
@@ -48,21 +48,20 @@ class FirebaseAnalyticsService {
         await this.crashlytics().setAttribute('platform', 'ios');
         
         this.isInitialized = true;
-        console.log('📊 Firebase Analytics initialized successfully');
   
       } catch (importError) {
-        console.warn('📊 Firebase modules not available:', importError.message);
+        // Firebase modules not available
         return;
       }
     } catch (error) {
-      console.error('Failed to initialize Firebase Analytics:', error);
+      // Failed to initialize Firebase Analytics
     }
   }
 
   // Track game events without personal data
   async trackGameEvent(eventName, parameters = {}) {
     if (!this.isInitialized || !this.analytics) {
-      console.warn('Firebase Analytics not initialized yet');
+      // Firebase Analytics not initialized yet
       return;
     }
 
@@ -77,13 +76,13 @@ class FirebaseAnalyticsService {
       await this.analytics().logEvent(eventName, safeParameters);
 
     } catch (error) {
-      console.error(`Failed to log analytics event ${eventName}:`, error);
+      // Failed to log analytics event
       // Log error to Crashlytics if available
       if (this.crashlytics) {
         try {
           await this.crashlytics().recordError(error);
         } catch (crashlyticsError) {
-          console.error('Failed to log error to Crashlytics:', crashlyticsError);
+          // Failed to log error to Crashlytics
         }
       }
     }

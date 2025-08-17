@@ -64,7 +64,7 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
       // Call the original onResume function
       onResume();
     } catch (error) {
-      console.warn('Failed to resume background music:', error);
+      // Failed to resume background music
       // Still continue the game even if music resume fails
       onResume();
     }
@@ -103,7 +103,7 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
       }
       
     } catch (error) {
-      console.warn('Failed to toggle background music:', error);
+      // Failed to toggle background music
       // Track error for analytics
       comprehensiveGameAnalytics.trackError('background_music_toggle_failed', error.message);
       
@@ -164,7 +164,7 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
                       comprehensiveGameAnalytics.trackAudioSettingChange('sound', soundEnabled, newSoundState);
                       toggleSound();
                     } catch (error) {
-                      console.warn('Failed to toggle sound:', error);
+                      // Failed to toggle sound
                       // Revert local state if toggle fails
                       setLocalSoundEnabled(!newSoundState);
                     }
@@ -196,7 +196,7 @@ const PauseModal = ({ visible, onResume, onHome, onClose, onRestart }) => {
                       comprehensiveGameAnalytics.trackAudioSettingChange('vibration', vibrationEnabled, newVibrationState);
                       toggleVibration();
                     } catch (error) {
-                      console.warn('Failed to toggle vibration:', error);
+                      // Failed to toggle vibration
                       // Revert local state if toggle fails
                       setLocalVibrationEnabled(!newVibrationState);
                     }

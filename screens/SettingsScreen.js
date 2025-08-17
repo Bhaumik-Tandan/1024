@@ -64,7 +64,7 @@ const SettingsScreen = ({ navigation }) => {
     try {
       backgroundMusicManager.updateSettings();
     } catch (error) {
-      console.warn('Failed to update background music settings:', error);
+      // Failed to update background music settings
     }
   }, [backgroundMusicEnabled]);
 

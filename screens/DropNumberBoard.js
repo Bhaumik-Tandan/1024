@@ -59,6 +59,8 @@ import { vibrateOnTouch } from '../utils/vibration';
 import useGameStore from '../store/gameStore';
 import comprehensiveGameAnalytics from '../utils/comprehensiveGameAnalytics';
 import BackgroundMusicManager from '../utils/backgroundMusicManager';
+import { useTutorial } from '../components/useTutorial';
+import { TutorialOverlay } from '../components/TutorialOverlay';
 
 
 
@@ -162,6 +164,18 @@ const DropNumberBoard = ({ navigation, route }) => {
   // Game state variables
   const { saveGame, loadSavedGame, updateScore, updateHighestBlock, clearSavedGame, highScore } = useGameStore();
   
+  // Tutorial system
+  const {
+    isTutorialActive,
+    currentStep,
+    allowedLaneIndex,
+    isGameFrozen,
+    hasCompletedOnboarding,
+    isInitialized,
+    advanceStep,
+    tutorialController,
+  } = useTutorial();
+  
   // Handle orientation changes and dynamic grid resizing
   useEffect(() => {
     try {
@@ -189,7 +203,7 @@ const DropNumberBoard = ({ navigation, route }) => {
                 
                 return newBoard;
               } catch (error) {
-                console.warn('Board resize error:', error);
+                // Board resize error
                 return Array.from({ length: newGridConfig.ROWS }, () => Array(newGridConfig.COLS).fill(0));
               }
             });
@@ -199,15 +213,27 @@ const DropNumberBoard = ({ navigation, route }) => {
             clearMergeAnimationsRef.current();
           }
         } catch (error) {
-          console.warn('Orientation change error:', error);
+          // Orientation change error
         }
       });
 
       return () => subscription?.remove();
     } catch (error) {
-      console.warn('Orientation effect setup error:', error);
+      // Orientation effect setup error
     }
   }, [gridConfig]); // Removed function dependencies to prevent infinite loops
+
+  // Tutorial initialization
+  useEffect(() => {
+    if (isInitialized && !hasCompletedOnboarding && isTutorialActive) {
+      // Set up the tutorial board for the current step
+      const stepSetup = tutorialController.getStepSetup(currentStep);
+      setBoard(stepSetup.boardSetup);
+      setNextBlock(stepSetup.shooterValue);
+      setPreviewBlock(stepSetup.shooterValue);
+      setScore(0); // Reset score for tutorial
+    }
+  }, [isInitialized, hasCompletedOnboarding, isTutorialActive, currentStep, tutorialController]);
 
   // Use the animation manager
   const {
@@ -277,17 +303,15 @@ const DropNumberBoard = ({ navigation, route }) => {
           
           // Start playing background music if enabled - it will continue playing continuously
           if (backgroundMusicEnabled) {
-            console.log('🎵 Starting background music for continuous playback...');
             await global.backgroundMusicManager.play();
-            console.log('🎵 Background music started successfully - will play continuously');
           } else {
-            console.log('🎵 Background music is disabled in settings');
+            // Background music is disabled in settings
           }
         } else {
-          console.log('🎵 Background music manager already exists');
+          // Background music manager already exists
         }
       } catch (error) {
-        console.warn('Background music initialization failed:', error);
+        // Background music initialization failed
       }
     };
     
@@ -322,7 +346,7 @@ const DropNumberBoard = ({ navigation, route }) => {
           }
         }
       } catch (error) {
-        console.warn('Background music sync failed:', error);
+        // Background music sync failed
       }
     };
     
@@ -360,7 +384,7 @@ const DropNumberBoard = ({ navigation, route }) => {
           }
         }
       } catch (error) {
-        console.warn('Failed to load saved game:', error);
+        // Failed to load saved game
       }
     };
     
@@ -388,7 +412,7 @@ const DropNumberBoard = ({ navigation, route }) => {
           try {
             saveGame(gameState);
           } catch (error) {
-            console.warn('Failed to save game on screen leave:', error);
+            // Failed to save game on screen leave
           }
         }
       };
@@ -415,7 +439,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         try {
           saveGame(gameState);
         } catch (error) {
-          console.warn('Failed to save game on app background:', error);
+          // Failed to save game on app background
         }
       }
     };
@@ -453,7 +477,7 @@ const DropNumberBoard = ({ navigation, route }) => {
           updateHighestBlock(maxTileAchieved);
         }
       } catch (error) {
-        console.warn('Auto-save failed:', error);
+        // Auto-save failed
       }
     }
   }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame, updateScore, updateHighestBlock]);
@@ -476,7 +500,7 @@ const DropNumberBoard = ({ navigation, route }) => {
           chainReactions: gameStats.chainReactions || 0,
         });
       } catch (analyticsError) {
-        console.warn('Analytics error:', analyticsError);
+        // Analytics error
       }
       
       // Save game state when pausing
@@ -493,7 +517,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       };
       saveGame(gameState);
     } catch (error) {
-      console.warn('Pause error:', error);
+      // Pause error
       setIsPaused(true); // Still pause even if sound fails
     }
   };
@@ -510,10 +534,10 @@ const DropNumberBoard = ({ navigation, route }) => {
       try {
         comprehensiveGameAnalytics.trackGameResume();
       } catch (analyticsError) {
-        console.warn('Analytics error:', analyticsError);
+        // Analytics error
       }
     } catch (error) {
-      console.warn('Resume error:', error);
+      // Resume error
       setIsPaused(false); // Still resume even if sound fails
     }
   };
@@ -524,13 +548,13 @@ const DropNumberBoard = ({ navigation, route }) => {
       try {
         comprehensiveGameAnalytics.trackGameRestart();
       } catch (analyticsError) {
-        console.warn('Analytics error:', analyticsError);
+        // Analytics error
       }
       
       resetGame(); // Use the local reset function for comprehensive game reset
       setIsPaused(false); // Dismiss modal after restarting
     } catch (error) {
-      console.warn('Restart error:', error);
+      // Restart error
       setIsPaused(false); // Still dismiss modal even if restart fails
     }
   }
@@ -541,7 +565,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       try {
         comprehensiveGameAnalytics.trackScreenView('Home', 'Drop Number Board');
       } catch (analyticsError) {
-        console.warn('Analytics error:', analyticsError);
+        // Analytics error
       }
       
       // Save game state before going home
@@ -562,7 +586,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       setIsPaused(false);
       navigation.navigate('Home');
     } catch (error) {
-      console.warn('Home navigation error:', error);
+      // Home navigation error
       // Still dismiss modal and navigate even if save fails
       setIsPaused(false);
       navigation.navigate('Home');
@@ -573,7 +597,7 @@ const DropNumberBoard = ({ navigation, route }) => {
     try {
       setIsPaused(false);
     } catch (error) {
-      console.warn('Close pause error:', error);
+      // Close pause error
       // Force close if normal close fails
       setIsPaused(false);
     }
@@ -590,6 +614,11 @@ const DropNumberBoard = ({ navigation, route }) => {
   useEffect(() => {
     // Prevent infinite loops by checking if we're already processing
     if (falling || gameOver || isPaused) {
+      return;
+    }
+    
+    // Don't spawn tiles during tutorial
+    if (isTutorialActive && isGameFrozen) {
       return;
     }
     
@@ -610,7 +639,7 @@ const DropNumberBoard = ({ navigation, route }) => {
             chainReactions: gameStats.chainReactions || 0,
           });
         } catch (error) {
-          console.warn('Game loop game over sound error:', error);
+          // Game loop game over sound error
         }
         return;
       }
@@ -620,7 +649,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         try {
           comprehensiveGameAnalytics.trackGameStart('normal', 'standard');
         } catch (analyticsError) {
-          console.warn('Analytics error:', analyticsError);
+          // Analytics error
         }
       }
       
@@ -641,7 +670,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       // Don't automatically show guide for every new tile
       // setShowGuide(true); // Removed this line
     } catch (error) {
-      console.warn('Game loop error:', error);
+      // Game loop error
       // Recover gracefully
       setGameOver(true);
       
@@ -649,7 +678,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       try {
         comprehensiveGameAnalytics.trackError('game_loop_failed', error.message);
       } catch (analyticsError) {
-        console.warn('Analytics error tracking failed:', analyticsError);
+        // Analytics error tracking failed
       }
     }
     // eslint-disable-next-line
@@ -668,7 +697,7 @@ const DropNumberBoard = ({ navigation, route }) => {
           const gameDuration = Date.now() - gameStats.startTime;
           comprehensiveGameAnalytics.trackGameEnd(score, maxTileAchieved, gameDuration, 'user_navigation');
         } catch (analyticsError) {
-          console.warn('Analytics error on unmount:', analyticsError);
+          // Analytics error on unmount
         }
       }
       
@@ -703,6 +732,11 @@ const DropNumberBoard = ({ navigation, route }) => {
       if (!falling || falling.fastDrop || gameOver || isPaused) {
         return;
       }
+      
+      // Don't allow normal gameplay during tutorial
+      if (isTutorialActive && isGameFrozen) {
+        return;
+      }
     
     // Emergency cleanup if animations are stuck - more aggressive
     try {
@@ -719,7 +753,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         clearMergeAnimationsRef.current();
       }
     } catch (error) {
-      console.warn('Emergency cleanup error:', error);
+      // Emergency cleanup error
       // Force cleanup if normal cleanup fails
       clearMergeAnimationsRef.current();
     }
@@ -731,7 +765,6 @@ const DropNumberBoard = ({ navigation, route }) => {
     handleRowTap(0, targetColumn); // Row doesn't matter, only column
     } catch (error) {
       // Error in handleScreenTap - recover gracefully
-      console.warn('HandleScreenTap error:', error);
       setIsTouchEnabled(true);
     }
   };
@@ -750,6 +783,11 @@ const DropNumberBoard = ({ navigation, route }) => {
       
       // Validate tap conditions
       if (!falling || falling.fastDrop || gameOver || isPaused) {
+        return;
+      }
+      
+      // Don't allow normal gameplay during tutorial
+      if (isTutorialActive && isGameFrozen) {
         return;
       }
     
@@ -854,7 +892,7 @@ const DropNumberBoard = ({ navigation, route }) => {
             handleTileLanded(landingRow, landingCol, tileValueToDrop);
           }
         } catch (error) {
-          console.warn('Landing timeout error:', error);
+          // Landing timeout error
           setIsTouchEnabled(true);
         } finally {
           clearFallingRef.current();
@@ -866,9 +904,91 @@ const DropNumberBoard = ({ navigation, route }) => {
     touchTimeoutRef.current = landingTimeout;
     } catch (error) {
       // Error in handleRowTap - recover gracefully
-      console.warn('HandleRowTap error:', error);
       setIsTouchEnabled(true);
       clearFallingRef.current();
+    }
+  };
+
+  /**
+   * Handle tutorial lane taps during the tutorial
+   */
+  const handleTutorialLaneTap = (laneIndex) => {
+    try {
+      if (!isTutorialActive || laneIndex !== allowedLaneIndex) {
+        return;
+      }
+
+      // Simulate a tile drop in the tutorial
+      const stepSetup = tutorialController.getStepSetup(currentStep);
+      
+      // Create a simple falling tile for the tutorial
+      const tutorialFalling = {
+        col: laneIndex,
+        toRow: 0, // Drop to top
+        value: stepSetup.shooterValue,
+        fastDrop: true,
+        static: false,
+        inPreview: false,
+        anim: new Animated.Value(0)
+      };
+
+      // Set the falling tile
+      setFalling(tutorialFalling);
+
+      // Simulate the drop animation
+      setTimeout(() => {
+        // Process the tutorial move
+        handleTutorialMove(laneIndex);
+      }, 500); // Short delay for visual feedback
+
+    } catch (error) {
+      // Tutorial lane tap error
+    }
+  };
+
+  /**
+   * Handle tutorial move completion
+   */
+  const handleTutorialMove = (laneIndex) => {
+    try {
+      // Simulate the merge result based on the current step
+      const stepSetup = tutorialController.getStepSetup(currentStep);
+      
+      // Update the board based on the tutorial step
+      if (currentStep === 1) {
+        // Step 1: Simple merge 2 + 2 = 4
+        const newBoard = [...board];
+        newBoard[0][laneIndex] = 4; // Result of 2 + 2
+        setBoard(newBoard);
+        setScore(4);
+      } else if (currentStep === 2) {
+        // Step 2: Combo setup
+        const newBoard = [...board];
+        newBoard[0][laneIndex] = 4; // 2 + 2 = 4
+        // Trigger chain reaction: 4 + 4 = 8
+        setTimeout(() => {
+          newBoard[1][laneIndex] = 8; // Chain merge result
+          setBoard([...newBoard]);
+          setScore(12);
+        }, 300);
+      } else if (currentStep === 3) {
+        // Step 3: Big merge 8 + 8 = 16
+        const newBoard = [...board];
+        newBoard[0][laneIndex] = 16; // Result of 8 + 8
+        setBoard(newBoard);
+        setScore(16);
+      }
+
+      // Clear falling tile
+      setFalling(null);
+
+      // Advance to next step after a delay
+      setTimeout(() => {
+        advanceStep();
+      }, 1000);
+
+    } catch (error) {
+      // Tutorial move error
     }
   };
 
@@ -894,7 +1014,7 @@ const DropNumberBoard = ({ navigation, route }) => {
                board[pos.row] && board[pos.row][pos.col] !== 0;
       });
     } catch (error) {
-      console.warn('Adjacent tiles check error:', error);
+      // Adjacent tiles check error
       return false; // Safe fallback
     }
   };
@@ -932,7 +1052,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       
       return null;
     } catch (error) {
-      console.warn('Can merge in full column error:', error);
+      // Can merge in full column error
       return null; // Safe fallback
     }
   };
@@ -1027,18 +1147,16 @@ const DropNumberBoard = ({ navigation, route }) => {
           try {
             soundManager.playSoundIfEnabled('gameOver');
           } catch (error) {
-            console.warn('Game over sound error:', error);
+            // Game over sound error
           }
         }
       }).catch(error => {
         // Error processing tile landing - recover gracefully
-        console.warn('Tile landing error:', error);
         setIsTouchEnabled(true);
         clearFallingRef.current();
       });
     } catch (error) {
       // Error in handleTileLanded - recover gracefully
-      console.warn('HandleTileLanded error:', error);
       setIsTouchEnabled(true);
       clearFallingRef.current();
     }
@@ -1131,7 +1249,7 @@ const DropNumberBoard = ({ navigation, route }) => {
           try {
             soundManager.playSoundIfEnabled('gameOver');
           } catch (error) {
-            console.warn('Game over sound error:', error);
+            // Game over sound error
           }
         }
       } else {
@@ -1140,7 +1258,6 @@ const DropNumberBoard = ({ navigation, route }) => {
       }
     } catch (error) {
       // Error in handleFullColumnTileLanded - recover gracefully
-      console.warn('FullColumnTileLanded error:', error);
       setIsTouchEnabled(true);
       clearFallingRef.current();
     }
@@ -1179,14 +1296,13 @@ const DropNumberBoard = ({ navigation, route }) => {
         // Clear the saved game state
         clearSavedGame();
       } catch (error) {
-        console.warn('Failed to clear saved game:', error);
+        // Failed to clear saved game
       }
     
     // Enable touch
     setIsTouchEnabled(true);
     } catch (error) {
       // Error in resetGame - recover gracefully
-      console.warn('ResetGame error:', error);
       // Try to reset to a safe state
       setBoard(Array.from({ length: gridConfig.ROWS }, () => Array(gridConfig.COLS).fill(0)));
       setScore(0);
@@ -1209,7 +1325,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       if (fillPercentage < 0.8) return 'hard';
       return 'extreme';
     } catch (error) {
-      console.warn('Difficulty calculation error:', error);
+      // Difficulty calculation error
       return 'easy'; // Safe fallback
     }
   };
@@ -1233,7 +1349,7 @@ const DropNumberBoard = ({ navigation, route }) => {
           try {
             setBoardLeft(e.nativeEvent.layout.x);
           } catch (error) {
-            console.warn('Board layout error:', error);
+            // Board layout error
           }
         }}
       >
@@ -1255,6 +1371,24 @@ const DropNumberBoard = ({ navigation, route }) => {
       </View>
       
       <OptimizedNextBlock nextBlock={nextBlock} />
+
+      {/* Tutorial Overlay */}
+      {isTutorialActive && (
+        <TutorialOverlay
+          isVisible={isTutorialActive}
+          currentStep={currentStep}
+          allowedLaneIndex={allowedLaneIndex}
+          stepText={tutorialController.getStepSetup(currentStep).stepText}
+          successText={tutorialController.getStepSetup(currentStep).successText}
+          showSuccessText={false} // Will be controlled by tutorial logic
+          onLaneTap={(laneIndex) => {
+            if (laneIndex === allowedLaneIndex) {
+              // Handle tutorial lane tap
+              handleTutorialLaneTap(laneIndex);
+            }
+          }}
+        />
+      )}
 
       {/* Game Over Overlay */}
       {gameOver && (
@@ -1295,7 +1429,7 @@ const DropNumberBoard = ({ navigation, route }) => {
                 try {
                   resetGame();
                 } catch (error) {
-                  console.warn('Game over restart error:', error);
+                  // Game over restart error
                   // Force reset to safe state
                   setBoard(Array.from({ length: gridConfig.ROWS }, () => Array(gridConfig.COLS).fill(0)));
                   setScore(0);

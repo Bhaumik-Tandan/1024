@@ -66,7 +66,7 @@ class ComprehensiveGameAnalytics {
       
   
     } catch (error) {
-      console.error('Failed to initialize Comprehensive Game Analytics:', error);
+      // Failed to initialize Comprehensive Game Analytics
     }
   }
 
@@ -94,7 +94,7 @@ class ComprehensiveGameAnalytics {
         await this.trackError('tile_drop_failed', error);
       }
     } catch (error) {
-      console.error('Error tracking tile drop:', error);
+      // Error tracking tile drop
     }
   }
 
@@ -132,7 +132,7 @@ class ComprehensiveGameAnalytics {
         });
       }
     } catch (error) {
-      console.error('Error tracking tile merge:', error);
+      // Error tracking tile merge
     }
   }
 
@@ -159,7 +159,7 @@ class ComprehensiveGameAnalytics {
         }
       });
     } catch (error) {
-      console.error('Error tracking score change:', error);
+      // Error tracking score change
     }
   }
 
@@ -172,7 +172,7 @@ class ComprehensiveGameAnalytics {
         milestone_type: this.getMilestoneType(milestone)
       });
     } catch (error) {
-      console.error('Error tracking score milestone:', error);
+      // Error tracking score milestone
     }
   }
 
@@ -197,7 +197,7 @@ class ComprehensiveGameAnalytics {
         }
       });
     } catch (error) {
-      console.error('Error tracking highest tile achievement:', error);
+      // Error tracking highest tile achievement
     }
   }
 
@@ -213,7 +213,7 @@ class ComprehensiveGameAnalytics {
         current_score: this.gameState.currentScore
       });
     } catch (error) {
-      console.error('Error tracking tile milestone:', error);
+      // Error tracking tile milestone
     }
   }
 
@@ -245,7 +245,7 @@ class ComprehensiveGameAnalytics {
         await this.trackVibrationToggle(newValue);
       }
     } catch (error) {
-      console.error('Error tracking audio setting change:', error);
+      // Error tracking audio setting change
     }
   }
 
@@ -258,7 +258,7 @@ class ComprehensiveGameAnalytics {
         game_duration: this.gameState.gameDuration
       });
     } catch (error) {
-      console.error('Error tracking sound toggle:', error);
+      // Error tracking sound toggle
     }
   }
 
@@ -272,7 +272,7 @@ class ComprehensiveGameAnalytics {
         time_in_session: Date.now() - (this.sessionStartTime || Date.now())
       });
     } catch (error) {
-      console.error('Error tracking background music toggle:', error);
+      // Error tracking background music toggle
     }
   }
 
@@ -285,7 +285,7 @@ class ComprehensiveGameAnalytics {
         game_duration: this.gameState.gameDuration
       });
     } catch (error) {
-      console.error('Error tracking vibration toggle:', error);
+      // Error tracking vibration toggle
     }
   }
 
@@ -305,7 +305,7 @@ class ComprehensiveGameAnalytics {
         await this.trackError('audio_playback_failed', error);
       }
     } catch (error) {
-      console.error('Error tracking audio playback:', error);
+      // Error tracking audio playback
     }
   }
 
@@ -353,7 +353,7 @@ class ComprehensiveGameAnalytics {
         await this.trackHomeScreenView();
       }
     } catch (error) {
-      console.error('Error tracking screen view:', error);
+      // Error tracking screen view
     }
   }
 
@@ -368,7 +368,7 @@ class ComprehensiveGameAnalytics {
         game_duration: this.gameState.gameDuration
       });
     } catch (error) {
-      console.error('Error tracking game screen view:', error);
+      // Error tracking game screen view
     }
   }
 
@@ -383,7 +383,7 @@ class ComprehensiveGameAnalytics {
         highest_score: await this.getHighestScore()
       });
     } catch (error) {
-      console.error('Error tracking settings screen view:', error);
+      // Error tracking settings screen view
     }
   }
 
@@ -397,7 +397,7 @@ class ComprehensiveGameAnalytics {
         total_sessions: await this.getTotalSessions()
       });
     } catch (error) {
-      console.error('Error tracking home screen view:', error);
+      // Error tracking home screen view
     }
   }
 
@@ -416,7 +416,7 @@ class ComprehensiveGameAnalytics {
         session_number: await this.getSessionNumber()
       });
     } catch (error) {
-      console.error('Error tracking game start:', error);
+      // Error tracking game start
     }
   }
 
@@ -435,7 +435,7 @@ class ComprehensiveGameAnalytics {
         time_in_session: Date.now() - (this.sessionStartTime || Date.now())
       });
     } catch (error) {
-      console.error('Error tracking game pause:', error);
+      // Error tracking game pause
     }
   }
 
@@ -454,7 +454,7 @@ class ComprehensiveGameAnalytics {
         time_since_pause: Date.now() - (this.sessionStartTime || Date.now())
       });
     } catch (error) {
-      console.error('Error tracking game resume:', error);
+      // Error tracking game resume
     }
   }
 
@@ -474,7 +474,7 @@ class ComprehensiveGameAnalytics {
       // Reset game state
       this.resetGameState();
     } catch (error) {
-      console.error('Error tracking game restart:', error);
+      // Error tracking game restart
     }
   }
 
@@ -500,7 +500,7 @@ class ComprehensiveGameAnalytics {
       // Track game performance metrics
       await this.trackGamePerformance(finalScore, maxTile, gameDuration);
     } catch (error) {
-      console.error('Error tracking game end:', error);
+      // Error tracking game end
     }
   }
 
@@ -522,7 +522,7 @@ class ComprehensiveGameAnalytics {
         engagement_score: (this.gameState.tilesPlaced + this.gameState.mergesPerformed) / gameDuration * 1000
       });
     } catch (error) {
-      console.error('Error tracking game performance:', error);
+      // Error tracking game performance
     }
   }
 
@@ -545,7 +545,7 @@ class ComprehensiveGameAnalytics {
         merges_at_usage: gameState.mergesPerformed || this.gameState.mergesPerformed
       });
     } catch (error) {
-      console.error('Error tracking power-up usage:', error);
+      // Error tracking power-up usage
     }
   }
 
@@ -565,7 +565,7 @@ class ComprehensiveGameAnalytics {
         game_duration_at_achievement: gameState.gameDuration || this.gameState.gameDuration
       });
     } catch (error) {
-      console.error('Error tracking achievement unlock:', error);
+      // Error tracking achievement unlock
     }
   }
 
@@ -588,7 +588,7 @@ class ComprehensiveGameAnalytics {
         ...additionalData
       });
     } catch (error) {
-      console.error('Error tracking error:', error);
+      // Error tracking error
     }
   }
 
@@ -608,7 +608,7 @@ class ComprehensiveGameAnalytics {
         ...crashData
       });
     } catch (error) {
-      console.error('Error tracking crash:', error);
+      // Error tracking crash
     }
   }
 
@@ -630,7 +630,7 @@ class ComprehensiveGameAnalytics {
         ...additionalData
       });
     } catch (error) {
-      console.error('Error tracking monetization event:', error);
+      // Error tracking monetization event
     }
   }
 
@@ -694,7 +694,7 @@ class ComprehensiveGameAnalytics {
         this.navigationState = { ...this.navigationState, ...parsed.navigationState };
       }
     } catch (error) {
-      console.error('Error loading analytics state:', error);
+      // Error loading analytics state
     }
   }
 
@@ -708,7 +708,7 @@ class ComprehensiveGameAnalytics {
       };
       await AsyncStorage.setItem('comprehensive_analytics_state', JSON.stringify(state));
     } catch (error) {
-      console.error('Error saving analytics state:', error);
+      // Error saving analytics state
     }
   }
 
@@ -774,7 +774,7 @@ class ComprehensiveGameAnalytics {
         }
       };
     } catch (error) {
-      console.error('Error getting analytics summary:', error);
+      // Error getting analytics summary
       return null;
     }
   }

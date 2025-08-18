@@ -27,7 +27,7 @@ class GameMetricsAnalytics {
       
   
     } catch (error) {
-      console.error('Failed to initialize Game Metrics Analytics:', error);
+      // Failed to initialize Game Metrics Analytics
     }
   }
 
@@ -41,7 +41,7 @@ class GameMetricsAnalytics {
       }
       return userId;
     } catch (error) {
-      console.error('Error getting user ID:', error);
+      // Error getting user ID
       return `user_${Date.now()}`;
     }
   }
@@ -56,7 +56,7 @@ class GameMetricsAnalytics {
       }
       return firstLaunch;
     } catch (error) {
-      console.error('Error getting first launch date:', error);
+      // Error getting first launch date
       return new Date().toISOString();
     }
   }
@@ -73,7 +73,7 @@ class GameMetricsAnalytics {
         this.crashCount = parsed.crashCount || 0;
       }
     } catch (error) {
-      console.error('Error loading metrics:', error);
+      // Error loading metrics
     }
   }
 
@@ -89,7 +89,7 @@ class GameMetricsAnalytics {
       };
       await AsyncStorage.setItem('analytics_metrics', JSON.stringify(metrics));
     } catch (error) {
-      console.error('Error saving metrics:', error);
+      // Error saving metrics
     }
   }
 
@@ -116,7 +116,7 @@ class GameMetricsAnalytics {
 
 
     } catch (error) {
-      console.error('Error starting session:', error);
+      // Error starting session
     }
   }
 
@@ -153,7 +153,7 @@ class GameMetricsAnalytics {
 
 
     } catch (error) {
-      console.error('Error ending session:', error);
+      // Error ending session
     }
   }
 
@@ -224,7 +224,7 @@ class GameMetricsAnalytics {
         }
       }
     } catch (error) {
-      console.error('Error tracking retention:', error);
+      // Error tracking retention
     }
   }
 
@@ -255,7 +255,7 @@ class GameMetricsAnalytics {
         });
       }
     } catch (error) {
-      console.error('Error tracking engagement:', error);
+      // Error tracking engagement
     }
   }
 
@@ -286,7 +286,7 @@ class GameMetricsAnalytics {
 
       await this.saveMetrics();
     } catch (error) {
-      console.error('Error tracking crash:', error);
+      // Error tracking crash
     }
   }
 
@@ -302,7 +302,7 @@ class GameMetricsAnalytics {
         total_previous_value: await this.getTotalMonetizationValue()
       });
     } catch (error) {
-      console.error('Error tracking monetization:', error);
+      // Error tracking monetization
     }
   }
 
@@ -330,7 +330,7 @@ class GameMetricsAnalytics {
 
       await firebaseAnalytics.trackGameEvent(eventName, enhancedParams);
     } catch (error) {
-      console.error(`Error tracking game event ${eventName}:`, error);
+      // Error tracking game event
     }
   }
 
@@ -358,7 +358,7 @@ class GameMetricsAnalytics {
         }
       };
     } catch (error) {
-      console.error('Error getting metrics summary:', error);
+      // Error getting metrics summary
       return null;
     }
   }
@@ -375,7 +375,7 @@ class GameMetricsAnalytics {
       await AsyncStorage.removeItem('analytics_first_launch');
 
     } catch (error) {
-      console.error('Error resetting metrics:', error);
+      // Error resetting metrics
     }
   }
 }

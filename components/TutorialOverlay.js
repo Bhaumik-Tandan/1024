@@ -21,53 +21,8 @@ export const TutorialOverlay = ({
   onLaneTap,
 }) => {
   // Animation refs
-  const chevronAnim = useRef(new Animated.Value(0)).current;
-  const handPointerAnim = useRef(new Animated.Value(1)).current;
   const textFadeAnim = useRef(new Animated.Value(1)).current;
   const successTextAnim = useRef(new Animated.Value(0)).current;
-
-  // Start chevron animation loop
-  useEffect(() => {
-    if (isVisible) {
-      const chevronLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(chevronAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.timing(chevronAnim, {
-            toValue: 0,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      chevronLoop.start();
-
-      // Start hand pointer animation
-      const handLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(handPointerAnim, {
-            toValue: 1.1,
-            duration: 600,
-            useNativeDriver: true,
-          }),
-          Animated.timing(handPointerAnim, {
-            toValue: 1,
-            duration: 600,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      handLoop.start();
-
-      return () => {
-        chevronLoop.stop();
-        handLoop.stop();
-      };
-    }
-  }, [isVisible]);
 
   // Animate success text when it should show
   useEffect(() => {
@@ -88,20 +43,24 @@ export const TutorialOverlay = ({
     }
   }, [showSuccessText, successText]);
 
+
+
   if (!isVisible) return null;
 
   // Calculate game area dimensions
   const gameAreaWidth = COLS * (CELL_SIZE + CELL_MARGIN) - CELL_MARGIN;
   const gameAreaHeight = ROWS * (CELL_SIZE + CELL_MARGIN) - CELL_MARGIN;
   const gameAreaLeft = (screenWidth - gameAreaWidth) / 2;
+  const gameAreaTop = screenHeight * 0.2; // Start below header
 
   // Calculate shooter area position (bottom center)
   const shooterAreaTop = screenHeight * 0.8; // 80% down the screen
   const shooterAreaLeft = gameAreaLeft + (allowedLaneIndex * (CELL_SIZE + CELL_MARGIN));
 
+
   return (
     <View style={styles.container} testID="tutorial-overlay">
-      {/* Lane Separators */}
+      {/* Enhanced Lane Separators for Better Grid Visibility */}
       {Array.from({ length: COLS - 1 }).map((_, index) => (
         <View
           key={`separator-${index}`}
@@ -115,63 +74,7 @@ export const TutorialOverlay = ({
           testID={`lane-separator-${index}`}
         />
       ))}
-
-      {/* Animated Chevrons (Runway Lights) */}
-      <View
-        style={[
-          styles.chevronContainer,
-          {
-            left: shooterAreaLeft + CELL_SIZE / 2 - 15,
-            top: shooterAreaTop - 80,
-          },
-        ]}
-        testID="chevrons"
-      >
-        {[0, 1, 2].map((index) => (
-          <Animated.Text
-            key={`chevron-${index}`}
-            style={[
-              styles.chevron,
-              {
-                opacity: chevronAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.3, 1],
-                }),
-                transform: [
-                  {
-                    translateY: chevronAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, -10],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
-            {'>'}
-          </Animated.Text>
-        ))}
-      </View>
-
-      {/* Hand Pointer */}
-      <Animated.View
-        style={[
-          styles.handPointer,
-          {
-            left: shooterAreaLeft + CELL_SIZE / 2 - 15,
-            top: shooterAreaTop - 120,
-            transform: [{ scale: handPointerAnim }],
-          },
-        ]}
-        testID="hand-pointer"
-      >
-        {/* Simple hand pointer using View - TODO: Replace with actual hand image */}
-        <View style={styles.handPointerIcon}>
-          <View style={styles.handFinger} />
-          <View style={styles.handPalm} />
-        </View>
-      </Animated.View>
-
+      
       {/* Step Text */}
       <Animated.Text
         style={[
@@ -200,20 +103,7 @@ export const TutorialOverlay = ({
         </Animated.Text>
       )}
 
-      {/* Lane Highlight Overlay */}
-      <View
-        style={[
-          styles.laneHighlight,
-          {
-            left: gameAreaLeft + allowedLaneIndex * (CELL_SIZE + CELL_MARGIN),
-            width: CELL_SIZE,
-            height: gameAreaHeight,
-          },
-        ]}
-        testID={`lane-highlight-${allowedLaneIndex}`}
-      />
-
-      {/* Interactive Lane Areas */}
+      {/* Interactive Lane Areas with Enhanced Highlighting */}
       {Array.from({ length: COLS }).map((_, laneIndex) => (
         <TouchableOpacity
           key={`lane-${laneIndex}`}
@@ -223,13 +113,30 @@ export const TutorialOverlay = ({
               left: gameAreaLeft + laneIndex * (CELL_SIZE + CELL_MARGIN),
               width: CELL_SIZE,
               height: gameAreaHeight,
+              // Ultra-premium and subtle highlighting for allowed lane
+              backgroundColor: laneIndex === allowedLaneIndex ? 'rgba(76, 175, 80, 0.04)' : 'transparent',
+              borderWidth: laneIndex === allowedLaneIndex ? 1 : 0,
+              borderColor: laneIndex === allowedLaneIndex ? 'rgba(76, 175, 80, 0.2)' : 'transparent',
+              borderRadius: laneIndex === allowedLaneIndex ? 2 : 0,
             },
           ]}
           testID={`lane-touch-${laneIndex}`}
-          onPress={() => onLaneTap(laneIndex)}
+          onPress={() => {
+            console.log(`🎯 Tutorial lane ${laneIndex} tapped`);
+            onLaneTap(laneIndex);
+          }}
           activeOpacity={laneIndex === allowedLaneIndex ? 0.3 : 1}
         />
       ))}
+
+      {/* Dynamic Tutorial Progress Text - Ultra Minimalistic */}
+      {currentStep === 3 && (
+        <View style={styles.progressTextContainer}>
+          <Text style={styles.progressText}>
+            Keep going...
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -242,54 +149,14 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     zIndex: 1000,
+    backgroundColor: 'transparent', // No screen tinting
   },
   
   laneSeparator: {
     position: 'absolute',
-    width: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    width: 1, // Very thin line
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Very subtle, almost invisible
     top: screenHeight * 0.2, // Start below header
-  },
-  
-  chevronContainer: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  
-  chevron: {
-    fontSize: 24,
-    color: '#4CAF50',
-    fontWeight: 'bold',
-    marginVertical: 2,
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-  
-  handPointer: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  
-  handPointerIcon: {
-    alignItems: 'center',
-  },
-  
-  handFinger: {
-    width: 8,
-    height: 20,
-    backgroundColor: 'white',
-    borderRadius: 4,
-    marginBottom: 2,
-  },
-  
-  handPalm: {
-    width: 20,
-    height: 12,
-    backgroundColor: 'white',
-    borderRadius: 6,
   },
   
   stepText: {
@@ -297,13 +164,13 @@ const styles = StyleSheet.create({
     top: '50%',
     left: '50%',
     transform: [{ translateX: -100 }, { translateY: -20 }],
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
+    fontSize: 18, // Smaller text
+    fontWeight: 'normal', // Not bold
+    color: 'rgba(255, 255, 255, 0.9)', // Slightly transparent white
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
     zIndex: 1001,
   },
   
@@ -312,28 +179,42 @@ const styles = StyleSheet.create({
     top: '50%',
     left: '50%',
     transform: [{ translateX: -100 }, { translateY: -20 }],
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#4CAF50',
+    fontSize: 16, // Smaller text
+    fontWeight: 'normal', // Not bold
+    color: 'rgba(76, 175, 80, 0.8)', // Subtle green
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.6)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
     zIndex: 1001,
-  },
-  
-  laneHighlight: {
-    position: 'absolute',
-    backgroundColor: 'rgba(76, 175, 80, 0.2)',
-    borderWidth: 2,
-    borderColor: 'rgba(76, 175, 80, 0.6)',
-    borderRadius: 4,
-    top: screenHeight * 0.2,
   },
   
   laneTouchArea: {
     position: 'absolute',
     top: screenHeight * 0.2,
     backgroundColor: 'transparent',
+  },
+  
+
+
+  progressTextContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -100 }, { translateY: -50 }],
+    backgroundColor: 'rgba(255, 255, 255, 0.02)', // Almost invisible
+    padding: 6, // Minimal padding
+    borderRadius: 3, // Minimal radius
+    borderWidth: 0, // No border
+    zIndex: 1001,
+  },
+
+  progressText: {
+    fontSize: 12, // Very small font
+    color: 'rgba(255, 255, 255, 0.3)', // Almost invisible
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)', // Very subtle shadow
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 0.5, // Minimal shadow
   },
 });

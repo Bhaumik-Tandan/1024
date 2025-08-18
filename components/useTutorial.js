@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import useGameStore from '../store/gameStore';
-import { getHasCompletedOnboarding, setHasCompletedOnboarding } from '../lib/storage/tutorial';
+import { getHasCompletedOnboarding, setHasCompletedOnboarding, hasExistingUserData } from '../lib/storage/tutorial';
 import { TutorialController } from './TutorialController';
 
 export const useTutorial = () => {
@@ -25,16 +25,25 @@ export const useTutorial = () => {
     const initializeTutorial = async () => {
       try {
         const completed = await getHasCompletedOnboarding();
-        setHasCompletedOnboardingState(completed);
+        const hasExistingData = await hasExistingUserData();
         
-        // If tutorial hasn't been completed, start it automatically
+        // If user has no tutorial completion flag but has existing data,
+        // they're updating from old version - mark tutorial as completed
+        if (completed === null && hasExistingData) {
+          await setHasCompletedOnboarding();
+          setHasCompletedOnboardingState(true);
+        } else {
+          setHasCompletedOnboardingState(completed);
+        }
+        
+        // If tutorial hasn't been completed and isn't already active, start it automatically
         if (!completed && !isTutorialActive) {
           startTutorial();
         }
         
         setIsInitialized(true);
       } catch (error) {
-        console.warn('Failed to initialize tutorial:', error);
+        // Failed to initialize tutorial - assume user is new
         setHasCompletedOnboardingState(false);
         setIsInitialized(true);
       }
@@ -50,7 +59,7 @@ export const useTutorial = () => {
       setHasCompletedOnboardingState(true);
       endTutorial();
     } catch (error) {
-      console.warn('Failed to save tutorial completion:', error);
+      // Failed to save tutorial completion
       // Still end the tutorial even if saving fails
       endTutorial();
     }
@@ -59,7 +68,8 @@ export const useTutorial = () => {
   // Handle tutorial step advancement
   const advanceStep = async () => {
     if (currentStep < 3) {
-      nextStep();
+      // Don't call nextStep here to avoid circular dependency
+      // The tutorial will handle step advancement separately
     } else {
       // Tutorial completed
       await completeTutorial();
@@ -73,7 +83,7 @@ export const useTutorial = () => {
       setHasCompletedOnboardingState(true);
       resetTutorial();
     } catch (error) {
-      console.warn('Failed to save tutorial skip:', error);
+      // Failed to save tutorial skip
       resetTutorial();
     }
   };
@@ -86,7 +96,7 @@ export const useTutorial = () => {
       setHasCompletedOnboardingState(false);
       resetTutorial();
     } catch (error) {
-      console.warn('Failed to reset tutorial completion:', error);
+      // Failed to reset tutorial completion
     }
   };
 
@@ -102,6 +112,7 @@ export const useTutorial = () => {
     // Actions
     startTutorial,
     advanceStep,
+    nextStep,
     endTutorial,
     skipTutorial,
     setAllowedLane,

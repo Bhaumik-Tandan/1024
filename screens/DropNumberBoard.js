@@ -172,9 +172,20 @@ const DropNumberBoard = ({ navigation, route }) => {
     isGameFrozen,
     hasCompletedOnboarding,
     isInitialized,
+    startTutorial,
     advanceStep,
+    nextStep,
+    endTutorial,
+    setAllowedLane,
+    resetTutorial,
+    resetTutorialCompletion,
     tutorialController,
   } = useTutorial();
+
+  // Tutorial state
+  const [tutorialOverlayVisible, setTutorialOverlayVisible] = useState(true);
+  const [completedSteps, setCompletedSteps] = useState(new Set()); // Track completed steps
+  const [step3SetupTime, setStep3SetupTime] = useState(0); // Track when Step 3 was set up
   
   // Handle orientation changes and dynamic grid resizing
   useEffect(() => {
@@ -223,17 +234,115 @@ const DropNumberBoard = ({ navigation, route }) => {
     }
   }, [gridConfig]); // Removed function dependencies to prevent infinite loops
 
+  // Tutorial board change watcher
+  useEffect(() => {
+    if (isTutorialActive && board && board.length > 0) {
+      // Check if we should advance the tutorial based on board state
+      const stepSetup = tutorialController.getStepSetup(currentStep);
+      
+      // For step 1: if we have a "4" (merged 2+2), advance
+      if (currentStep === 1 && !completedSteps.has(1)) {
+        const hasMerged = board.some(row => row.some(cell => cell === 4));
+                  if (hasMerged) {
+            setCompletedSteps(prev => new Set([...prev, 1])); // Mark step 1 as completed
+          setTimeout(() => {
+            if (isTutorialActive && currentStep === 1) { // Double check current step
+              nextStep(); // Advance to next step
+            }
+          }, 200); // Wait 200ms for merge animation
+        }
+      }
+      
+      // For step 2: if we have an "8" (combo), advance
+      if (currentStep === 2 && !completedSteps.has(2)) {
+        // Check for the combo: "2" + "2" = "4", then "4" + "4" = "8"
+        const hasCombo = board.some(row => row.some(cell => cell === 8));
+        
+        if (hasCombo) {
+          setCompletedSteps(prev => new Set([...prev, 2])); // Mark step 2 as completed
+          setTimeout(() => {
+            if (isTutorialActive && currentStep === 2) { // Double check current step
+              nextStep(); // Advance to next step
+            }
+          }, 200); // Wait 200ms for merge animation
+        }
+      }
+      
+      // Step 3 completion is now handled in handleTileLanded when actual merges happen
+    }
+  }, [board, currentStep, isTutorialActive, completedSteps]);
+
+  // Tutorial step change handler
+  useEffect(() => {
+          if (isTutorialActive && currentStep > 1) {
+        // Record setup time for Step 3 to prevent immediate completion
+        if (currentStep === 3) {
+          setStep3SetupTime(Date.now());
+        }
+      
+              // Small delay to ensure smooth transition
+        setTimeout(() => {
+          if (isTutorialActive) { // Double check tutorial is still active
+            // Set up the board for the new step
+          const stepBoard = tutorialController.getStepBoard(currentStep);
+          setBoard(stepBoard);
+          
+          // Get step setup for shooter value
+          const stepSetup = tutorialController.getStepSetup(currentStep);
+          setNextBlock(stepSetup.shooterValue);
+          setPreviewBlock(stepSetup.shooterValue);
+          
+          // Reset score for this step
+          setScore(0);
+          
+          // Show tutorial overlay again
+          setTutorialOverlayVisible(true);
+          
+          // Update store with TutorialController's allowed lane
+          setAllowedLane(stepSetup.allowedLaneIndex);
+        }
+      }, 500); // Increased delay for smoother transition
+    }
+  }, [currentStep, isTutorialActive]);
+
   // Tutorial initialization
   useEffect(() => {
-    if (isInitialized && !hasCompletedOnboarding && isTutorialActive) {
-      // Set up the tutorial board for the current step
+    if (isTutorialActive && !hasCompletedOnboarding) {
+      // Reset completed steps for new tutorial run
+      setCompletedSteps(new Set());
+      
       const stepSetup = tutorialController.getStepSetup(currentStep);
-      setBoard(stepSetup.boardSetup);
+      
+      // Set up the board for this step
+      const stepBoard = tutorialController.getStepBoard(currentStep);
+      setBoard(stepBoard);
+      
+      // Set next block to the shooter value
       setNextBlock(stepSetup.shooterValue);
       setPreviewBlock(stepSetup.shooterValue);
-      setScore(0); // Reset score for tutorial
+      
+      // Reset score for this step
+      setScore(0);
+      
+      // Hide guide text during tutorial
+      setShowGuide(false);
+      
+      // Show tutorial overlay
+      setTutorialOverlayVisible(true);
+      
+      // Update store with TutorialController's allowed lane
+      setAllowedLane(stepSetup.allowedLaneIndex);
     }
-  }, [isInitialized, hasCompletedOnboarding, isTutorialActive, currentStep, tutorialController]);
+  }, [isTutorialActive, currentStep, hasCompletedOnboarding]);
+
+  // Board safety check for tutorial
+  useEffect(() => {
+    if (isTutorialActive && (!board || board.length === 0)) {
+      // Board is not ready, set a default empty board
+      const defaultBoard = Array.from({ length: gridConfig.ROWS }, () => Array(gridConfig.COLS).fill(0));
+      setBoard(defaultBoard);
+    }
+  }, [isTutorialActive, board, gridConfig.ROWS, gridConfig.COLS]);
 
   // Use the animation manager
   const {
@@ -617,10 +726,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       return;
     }
     
-    // Don't spawn tiles during tutorial
-    if (isTutorialActive && isGameFrozen) {
-      return;
-    }
+    // Tutorial mode - spawn tiles normally but with guidance
     
     try {
       const spawnCol = Math.floor(COLS / 2); // Center column as per rules
@@ -682,7 +788,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       }
     }
     // eslint-disable-next-line
-  }, [falling, gameOver, isPaused, nextBlock]); // Removed board to prevent infinite loops
+  }, [falling, gameOver, isPaused, nextBlock]); // Removed isTutorialActive dependency
 
   /**
    * Cleanup touch timeout and set mounted state on component unmount
@@ -733,10 +839,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         return;
       }
       
-      // Don't allow normal gameplay during tutorial
-      if (isTutorialActive && isGameFrozen) {
-        return;
-      }
+      // Tutorial mode - allow normal gameplay with guidance
     
     // Emergency cleanup if animations are stuck - more aggressive
     try {
@@ -786,10 +889,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         return;
       }
       
-      // Don't allow normal gameplay during tutorial
-      if (isTutorialActive && isGameFrozen) {
-        return;
-      }
+      // Tutorial mode - allow normal gameplay with guidance
     
     // Use the column from the tap - ignore the row (always drop from bottom)
     const col = targetCol !== null ? targetCol : falling.col;
@@ -912,83 +1012,19 @@ const DropNumberBoard = ({ navigation, route }) => {
   /**
    * Handle tutorial lane taps during the tutorial
    */
-  const handleTutorialLaneTap = (laneIndex) => {
-    try {
-      if (!isTutorialActive || laneIndex !== allowedLaneIndex) {
-        return;
-      }
-
-      // Simulate a tile drop in the tutorial
-      const stepSetup = tutorialController.getStepSetup(currentStep);
-      
-      // Create a simple falling tile for the tutorial
-      const tutorialFalling = {
-        col: laneIndex,
-        toRow: 0, // Drop to top
-        value: stepSetup.shooterValue,
-        fastDrop: true,
-        static: false,
-        inPreview: false,
-        anim: new Animated.Value(0)
-      };
-
-      // Set the falling tile
-      setFalling(tutorialFalling);
-
-      // Simulate the drop animation
-      setTimeout(() => {
-        // Process the tutorial move
-        handleTutorialMove(laneIndex);
-      }, 500); // Short delay for visual feedback
-
-    } catch (error) {
-      // Tutorial lane tap error
+  const handleTutorialLaneTap = async (laneIndex) => {
+    if (!isTutorialActive || laneIndex !== allowedLaneIndex) {
+      return;
     }
-  };
-
-  /**
-   * Handle tutorial move completion
-   */
-  const handleTutorialMove = (laneIndex) => {
-    try {
-      // Simulate the merge result based on the current step
-      const stepSetup = tutorialController.getStepSetup(currentStep);
-      
-      // Update the board based on the tutorial step
-      if (currentStep === 1) {
-        // Step 1: Simple merge 2 + 2 = 4
-        const newBoard = [...board];
-        newBoard[0][laneIndex] = 4; // Result of 2 + 2
-        setBoard(newBoard);
-        setScore(4);
-      } else if (currentStep === 2) {
-        // Step 2: Combo setup
-        const newBoard = [...board];
-        newBoard[0][laneIndex] = 4; // 2 + 2 = 4
-        // Trigger chain reaction: 4 + 4 = 8
-        setTimeout(() => {
-          newBoard[1][laneIndex] = 8; // Chain merge result
-          setBoard([...newBoard]);
-          setScore(12);
-        }, 300);
-      } else if (currentStep === 3) {
-        // Step 3: Big merge 8 + 8 = 16
-        const newBoard = [...board];
-        newBoard[0][laneIndex] = 16; // Result of 8 + 8
-        setBoard(newBoard);
-        setScore(16);
-      }
-
-      // Clear falling tile
-      setFalling(null);
-
-      // Advance to next step after a delay
-      setTimeout(() => {
-        advanceStep();
-      }, 1000);
-
-    } catch (error) {
-      // Tutorial move error
+    
+    // Hide tutorial overlay immediately
+    setTutorialOverlayVisible(false);
+    
+    // Let the normal game handle the drop by calling handleRowTap
+    // This ensures all normal game mechanics (animation, sound, merge logic) work
+    if (falling && !falling.fastDrop && !gameOver && !isPaused) {
+      // Use the normal game drop logic but target the tutorial lane
+      handleRowTap(0, laneIndex);
     }
   };
 
@@ -1087,6 +1123,48 @@ const DropNumberBoard = ({ navigation, route }) => {
         // Calculate new values first
         const newHighestTile = Math.max(gameStats.highestTile, ...newBoard.flat());
         const newScore = totalScore > 0 ? score + totalScore : score;
+        
+        // Check for Step 3 completion when a merge actually happens
+        if (isTutorialActive && currentStep === 3 && !completedSteps.has(3)) {
+          // Check if we have a big merge (16) after the actual merge action
+          // In Step 3: Chain merge: 2+2=4, 4+4=8, 8+8=16
+          const hasNewBigMerge = totalScore > 0 && newBoard.some(row => row.some(cell => cell === 16));
+          
+          if (hasNewBigMerge) {
+            console.log('🎯 Step 3 complete: Found new big merge (16) after chain merge action');
+            setCompletedSteps(prev => new Set([...prev, 3])); // Mark step 3 as completed
+            
+            // Instead of clearing board, keep it and let user continue playing!
+            // This creates a continuous, addictive experience
+            console.log('🎯 Tutorial Step 3 completed! User can now continue playing with chain merges...');
+            
+            // Show success message but don't end tutorial
+            // User can keep playing and doing more chain merges
+            // The tutorial will continue until they manually end it or complete more objectives
+          }
+        }
+        
+        // Continuous chain merge encouragement (after Step 3 is completed)
+        if (isTutorialActive && completedSteps.has(3) && totalScore > 0) {
+          // Check for even bigger merges to encourage continued play
+          const has32 = newBoard.some(row => row.some(cell => cell === 32));
+          const has64 = newBoard.some(row => row.some(cell => cell === 64));
+          const has128 = newBoard.some(row => row.some(cell => cell === 128));
+          const has256 = newBoard.some(row => row.some(cell => cell === 256));
+          const has512 = newBoard.some(row => row.some(cell => cell === 512));
+          
+          if (has512) {
+            console.log('🎯 LEGENDARY! User achieved 512! This is INSANE chain merging!');
+          } else if (has256) {
+            console.log('🎯 PHENOMENAL! User achieved 256! The chain merging is LEGENDARY!');
+          } else if (has128) {
+            console.log('🎯 INCREDIBLE! User achieved 128! This is amazing chain merging!');
+          } else if (has64) {
+            console.log('🎯 AMAZING! User achieved 64! Keep going for more chain merges!');
+          } else if (has32) {
+            console.log('🎯 GREAT! User achieved 32! The chain merging is working perfectly!');
+          }
+        }
         
         // Update game statistics
         setGameStats(prevStats => ({
@@ -1367,13 +1445,89 @@ const DropNumberBoard = ({ navigation, route }) => {
           showGuide={showGuide}
           panHandlers={panResponder.panHandlers}
           isTouchEnabled={isTouchEnabled}
+          isTutorialCompleted={!isTutorialActive} // Show completion message when tutorial is not active
         />
       </View>
       
       <OptimizedNextBlock nextBlock={nextBlock} />
 
-      {/* Tutorial Overlay */}
-      {isTutorialActive && (
+              {/* ======================================== */}
+        {/* DEVELOPMENT MODE BUTTON - COMMENTED OUT */}
+        {/* ======================================== */}
+        {/* 
+        {__DEV__ && (
+          <TouchableOpacity 
+            style={styles.devModeButton}
+            onPress={() => {
+              // Check if board is currently in preview mode (has high values)
+              const hasPreviewTiles = board.some(row => row.some(cell => cell > 64));
+              
+              if (hasPreviewTiles) {
+                // Second click: Reset board to empty
+                const emptyBoard = Array.from({ length: gridConfig.ROWS }, () => Array(gridConfig.COLS).fill(0));
+                setBoard(emptyBoard);
+                setScore(0);
+                setGameOver(false);
+              } else {
+                // First click: Set the game matrix to preview mode tiles
+                const previewValues = [128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 1048576];
+                const newBoard = Array.from({ length: gridConfig.ROWS }, () => Array(gridConfig.COLS).fill(0));
+                
+                // Fill the board with preview values
+                for (let row = 0; row < gridConfig.ROWS; row++) {
+                  for (let col = 0; col < gridConfig.COLS; col++) {
+                    const index = row * gridConfig.COLS + col;
+                    if (index < previewValues.length) {
+                      newBoard[row][col] = previewValues[index];
+                    }
+                  }
+                }
+                
+                setBoard(newBoard);
+                setScore(0); // Reset score when setting preview mode
+                setGameOver(false); // Ensure game is not over
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.devModeButtonText}>
+              {board.some(row => row.some(cell => cell > 64)) ? 'RESET BOARD' : 'DEV MODE'}
+            </Text>
+            <Text style={styles.devModeButtonSubtext}>
+              {board.some(row => row.some(cell => cell > 64)) ? 'Clear all tiles' : 'Fill with preview tiles'}
+            </Text>
+          </TouchableOpacity>
+        )}
+        */}
+
+                {/* Tutorial Reset Button - Only visible in development */}
+        {/* Debug: Reset Tutorial Button (Development Only) - COMMENTED OUT */}
+        {/*
+        {__DEV__ && (
+          <TouchableOpacity 
+            style={styles.tutorialResetButton}
+            onPress={() => {
+              // Reset tutorial completion status and restart tutorial
+              resetTutorialCompletion();
+              
+              // Start tutorial immediately - the board safety check will handle it
+              startTutorial();
+              
+              // Show tutorial overlay
+              setTutorialOverlayVisible(true);
+              
+              console.log('🔧 Tutorial reset and started for testing');
+            }}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.tutorialResetButtonText}>RESET TUTORIAL</Text>
+            <Text style={styles.tutorialResetButtonSubtext}>Restart tutorial from Step 1</Text>
+          </TouchableOpacity>
+        )}
+        */}
+
+            {/* Tutorial Overlay */}
+      {isTutorialActive && tutorialOverlayVisible && (
         <TutorialOverlay
           isVisible={isTutorialActive}
           currentStep={currentStep}
@@ -1382,13 +1536,26 @@ const DropNumberBoard = ({ navigation, route }) => {
           successText={tutorialController.getStepSetup(currentStep).successText}
           showSuccessText={false} // Will be controlled by tutorial logic
           onLaneTap={(laneIndex) => {
+            console.log(`🎯 TutorialOverlay: Lane ${laneIndex} tapped, allowedLaneIndex: ${allowedLaneIndex}, currentStep: ${currentStep}`);
+            
+            // Special case: Continue Playing button was pressed
+            if (laneIndex === -1) {
+              console.log('🎯 User clicked Continue Playing - ending tutorial and starting normal game');
+              endTutorial(); // End the tutorial
+              return;
+            }
+            
             if (laneIndex === allowedLaneIndex) {
               // Handle tutorial lane tap
               handleTutorialLaneTap(laneIndex);
+            } else {
+              console.log(`🎯 TutorialOverlay: Lane ${laneIndex} not allowed, expected ${allowedLaneIndex}`);
             }
           }}
         />
       )}
+
+
 
       {/* Game Over Overlay */}
       {gameOver && (
@@ -1525,6 +1692,74 @@ const styles = StyleSheet.create({
     elevation: 6,
     borderWidth: screenWidth >= 768 ? 2 : 1, // Thicker border for iPad
     borderColor: 'rgba(74, 144, 226, 0.2)',
+  },
+  devModeButton: {
+    position: 'absolute',
+    bottom: screenWidth >= 768 ? 140 : 100, // Position above the next block
+    right: 20,
+    backgroundColor: 'rgba(255, 107, 53, 0.9)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
+    shadowColor: '#FF6B35',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 107, 53, 0.6)',
+    zIndex: 100,
+    alignItems: 'center',
+    minWidth: 120,
+  },
+  devModeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  devModeButtonSubtext: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 10,
+    fontWeight: '500',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  tutorialResetButton: {
+    position: 'absolute',
+    bottom: screenWidth >= 768 ? 200 : 160, // Position above the dev mode button
+    right: 20,
+    backgroundColor: 'rgba(76, 175, 80, 0.9)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: 'rgba(76, 175, 80, 0.6)',
+    zIndex: 100,
+    alignItems: 'center',
+    minWidth: 120,
+  },
+  tutorialResetButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  tutorialResetButtonSubtext: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 10,
+    fontWeight: '500',
+    textAlign: 'center',
+    letterSpacing: 0.5,
   },
   nextBlockTile: {
     width: CELL_SIZE,

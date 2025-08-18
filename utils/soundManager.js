@@ -92,7 +92,7 @@ class SoundManager {
       this.createAudioPlayers();
       this.isInitialized = true;
     } catch (error) {
-      console.warn('SoundManager: Initialization failed:', error);
+      // SoundManager: Initialization failed
       this.isInitialized = false;
     }
   }
@@ -361,7 +361,7 @@ class SoundManager {
       const { soundVolume } = useGameStore.getState();
       this.updateVolumeLevels(soundVolume);
     } catch (error) {
-      console.warn('SoundManager: Failed to create audio players:', error);
+      // SoundManager: Failed to create audio players
     }
   }
 
@@ -376,7 +376,7 @@ class SoundManager {
         this.gameOverPlayer.loadAsync(require('../assets/audio/gameOver.wav'))
       ]);
     } catch (error) {
-      console.warn('SoundManager: Failed to load some sound files:', error);
+      // SoundManager: Failed to load some sound files
     }
   }
 
@@ -391,7 +391,7 @@ class SoundManager {
       if (this.dropPlayer) this.dropPlayer.setVolumeAsync(baseVolume * 0.9);
       if (this.gameOverPlayer) this.gameOverPlayer.setVolumeAsync(baseVolume * 0.8);
     } catch (error) {
-      console.warn('SoundManager: Failed to update volume levels:', error);
+      // SoundManager: Failed to update volume levels
     }
   }
 
@@ -402,7 +402,7 @@ class SoundManager {
     try {
       await this.mergePlayer.replayAsync();
     } catch (error) {
-      console.warn('SoundManager: Failed to play merge sound:', error);
+      // SoundManager: Failed to play merge sound
       throw error;
     }
   }
@@ -413,7 +413,7 @@ class SoundManager {
     try {
       await this.intermediateMergePlayer.replayAsync();
     } catch (error) {
-      console.warn('SoundManager: Failed to play intermediate merge sound:', error);
+      // SoundManager: Failed to play intermediate merge sound
       throw error;
     }
   }
@@ -424,7 +424,7 @@ class SoundManager {
     try {
       await this.dropPlayer.replayAsync();
     } catch (error) {
-      console.warn('SoundManager: Failed to play drop sound:', error);
+      // SoundManager: Failed to play drop sound
       throw error;
     }
   }
@@ -435,7 +435,7 @@ class SoundManager {
     try {
       await this.gameOverPlayer.replayAsync();
     } catch (error) {
-      console.warn('SoundManager: Failed to play game over sound:', error);
+      // SoundManager: Failed to play game over sound
       throw error;
     }
   }
@@ -446,7 +446,7 @@ class SoundManager {
     try {
       await this.dropPlayer.replayAsync();
     } catch (error) {
-      console.warn('SoundManager: Failed to play pause/resume sound:', error);
+      // SoundManager: Failed to play pause/resume sound
       throw error;
     }
   }
@@ -521,7 +521,7 @@ class SoundManager {
         pauseResume: 0
       };
     } catch (error) {
-      console.warn('SoundManager: Failed to stop sounds:', error);
+      // SoundManager: Failed to stop sounds
     }
   }
 
@@ -546,7 +546,7 @@ class SoundManager {
         this.gameOverPlayer = null;
       }
     } catch (error) {
-      console.warn('SoundManager: Failed to unload sounds:', error);
+      // SoundManager: Failed to unload sounds
     }
   }
 
@@ -556,7 +556,7 @@ class SoundManager {
     try {
       this.updateVolumeLevels(volume);
     } catch (error) {
-      console.warn('SoundManager: Failed to set volume:', error);
+      // SoundManager: Failed to set volume
     }
   }
 
@@ -627,7 +627,7 @@ class SoundManager {
 
   // Enhanced error recovery
   async recoverFromError() {
-    console.log('SoundManager: Attempting error recovery...');
+    // SoundManager: Attempting error recovery
     
     try {
       // Stop all sounds
@@ -643,9 +643,9 @@ class SoundManager {
       // Reinitialize
       await this.initialize();
       
-      console.log('SoundManager: Error recovery completed');
+      // SoundManager: Error recovery completed
     } catch (error) {
-      console.warn('SoundManager: Error recovery failed:', error);
+      // SoundManager: Error recovery failed
     }
   }
 
@@ -675,28 +675,28 @@ class SoundManager {
   // Test if sound system is working properly
   async testSoundSystem() {
     const status = this.getStatus();
-    console.log('🔍 SoundManager Test Results:', status);
+    // SoundManager Test Results
     
     if (!status.isInitialized) {
-      console.warn('❌ SoundManager: Not initialized');
+      // SoundManager: Not initialized
       return false;
     }
     
     if (status.isWebPlatform) {
-      console.log('✅ SoundManager: Web platform - audio disabled');
+      // SoundManager: Web platform - audio disabled
       return true; // Not an error on web
     }
     
     // Test if all players are created
     const allPlayersExist = Object.values(status.hasPlayers).every(exists => exists);
     if (!allPlayersExist) {
-      console.warn('❌ SoundManager: Some audio players are missing');
+      // SoundManager: Some audio players are missing
       return false;
     }
     
     // Test if sound is enabled
     if (!status.soundEnabled) {
-      console.log('🔇 SoundManager: Sound is disabled in settings');
+      // SoundManager: Sound is disabled in settings
       return true; // Not an error, just disabled
     }
     

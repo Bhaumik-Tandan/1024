@@ -16,7 +16,7 @@ if (!__DEV__) {
     firebaseAnalytics = require('./utils/firebaseAnalytics').default;
     gameMetricsAnalytics = require('./utils/gameMetricsAnalytics').default;
   } catch (error) {
-    console.warn('📊 Firebase services not available:', error.message);
+    // Firebase services not available
   }
 }
 
@@ -85,18 +85,18 @@ const AppComponent = function App() {
             // Also run background music diagnosis
             await backgroundMusicManager.diagnoseSystem();
           } catch (error) {
-            console.warn('🎵 Sound system test failed:', error);
+            // Sound system test failed
           }
         }, 1000); // Test after 1 second to ensure everything is loaded
       } catch (error) {
-        console.warn('🎵 Audio initialization failed:', error);
+        // Audio initialization failed
         
         // Try to recover from initialization errors
         try {
           await backgroundMusicManager.recoverFromError();
           await soundManager.recoverFromError();
         } catch (recoveryError) {
-          console.warn('🎵 Audio recovery failed:', recoveryError);
+          // Audio recovery failed
         }
       }
     };
@@ -128,7 +128,7 @@ const AppComponent = function App() {
           platform: Platform.OS,
         });
       } catch (error) {
-        console.warn('📊 Firebase Analytics initialization failed:', error);
+        // Firebase Analytics initialization failed
       }
     };
     
@@ -143,7 +143,7 @@ const AppComponent = function App() {
         // Start the first session
         await gameMetricsAnalytics.startSession();
       } catch (error) {
-        console.warn('📊 Game Metrics Analytics initialization failed:', error);
+        // Game Metrics Analytics initialization failed
       }
     };
     
@@ -156,7 +156,7 @@ const AppComponent = function App() {
         soundManager.unloadAllSounds();
         backgroundMusicManager.cleanup();
       } catch (error) {
-        console.warn('🎵 Audio cleanup failed:', error);
+        // Audio cleanup failed
       }
       
       // End analytics session
@@ -165,7 +165,7 @@ const AppComponent = function App() {
           await gameMetricsAnalytics.endSession();
         }
       } catch (error) {
-        console.warn('📊 Analytics session cleanup failed:', error);
+        // Analytics session cleanup failed
       }
     };
   }, []);
@@ -176,7 +176,7 @@ const AppComponent = function App() {
       await backgroundMusicManager.diagnoseSystem();
       await soundManager.testSoundSystem();
     } catch (error) {
-      console.error('Debug failed:', error);
+      // Debug failed
     }
   };
 
@@ -184,7 +184,7 @@ const AppComponent = function App() {
     try {
       await backgroundMusicManager.forcePlay();
     } catch (error) {
-      console.error('Force play failed:', error);
+      // Force play failed
     }
   };
 

@@ -3,14 +3,14 @@ const fs = require('fs');
 const path = require('path');
 
 async function convertSvgToPng() {
-  console.log('Converting splash-space.svg to PNG files...');
+  // Converting splash-space.svg to PNG files
   
   const svgPath = path.join(__dirname, '../assets/sources/splash-space.svg');
   const splashDir = path.join(__dirname, '../assets/splash/');
   
   // Check if SVG file exists
   if (!fs.existsSync(svgPath)) {
-    console.error('Error: splash-space.svg not found!');
+    // Error: splash-space.svg not found!
     return;
   }
   
@@ -30,7 +30,7 @@ async function convertSvgToPng() {
       .png()
       .toFile(path.join(splashDir, 'splash.png'));
     
-    console.log('✅ Generated splash.png (1242x2688)');
+    // Generated splash.png (1242x2688)
     
     // Android splash screen (same as standard for now)
     await sharp(svgBuffer)
@@ -38,13 +38,13 @@ async function convertSvgToPng() {
       .png()
       .toFile(path.join(splashDir, 'splash-android.png'));
     
-    console.log('✅ Generated splash-android.png (1242x2688)');
+    // Generated splash-android.png (1242x2688)
     
-    console.log('\n🚀 Splash screen PNG files generated successfully!');
-    console.log('The new space-themed splash screen will now show when your app loads.');
+    // Splash screen PNG files generated successfully!
+    // The new space-themed splash screen will now show when your app loads.
     
   } catch (error) {
-    console.error('Error converting SVG to PNG:', error);
+    // Error converting SVG to PNG
   }
 }
 

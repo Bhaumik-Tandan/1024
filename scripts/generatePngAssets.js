@@ -160,20 +160,20 @@ function createIcon() {
 }
 
 // Generate the SVG files first
-console.log('Generating space-themed assets...');
+// Generating space-themed assets...
 
 // Write SVG files
 fs.writeFileSync('./assets/sources/splash-space.svg', createSplashScreen());
 fs.writeFileSync('./assets/sources/icon-space.svg', createIcon());
 
-console.log('Space-themed SVG assets generated successfully!');
-console.log('');
-console.log('To convert to PNG, you can:');
-console.log('1. Use online SVG to PNG converters');
-console.log('2. Open in browsers and save as PNG');
-console.log('3. Use design tools like Figma, Sketch, or Photoshop');
-console.log('');
-console.log('Required sizes:');
-console.log('- splash.png: 1242x2688');
-console.log('- icon.png: 1024x1024');
-console.log('- adaptive-icon.png: 1024x1024'); 
+// Space-themed SVG assets generated successfully!
+// 
+// To convert to PNG, you can:
+// 1. Use online SVG to PNG converters
+// 2. Open in browsers and save as PNG
+// 3. Use design tools like Figma, Sketch, or Photoshop
+// 
+// Required sizes:
+// - splash.png: 1242x2688
+// - icon.png: 1024x1024
+// - adaptive-icon.png: 1024x1024 

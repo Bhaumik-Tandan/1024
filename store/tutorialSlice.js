@@ -1,4 +1,6 @@
 // Tutorial slice for the game store
+import { COLS } from '../components/constants';
+
 export const createTutorialSlice = (set, get) => ({
   // Initial state
   isActive: false,
@@ -7,30 +9,38 @@ export const createTutorialSlice = (set, get) => ({
   isGameFrozen: false,
   
   // Actions
-  startTutorial: () => set({
-    isActive: true,
-    currentStep: 1,
-    allowedLaneIndex: 2, // Center lane for step 1
-    isGameFrozen: true
-  }),
-  
-  nextStep: () => {
-    const { currentStep } = get();
-    if (currentStep < 3) {
-      set({
-        currentStep: currentStep + 1,
-        allowedLaneIndex: currentStep === 1 ? 3 : 2 // Step 2: rightmost, Step 3: center
-      });
-    } else {
-      get().endTutorial();
-    }
+  startTutorial: () => {
+    set({
+      isActive: true,
+      currentStep: 1,
+      allowedLaneIndex: 2, // Center lane for step 1
+      isGameFrozen: false // Keep game running normally
+    });
   },
+  
+      nextStep: () => {
+      const { currentStep } = get();
+      if (currentStep < 3) {
+        const newStep = currentStep + 1;
+        
+        set({
+          currentStep: newStep
+          // Don't override allowedLaneIndex here - let TutorialController set it
+          // The TutorialController will call setAllowedLane with the correct value
+        });
+        
+        console.log(`🎯 Tutorial advanced to step ${newStep}, keeping current allowed lane: ${get().allowedLaneIndex}`);
+      } else {
+        get().endTutorial();
+      }
+    },
   
   endTutorial: () => set({
     isActive: false,
     currentStep: 1,
     allowedLaneIndex: 2,
     isGameFrozen: false
+    // Note: Board clearing is handled in the main component when tutorial completes
   }),
   
   setAllowedLane: (laneIndex) => set({ allowedLaneIndex: laneIndex }),

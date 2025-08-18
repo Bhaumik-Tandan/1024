@@ -5,7 +5,7 @@ import PAGES from '../constants/pages';
 import DropNumberBoard from '../screens/DropNumberBoard';
 import HomeScreen from '../screens/HomeScreen';
 import SettingsScreen from '../screens/SettingsScreen';
-import PreviewModeScreen from '../screens/PreviewModeScreen';
+
 import { NavigationContainer } from '@react-navigation/native';
 
 const Stack = createNativeStackNavigator();
@@ -35,13 +35,7 @@ const RootNavigator = () => (
                     }}
                     component={SettingsScreen}
                 />
-                <Stack.Screen
-                    name={PAGES.SOLAR_SYSTEM_PREVIEW}
-                    options={{
-                        headerShown: false,
-                    }}
-                    component={PreviewModeScreen}
-                />
+
             </Stack.Group>
         </Stack.Navigator>
     </NavigationContainer>

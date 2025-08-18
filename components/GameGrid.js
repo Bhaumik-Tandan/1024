@@ -1,12 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Dimensions, Platform } from 'react-native';
-import { 
-  ROWS, 
-  COLS, 
-  CELL_SIZE, 
-  CELL_MARGIN, 
-  COLORS, 
-  getCellLeft, 
+import {
+  ROWS,
+  COLS,
+  CELL_SIZE,
+  CELL_MARGIN,
+  COLORS,
+  getCellLeft,
   getCellTop,
   ANIMATION_CONFIG,
   getTileStyle,
@@ -57,18 +57,18 @@ const getColumnFromMeasuredX = (x) => {
     const columnWidth = CELL_SIZE + CELL_MARGIN;
     return Math.min(Math.floor(x / columnWidth), COLS - 1);
   }
-  
+
   // Use measured positions for accurate detection
   for (const pos of measuredColumnPositions) {
     if (x >= pos.leftBound && x <= pos.rightBound) {
       return pos.col;
     }
   }
-  
+
   // Find closest column if outside bounds
   let closestCol = 0;
   let minDistance = Math.abs(x - measuredColumnPositions[0].centerX);
-  
+
   for (let i = 1; i < measuredColumnPositions.length; i++) {
     const distance = Math.abs(x - measuredColumnPositions[i].centerX);
     if (distance < minDistance) {
@@ -76,7 +76,7 @@ const getColumnFromMeasuredX = (x) => {
       closestCol = i;
     }
   }
-  
+
   return closestCol;
 };
 
@@ -90,22 +90,22 @@ const getExactCellPosition = (col) => {
 };
 
 // PERFORMANCE: Memoized cell component to prevent unnecessary re-renders
-const GameCell = React.memo(({ 
-  cell, 
-  rowIdx, 
-  colIdx, 
-  isAnimating, 
-  isDisabled, 
-  onPress 
+const GameCell = React.memo(({
+  cell,
+  rowIdx,
+  colIdx,
+  isAnimating,
+  isDisabled,
+  onPress
 }) => {
   const cellStyle = {
     ...styles.cellContainer,
     opacity: isAnimating ? 0.7 : 1, // Dim animated cells
     ...(isDisabled && styles.cellDisabled),
   };
-  
+
   return (
-    <View 
+    <View
       style={[styles.cellContainer]}
     >
       <TouchableOpacity
@@ -117,7 +117,7 @@ const GameCell = React.memo(({
         delayPressOut={50}
       >
         <View style={styles.cell}>
-          <PlanetTile 
+          <PlanetTile
             value={cell}
             size={CELL_SIZE}
             isOrbiting={cell > 0}
@@ -129,24 +129,24 @@ const GameCell = React.memo(({
   );
 });
 
-// PERFORMANCE: Memoized row component to prevent unnecessary re-renders  
-const GameRow = React.memo(({ 
-  row, 
-  rowIdx, 
+// PERFORMANCE: Memoized row component to prevent unnecessary re-renders
+const GameRow = React.memo(({
+  row,
+  rowIdx,
   mergeAnimations,
   isDisabled,
-  onRowTap 
+  onRowTap
 }) => {
   return (
-    <View 
+    <View
       style={[styles.gridRow, rowIdx === ROWS - 1 && styles.lastRow]}
     >
       {row.map((cell, colIdx) => {
         // Check if this cell is currently being animated to prevent interaction
-        const isAnimating = mergeAnimations.some(anim => 
+        const isAnimating = mergeAnimations.some(anim =>
           anim.row === rowIdx && anim.col === colIdx
         );
-        
+
         return (
           <GameCell
             key={`cell-${rowIdx}-${colIdx}`}
@@ -164,27 +164,28 @@ const GameRow = React.memo(({
 });
 
 // PERFORMANCE: Main GameGrid component with React.memo
-const GameGrid = React.memo(({ 
-  board, 
-  falling, 
-  mergingTiles, 
-  mergeResult, 
+const GameGrid = React.memo(({
+  board,
+  falling,
+  mergingTiles,
+  mergeResult,
   mergeAnimations,
-  collisionEffects, // Add collision effects prop
-  energyBursts, // Add energy bursts prop
-  onRowTap, 
-  onScreenTap, 
+  collisionEffects,
+  energyBursts,
+  onRowTap,
+  onScreenTap,
   gameOver,
   showGuide,
   panHandlers,
-  isTouchEnabled = true
+  isTouchEnabled,
+  isTutorialCompleted = false, // New prop to show tutorial completion message
 }) => {
   const gridRef = useRef(null);
   const isDisabled = gameOver || !falling || (falling?.fastDrop && !falling?.static) || !isTouchEnabled;
-  
+
   // Add subtle pulsing animation for guide
   const guideOpacity = useRef(new Animated.Value(0.8)).current;
-  
+
   useEffect(() => {
     if (showGuide) {
       const pulseAnimation = Animated.loop(
@@ -205,32 +206,32 @@ const GameGrid = React.memo(({
       return () => pulseAnimation.stop();
     }
   }, [showGuide, guideOpacity]);
-  
+
   // Enhanced screen tap handler with accurate coordinates
   const handleGridTap = (event) => {
     if (gridRef.current) {
       // Get touch position relative to grid container
       const { locationX } = event.nativeEvent;
-      
+
       // Detect column using measured positions
       const detectedColumn = getColumnFromMeasuredX(locationX);
-      
+
       // Call the parent's screen tap handler with accurate column
       if (onScreenTap) {
-        onScreenTap({ 
-          nativeEvent: { 
+        onScreenTap({
+          nativeEvent: {
             locationX,
             detectedColumn // Pass detected column directly
-          } 
+          }
         });
       }
     }
   };
-  
+
   return (
     <View style={[styles.board, styles.boardDeepSpace]} {...panHandlers}>
       {/* Game grid container with precise measurement and tap detection */}
-      <View 
+      <View
         ref={gridRef}
         style={styles.gridContainer}
         onLayout={(event) => {
@@ -240,7 +241,7 @@ const GameGrid = React.memo(({
         onResponderGrant={handleGridTap}
       >
         {/* Render grid as rows and columns using flexbox */}
-        {board.map((row, rowIdx) => (
+        {board && board.length > 0 ? board.map((row, rowIdx) => (
           <GameRow
             key={`row-${rowIdx}`}
             row={row}
@@ -249,7 +250,12 @@ const GameGrid = React.memo(({
             isDisabled={isDisabled}
             onRowTap={onRowTap}
           />
-        ))}
+        )) : (
+          // Show loading state when board is not ready
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading...</Text>
+          </View>
+        )}
       </View>
 
       {/* Falling astronomical body - FIXED positioning for perfect alignment */}
@@ -271,7 +277,7 @@ const GameGrid = React.memo(({
             zIndex: 1000,
           }}
         >
-          <PlanetTile 
+          <PlanetTile
             value={falling.value}
             size={CELL_SIZE}
             isOrbiting={true}
@@ -291,19 +297,19 @@ const GameGrid = React.memo(({
             width: CELL_SIZE,
             height: CELL_SIZE,
             transform: [
-              { 
-                translateX: anim.moveX || 0 
+              {
+                translateX: anim.moveX || 0
               },
-              { 
-                translateY: anim.moveY || 0 
+              {
+                translateY: anim.moveY || 0
               },
-              { 
+              {
                 scale: anim.scale || 1
               },
               // ENHANCED: No rotation - planets sink into each other
               // Rotation removed for cleaner sinking animation
               // ENHANCED: Handle bounce effect for result planets
-              ...(anim.bounce ? [{ 
+              ...(anim.bounce ? [{
                 translateY: anim.bounce.interpolate({
                   inputRange: [0, 1],
                   outputRange: [0, -CELL_SIZE * 0.1]
@@ -313,7 +319,7 @@ const GameGrid = React.memo(({
             zIndex: 2000,
           }}
         >
-          <PlanetTile 
+          <PlanetTile
             value={anim.value}
             size={CELL_SIZE}
             isOrbiting={false}
@@ -339,7 +345,7 @@ const GameGrid = React.memo(({
               transform: [{ scale: Animated.add(1, Animated.multiply(effect.flash || 0, 0.5)) }],
             }}
           />
-          
+
           {/* ENHANCED: Primary expanding shockwave */}
           <Animated.View
             style={{
@@ -355,7 +361,7 @@ const GameGrid = React.memo(({
               transform: [{ scale: Animated.add(0.3, Animated.multiply(effect.shockwave || 0, 2)) }],
             }}
           />
-          
+
           {/* ENHANCED: Secondary shockwave */}
           <Animated.View
             style={{
@@ -371,7 +377,7 @@ const GameGrid = React.memo(({
               transform: [{ scale: Animated.add(0.2, Animated.multiply(effect.secondaryShockwave || 0, 2.5)) }],
             }}
           />
-          
+
           {/* ENHANCED: Gravitational distortion effect */}
           <Animated.View
             style={{
@@ -384,7 +390,7 @@ const GameGrid = React.memo(({
               backgroundColor: 'rgba(255, 255, 255, 0.3)',
               opacity: Animated.multiply(effect.opacity, effect.gravitationalDistortion || 0),
               transform: [
-                { 
+                {
                   scale: Animated.add(1, Animated.multiply(effect.gravitationalDistortion || 0, 0.3))
                 },
                 {
@@ -396,7 +402,7 @@ const GameGrid = React.memo(({
               ],
             }}
           />
-          
+
           {/* Energy ring explosion */}
           <Animated.View
             style={{
@@ -412,7 +418,7 @@ const GameGrid = React.memo(({
               transform: [{ scale: Animated.add(0.2, Animated.multiply(effect.energyRing || 0, 2.5)) }],
             }}
           />
-          
+
           {/* Collision sparks */}
           {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, index) => (
             <Animated.View
@@ -427,10 +433,10 @@ const GameGrid = React.memo(({
                 backgroundColor: '#FFD700',
                 opacity: Animated.multiply(effect.opacity, Animated.subtract(1, effect.sparks || 0)),
                 transform: [
-                  { 
+                  {
                     translateX: Animated.multiply(effect.sparks || 0, Math.cos(angle * Math.PI / 180) * CELL_SIZE * 1.5)
                   },
-                  { 
+                  {
                     translateY: Animated.multiply(effect.sparks || 0, Math.sin(angle * Math.PI / 180) * CELL_SIZE * 1.5)
                   },
                   { scale: Animated.subtract(1, Animated.multiply(effect.sparks || 0, 0.5)) }
@@ -452,10 +458,10 @@ const GameGrid = React.memo(({
             width: CELL_SIZE * 2,
             height: CELL_SIZE * 2,
             transform: [
-              { 
+              {
                 scale: burst.scale || 1
               },
-              { 
+              {
                 rotate: typeof burst.rotate === 'string' ? burst.rotate : `${burst.rotate || 0}deg`
               }
             ],
@@ -476,14 +482,14 @@ const GameGrid = React.memo(({
             width: CELL_SIZE,
             height: CELL_SIZE,
             transform: [
-              { 
-                scale: mergeResult.scale 
+              {
+                scale: mergeResult.scale
               }
             ],
             zIndex: 5000,
           }}
         >
-          <PlanetTile 
+          <PlanetTile
             value={mergeResult.value}
             size={CELL_SIZE}
             isOrbiting={false}
@@ -495,11 +501,11 @@ const GameGrid = React.memo(({
 
       {/* Guide overlay for new players - non-blocking with subtle animation */}
       {showGuide && (
-        <Animated.View 
-          style={[styles.guideOverlay, { opacity: guideOpacity }]} 
+        <Animated.View
+          style={[styles.guideOverlay, { opacity: guideOpacity }]}
           pointerEvents="none"
         >
-          <Text style={styles.guideText}>Tap to play</Text>
+          <Text style={styles.guideText}>{isTutorialCompleted ? "Let's start playing.." : "Tap to play"}</Text>
         </Animated.View>
       )}
     </View>
@@ -515,7 +521,8 @@ const GameGrid = React.memo(({
     prevProps.mergeResult === nextProps.mergeResult &&
     prevProps.gameOver === nextProps.gameOver &&
     prevProps.showGuide === nextProps.showGuide &&
-    prevProps.isTouchEnabled === nextProps.isTouchEnabled
+    prevProps.isTouchEnabled === nextProps.isTouchEnabled &&
+    prevProps.isTutorialCompleted === nextProps.isTutorialCompleted
   );
 });
 
@@ -756,7 +763,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  
+
   // Guide overlay styles - Premium Space themed
   guideOverlay: {
     position: 'absolute',
@@ -787,7 +794,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif-medium',
   },
-  
+
   // Animation styles
   mergeAnimationTile: {
     borderRadius: 8,
@@ -821,6 +828,17 @@ const styles = StyleSheet.create({
     height: CELL_SIZE * 2,
     borderRadius: CELL_SIZE,
     opacity: 0.7,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 16,
+    textAlign: 'center',
   },
 });
 

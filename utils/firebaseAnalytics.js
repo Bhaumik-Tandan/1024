@@ -137,7 +137,7 @@ class FirebaseAnalyticsService {
   // Track screen views
   async trackScreenView(screenName) {
     if (!this.isInitialized || !this.analytics) {
-      console.warn('Firebase Analytics not initialized yet');
+      // Firebase Analytics not initialized yet
       return;
     }
 
@@ -147,7 +147,7 @@ class FirebaseAnalyticsService {
         screen_class: screenName,
       });
     } catch (error) {
-      console.error('Failed to log screen view:', error);
+      // Failed to log screen view
     }
   }
 
@@ -158,7 +158,7 @@ class FirebaseAnalyticsService {
     try {
       await this.analytics().setUserProperty(key, value);
     } catch (error) {
-      console.error(`Failed to set user property ${key}:`, error);
+      // Failed to set user property
     }
   }
 

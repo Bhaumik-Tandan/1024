@@ -4,7 +4,7 @@ const sharp = require('sharp');
 
 // Realistic solar system asset generator using Sharp
 async function generateSolarSystemAssets() {
-  console.log('🌌 Generating Realistic Solar System themed app assets using Sharp...\n');
+  // Generating Realistic Solar System themed app assets using Sharp
   
   const iconsDir = path.join(__dirname, '..', 'assets', 'icons');
   const splashDir = path.join(__dirname, '..', 'assets', 'splash');
@@ -18,19 +18,19 @@ async function generateSolarSystemAssets() {
   
   try {
     // Generate realistic app icon (1024x1024)
-    console.log('🔬 Generating realistic app icon (1024x1024)...');
+    // Generating realistic app icon (1024x1024)
     await generateRealisticIconAsset(iconsDir);
     
     // Generate splash screens
-    console.log('🖼️ Generating realistic splash screens...');
+    // Generating realistic splash screens
     await generateSplashAssets(splashDir);
     
-    console.log('\n🎉 Realistic Solar System asset generation complete!');
-    console.log('📂 Check the assets/icons/ and assets/splash/ directories for your new files.');
-    console.log('✨ Features: Photorealistic planets, scientific accuracy, professional design!');
+    // Realistic Solar System asset generation complete!
+    // Check the assets/icons/ and assets/splash/ directories for your new files.
+    // Features: Photorealistic planets, scientific accuracy, professional design!
     
   } catch (error) {
-    console.error('❌ Error generating assets:', error);
+    // Error generating assets
   }
 }
 
@@ -226,8 +226,8 @@ async function generateRealisticIconAsset(iconsDir) {
     .png()
     .toFile(path.join(iconsDir, 'adaptive-icon.png'));
   
-  console.log('✅ Generated realistic app icons successfully!');
-  console.log('   🔬 Features: Photorealistic colors, scientific accuracy, professional design');
+  // Generated realistic app icons successfully!
+  // Features: Photorealistic colors, scientific accuracy, professional design
 }
 
 async function generateSplashAssets(splashDir) {
@@ -237,8 +237,8 @@ async function generateSplashAssets(splashDir) {
   // Generate Android splash (1080x1920)
   await generateRealisticSplashSvg(1080, 1920, path.join(splashDir, 'splash-android.png'));
   
-  console.log('✅ Generated realistic splash screens successfully!');
-  console.log('   🌌 Features: Scientific solar system, professional appearance, NASA-style');
+  // Generated realistic splash screens successfully!
+  // Features: Scientific solar system, professional appearance, NASA-style
 }
 
 async function generateRealisticSplashSvg(width, height, outputPath) {
@@ -420,7 +420,9 @@ async function generateRealisticSplashSvg(width, height, outputPath) {
 
 // Run the generator
 if (require.main === module) {
-  generateSolarSystemAssets().catch(console.error);
+  generateSolarSystemAssets().catch(error => {
+    // Error generating assets
+  });
 }
 
 module.exports = { generateSolarSystemAssets }; 

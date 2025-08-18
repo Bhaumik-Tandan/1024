@@ -1,6 +1,7 @@
 import { create } from './helpers';
 import { Platform } from 'react-native';
 import { createTutorialSlice } from './tutorialSlice';
+import { COLS } from '../components/constants';
 
 // For web, use a simple store without persistence to avoid issues
 const createGameStore = () => {
@@ -25,16 +26,24 @@ const createGameStore = () => {
     
     // Tutorial actions
     startTutorial: function() {
+      // Tutorial Store: startTutorial called
       storeData.isActive = true;
       storeData.currentStep = 1;
       storeData.allowedLaneIndex = 2;
-      storeData.isGameFrozen = true;
+      storeData.isGameFrozen = false; // Keep game running normally
+
     },
     
     nextStep: function() {
       if (storeData.currentStep < 3) {
-        storeData.currentStep = storeData.currentStep + 1;
-        storeData.allowedLaneIndex = storeData.currentStep === 1 ? 3 : 2;
+        const newStep = storeData.currentStep + 1;
+        
+        storeData.currentStep = newStep;
+        
+        // Don't override allowedLaneIndex here - let TutorialController set it
+        // The TutorialController will call setAllowedLane with the correct value
+        
+        console.log(`🎯 Tutorial advanced to step ${newStep}, keeping current allowed lane: ${storeData.allowedLaneIndex}`);
       } else {
         storeData.endTutorial();
       }
@@ -49,6 +58,7 @@ const createGameStore = () => {
     
     setAllowedLane: function(laneIndex) {
       storeData.allowedLaneIndex = laneIndex;
+      console.log(`🎯 Store: setAllowedLane called with ${laneIndex}`);
     },
     
     setGameFrozen: function(frozen) {
@@ -219,7 +229,7 @@ if (Platform.OS === 'web') {
         highestBlock: null,
         
         // Tutorial state
-        ...createTutorialSlice(),
+        ...createTutorialSlice(set, get),
         
 
         
@@ -317,6 +327,12 @@ if (Platform.OS === 'web') {
           highestBlock: null,
           savedGame: null,
           hasSavedGame: false,
+          
+          // Reset tutorial state
+          isActive: false,
+          currentStep: 1,
+          allowedLaneIndex: 2,
+          isGameFrozen: false,
         }),
       }),
       {

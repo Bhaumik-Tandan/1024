@@ -526,7 +526,14 @@ const DropNumberBoard = ({ navigation, route }) => {
     };
     
     loadGame();
-  }, [loadSavedGame]);
+    
+    // Check if tutorial should start (if no high score and no saved game)
+    const shouldStartTutorial = !highScore && !loadSavedGame();
+    if (shouldStartTutorial && !isTutorialActive) {
+      console.log('🎯 Starting tutorial - no high score and no saved game');
+      startTutorial();
+    }
+  }, [loadSavedGame, highScore, isTutorialActive, startTutorial]);
 
   // Save game when user leaves the screen
   useFocusEffect(

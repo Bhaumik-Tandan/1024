@@ -42,18 +42,16 @@ export const useTutorial = () => {
           setHasCompletedOnboardingState(true);
           clearTutorialState();
         } else if (!hasHighScore) {
-          // No high score - but check if this is after data clearing
-          console.log('🔍 No high score detected - checking if data was cleared');
+          // No high score - this could be new user OR user who cleared data
+          console.log('🔍 No high score detected - checking context');
           
-          // If we're on Home screen and no tutorial is active, don't auto-start tutorial
-          // This prevents tutorial from starting after data clearing
-          if (!isTutorialActive) {
-            console.log('🚫 Not auto-starting tutorial after data clearing');
-            setHasCompletedOnboardingState(false);
-          } else {
-            console.log('✅ Starting tutorial (was already active)');
-            setHasCompletedOnboardingState(false);
-          }
+          // Always allow tutorial to start if no high score
+          // The user can manually start it by clicking ENTER COSMOS
+          console.log('✅ Allowing tutorial to start (no high score)');
+          setHasCompletedOnboardingState(false);
+          
+          // Don't auto-start tutorial here - let the game component handle it
+          // when user actually enters the game
         }
         
         setIsInitialized(true);

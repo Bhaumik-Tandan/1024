@@ -311,6 +311,55 @@ if (Platform.OS === 'web') {
 
         
         resetGame: () => set({ currentScore: 0 }),
+
+        clearAllData: async () => {
+          try {
+            // Clear tutorial completion status
+            const { resetTutorialCompletion } = await import('../lib/storage/tutorial');
+            await resetTutorialCompletion();
+            
+            // Clear other AsyncStorage data
+            const AsyncStorage = await import('@react-native-async-storage/async-storage');
+            await AsyncStorage.default.multiRemove([
+              'game_high_score',
+              'game_saved_state',
+              'game_total_sessions',
+              'analytics_user_id',
+              'analytics_first_launch',
+              'comprehensive_analytics_state'
+            ]);
+          } catch (error) {
+            // Failed to clear storage data
+          }
+          
+          storeData.highScore = null;
+          storeData.currentScore = 0;
+          storeData.highestBlock = null;
+          storeData.savedGame = null;
+          storeData.hasSavedGame = false;
+          
+          // Reset tutorial state
+          storeData.isActive = false;
+          storeData.currentStep = 1;
+          storeData.allowedLaneIndex = 2;
+          storeData.isGameFrozen = false;
+        },
+
+        resetOnboarding: async () => {
+          try {
+            // Import the tutorial storage functions
+            const { resetTutorialCompletion } = await import('../lib/storage/tutorial');
+            await resetTutorialCompletion();
+          } catch (error) {
+            // Failed to reset tutorial completion status
+          }
+          
+          // Reset tutorial state to allow tutorial to run again
+          storeData.isActive = false;
+          storeData.currentStep = 1;
+          storeData.allowedLaneIndex = 2;
+          storeData.isGameFrozen = false;
+        },
         
         resetAllSettings: () => set({
           vibrationEnabled: true,
@@ -330,6 +379,60 @@ if (Platform.OS === 'web') {
           allowedLaneIndex: 2,
           isGameFrozen: false,
         }),
+
+        clearAllData: async () => {
+          try {
+            // Clear tutorial completion status
+            const { resetTutorialCompletion } = await import('../lib/storage/tutorial');
+            await resetTutorialCompletion();
+            
+            // Clear other AsyncStorage data
+            const AsyncStorage = await import('@react-native-async-storage/async-storage');
+            await AsyncStorage.default.multiRemove([
+              'game_high_score',
+              'game_saved_state',
+              'game_total_sessions',
+              'analytics_user_id',
+              'analytics_first_launch',
+              'comprehensive_analytics_state'
+            ]);
+          } catch (error) {
+            // Failed to clear storage data
+          }
+          
+          set({
+            // Reset all game data
+            highScore: null,
+            currentScore: 0,
+            highestBlock: null,
+            savedGame: null,
+            hasSavedGame: false,
+            
+            // Reset tutorial state
+            isActive: false,
+            currentStep: 1,
+            allowedLaneIndex: 2,
+            isGameFrozen: false,
+          });
+        },
+
+        resetOnboarding: async () => {
+          try {
+            // Import the tutorial storage functions
+            const { resetTutorialCompletion } = await import('../lib/storage/tutorial');
+            await resetTutorialCompletion();
+          } catch (error) {
+            // Failed to reset tutorial completion status
+          }
+          
+          set({
+            // Reset tutorial state to allow tutorial to run again
+            isActive: false,
+            currentStep: 1,
+            allowedLaneIndex: 2,
+            isGameFrozen: false,
+          });
+        },
       }),
       {
         name: 'game-settings',

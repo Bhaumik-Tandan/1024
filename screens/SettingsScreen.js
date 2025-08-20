@@ -68,7 +68,7 @@ const SettingsScreen = ({ navigation }) => {
     }
   }, [backgroundMusicEnabled]);
 
-  const handleClearData = () => {
+  const handleClearData = async () => {
     Alert.alert(
       'Reset All Data',
       'This will permanently delete all your progress, scores, and settings. This action cannot be undone.',
@@ -80,9 +80,13 @@ const SettingsScreen = ({ navigation }) => {
         {
           text: 'Reset Everything',
           style: 'destructive',
-          onPress: () => {
-            clearAllData();
-            Alert.alert('Success', 'All data has been reset.');
+          onPress: async () => {
+            try {
+              await clearAllData();
+              Alert.alert('Success', 'All data has been reset.');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to reset data. Please try again.');
+            }
           },
         },
       ],

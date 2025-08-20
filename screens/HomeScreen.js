@@ -103,6 +103,15 @@ const HomeScreen = ({ navigation }) => {
     clearSavedGame 
   } = useGameStore();
 
+  // Debug logging to see state values
+  useEffect(() => {
+    console.log('🔍 HomeScreen State Debug:');
+    console.log('  - highScore:', highScore);
+    console.log('  - highestBlock:', highestBlock);
+    console.log('  - hasSavedGame:', hasSavedGame);
+    console.log('  - Button should show:', hasSavedGame ? 'RESUME JOURNEY' : 'ENTER COSMOS');
+  }, [highScore, highestBlock, hasSavedGame]);
+
   // Refined entrance animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;

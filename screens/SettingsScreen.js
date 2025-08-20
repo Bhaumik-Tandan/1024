@@ -83,19 +83,8 @@ const SettingsScreen = ({ navigation }) => {
           onPress: () => {
             try {
               clearAllData();
-              Alert.alert(
-                'Success', 
-                'All data has been reset. Returning to main menu...',
-                [
-                  {
-                    text: 'OK',
-                    onPress: () => {
-                      // Auto-redirect to Home screen after clearing data
-                      navigation.navigate('Home');
-                    }
-                  }
-                ]
-              );
+              // Go directly to main menu without success alert
+              navigation.navigate('Home');
             } catch (error) {
               Alert.alert('Error', 'Failed to reset data. Please try again.');
             }

@@ -10,6 +10,7 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import useGameStore from '../store/gameStore';
 import ContinuousStarfield from '../components/MovingStarfield';
 import SolarSystemView from '../components/SolarSystemView';

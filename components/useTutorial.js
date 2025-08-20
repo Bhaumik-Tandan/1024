@@ -22,14 +22,14 @@ export const useTutorial = () => {
   const [hasCompletedOnboarding, setHasCompletedOnboardingState] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize tutorial state - simple logic: if no high score, show tutorial
+  // Initialize tutorial state - simple logic: if no record, show tutorial
   useEffect(() => {
     const initializeTutorial = async () => {
       try {
-        // Simple check: if there's a high score, don't show tutorial
-        const hasHighScore = highScore && highScore > 0;
+        // Simple check: if there's a record, don't show tutorial
+        const hasRecord = record && record > 0;
         
-        if (hasHighScore) {
+        if (hasRecord) {
           // User has played before - no tutorial
           setHasCompletedOnboardingState(true);
           clearTutorialState();
@@ -37,7 +37,7 @@ export const useTutorial = () => {
             endTutorial();
           }
         } else {
-          // No high score - show tutorial
+          // No record - show tutorial
           setHasCompletedOnboardingState(false);
           if (!isTutorialActive) {
             startTutorial();
@@ -56,7 +56,7 @@ export const useTutorial = () => {
     };
 
     initializeTutorial();
-  }, [isTutorialActive, clearTutorialState, startTutorial, highScore]);
+  }, [isTutorialActive, clearTutorialState, startTutorial, record]);
 
   // Handle tutorial completion - simple: just end tutorial
   const completeTutorial = async () => {

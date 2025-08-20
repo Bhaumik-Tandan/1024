@@ -237,7 +237,7 @@ const DropNumberBoard = ({ navigation, route }) => {
 
   // Tutorial board change watcher
   useEffect(() => {
-    if (isTutorialActive && board && board.length > 0 && !isResettingTutorial && hasCompletedOnboarding === false) {
+    if (isTutorialActive && board && board.length > 0 && !isResettingTutorial) {
       // Check if we should advance the tutorial based on board state
       const stepSetup = tutorialController.getStepSetup(currentStep);
       
@@ -308,7 +308,7 @@ const DropNumberBoard = ({ navigation, route }) => {
 
   // Tutorial initialization
   useEffect(() => {
-    if (isTutorialActive && !hasCompletedOnboarding && !isResettingTutorial) {
+    if (isTutorialActive && !isResettingTutorial) {
       // Reset completed steps for new tutorial run
       setCompletedSteps(new Set());
       
@@ -1156,12 +1156,13 @@ const DropNumberBoard = ({ navigation, route }) => {
           if (hasNewBigMerge) {
             setCompletedSteps(prev => new Set([...prev, 3])); // Mark step 3 as completed
             
-            // Instead of clearing board, keep it and let user continue playing!
-            // This creates a continuous, addictive experience
-            
-            // Show success message but don't end tutorial
-            // User can keep playing and doing more chain merges
-            // The tutorial will continue until they manually end it or complete more objectives
+            // Tutorial completed! Save completion status and end tutorial
+            setTimeout(() => {
+              if (isTutorialActive && currentStep === 3) {
+                // Complete the tutorial properly
+                completeTutorial();
+              }
+            }, 1000); // Wait 1 second to show the success
           }
         }
         
@@ -1546,7 +1547,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         */}
 
             {/* Tutorial Overlay */}
-      {isTutorialActive && tutorialOverlayVisible && hasCompletedOnboarding === false && (
+      {isTutorialActive && tutorialOverlayVisible && (
         <TutorialOverlay
           isVisible={isTutorialActive}
           currentStep={currentStep}

@@ -1,3 +1,16 @@
+// Mock React Native modules
+jest.mock('react-native', () => ({
+  Dimensions: {
+    get: jest.fn(() => ({ width: 375, height: 667 }))
+  },
+  PixelRatio: {
+    roundToNearestPixel: jest.fn((value) => Math.round(value))
+  },
+  Platform: {
+    OS: 'web'
+  }
+}));
+
 import { ROWS, COLS } from '../../components/constants';
 
 describe('Game Constants', () => {

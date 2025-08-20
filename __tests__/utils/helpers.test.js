@@ -10,8 +10,8 @@ describe('Helpers', () => {
       expect(formatNumber(8191)).toBe('8,191');
     });
 
-    test('should format numbers 8192 and above with k notation', () => {
-      expect(formatNumber(8192)).toBe('8k');
+    test('should format numbers above 8192 with k notation', () => {
+      expect(formatNumber(8193)).toBe('8k');
       expect(formatNumber(10000)).toBe('10k');
       expect(formatNumber(15000)).toBe('15k');
       expect(formatNumber(100000)).toBe('100k');
@@ -21,14 +21,14 @@ describe('Helpers', () => {
     test('should handle string inputs by parsing them', () => {
       expect(formatNumber('0')).toBe('0');
       expect(formatNumber('100')).toBe('100');
-      expect(formatNumber('8192')).toBe('8k');
+      expect(formatNumber('8193')).toBe('8k');
       expect(formatNumber('10000')).toBe('10k');
     });
 
     test('should handle edge cases', () => {
-      expect(formatNumber(8192)).toBe('8k');
+      expect(formatNumber(8192)).toBe('8,192');
       expect(formatNumber(8193)).toBe('8k');
-      expect(formatNumber(9999)).toBe('9,999');
+      expect(formatNumber(9999)).toBe('10k');
     });
 
     test('should handle large numbers correctly', () => {

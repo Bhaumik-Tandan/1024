@@ -8,12 +8,12 @@ jest.mock('react-native', () => ({
 }));
 
 // Mock the helpers module
-jest.mock('../store/helpers', () => ({
+jest.mock('../../store/helpers', () => ({
   create: jest.fn()
 }));
 
 // Mock the tutorial slice
-jest.mock('../store/tutorialSlice', () => ({
+jest.mock('../../store/tutorialSlice', () => ({
   createTutorialSlice: jest.fn(() => ({
     isActive: false,
     currentStep: 1,
@@ -30,7 +30,7 @@ jest.mock('../store/tutorialSlice', () => ({
 }));
 
 // Mock constants
-jest.mock('../components/constants', () => ({
+jest.mock('../../components/constants', () => ({
   COLS: 4
 }));
 
@@ -58,9 +58,12 @@ describe('GameStore (Web Version)', () => {
     jest.resetModules();
     
     // Import the store after mocking
-    const storeModule = require('../store/gameStore');
+    const storeModule = require('../../store/gameStore');
     useGameStore = storeModule.default;
     gameStore = useGameStore();
+    
+    // Mock Platform.OS for testing
+    Object.defineProperty(Platform, 'OS', { value: 'web' });
   });
 
   describe('Initial State', () => {

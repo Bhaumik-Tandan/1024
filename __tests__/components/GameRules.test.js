@@ -1,7 +1,10 @@
 import { 
   getBoardConfig, 
   GAME_CONFIG, 
-  GAME_RULES 
+  GAME_RULES,
+  ScoringSystem,
+  GamePhysics,
+  GameHelpers
 } from '../../components/GameRules';
 
 describe('GameRules', () => {
@@ -99,27 +102,25 @@ describe('GameRules', () => {
     test('should have chain reaction rules defined', () => {
       expect(GAME_RULES.chainReactions).toBeDefined();
       expect(GAME_RULES.chainReactions.enabled).toBe(true);
-      expect(GAME_RULES.chainReactions.maxChains).toBeGreaterThan(0);
-      expect(typeof GAME_RULES.chainReactions.delay).toBe('number');
+      expect(GAME_RULES.chainReactions.scoringBonus).toBeGreaterThan(0);
     });
 
-    test('should have scoring rules defined', () => {
-      expect(GAME_RULES.scoring).toBeDefined();
-      expect(typeof GAME_RULES.scoring.baseScore).toBe('function');
-      expect(typeof GAME_RULES.scoring.comboBonus).toBe('function');
-      expect(typeof GAME_RULES.scoring.mergeBonus).toBe('function');
+    test('should have scoring system defined', () => {
+      expect(ScoringSystem).toBeDefined();
+      expect(typeof ScoringSystem.calculateMergeScore).toBe('function');
+      expect(typeof ScoringSystem.calculateBonus).toBe('function');
     });
 
-    test('should have win condition rules defined', () => {
-      expect(GAME_RULES.winCondition).toBeDefined();
-      expect(GAME_RULES.winCondition.targetValue).toBeGreaterThan(0);
-      expect(typeof GAME_RULES.winCondition.checkWin).toBe('function');
+    test('should have game physics defined', () => {
+      expect(GamePhysics).toBeDefined();
+      expect(typeof GamePhysics.calculateFallSpeed).toBe('function');
+      expect(typeof GamePhysics.calculateMergeDelay).toBe('function');
     });
 
-    test('should have game over rules defined', () => {
-      expect(GAME_RULES.gameOver).toBeDefined();
-      expect(typeof GAME_RULES.gameOver.checkGameOver).toBe('function');
-      expect(typeof GAME_RULES.gameOver.conditions).toBe('object');
+    test('should have game helpers defined', () => {
+      expect(GameHelpers).toBeDefined();
+      expect(typeof GameHelpers.generateRandomTile).toBe('function');
+      expect(typeof GameHelpers.createEmptyBoard).toBe('function');
     });
   });
 
@@ -144,13 +145,13 @@ describe('GameRules', () => {
       expect(formula(4, 4)).toBe(32); // 4 * 2^(4-1) = 4 * 8 = 32
     });
 
-    test('chain reaction delay should be positive', () => {
-      expect(GAME_RULES.chainReactions.delay).toBeGreaterThan(0);
+    test('chain reaction scoring bonus should be positive', () => {
+      expect(GAME_RULES.chainReactions.scoringBonus).toBeGreaterThan(0);
     });
 
-    test('max chains should be reasonable', () => {
-      expect(GAME_RULES.chainReactions.maxChains).toBeGreaterThan(0);
-      expect(GAME_RULES.chainReactions.maxChains).toBeLessThan(100);
+    test('scoring system should handle chain reactions', () => {
+      const score = ScoringSystem.calculateMergeScore(8, 2, true);
+      expect(score).toBeGreaterThan(8);
     });
   });
 

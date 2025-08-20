@@ -160,6 +160,9 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
   
   // Flag to prevent auto-save after data clearing
   const [isDataCleared, setIsDataCleared] = useState(false);
+  
+  // CRITICAL: Use ref to prevent race condition with state updates
+  const isDataClearedRef = useRef(false);
 
   const boardRef = useRef(null);
   const [boardLeft, setBoardLeft] = useState(0);
@@ -185,6 +188,13 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
     resetTutorialCompletion,
     tutorialController,
   } = useTutorial();
+  
+  // CRITICAL: Reset data cleared ref when store data is cleared
+  useEffect(() => {
+    if (!highScore && !isDataCleared) {
+      isDataClearedRef.current = false;
+    }
+  }, [highScore, isDataCleared]);
 
   // Tutorial state
   const [tutorialOverlayVisible, setTutorialOverlayVisible] = useState(true);
@@ -534,6 +544,10 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
     setIsDataCleared(true);
     console.log('🚫 Setting isDataCleared = true to block auto-save');
     
+    // CRITICAL: Also set a ref immediately to prevent race condition
+    isDataClearedRef.current = true;
+    console.log('🚫 Setting isDataClearedRef.current = true to block auto-save immediately');
+    
     startTutorial();
   }
   }, [loadSavedGame, highScore, isTutorialActive, startTutorial, gridConfig.ROWS, gridConfig.COLS]);
@@ -609,7 +623,8 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
   // Auto-save functionality - save game state whenever it changes
   useEffect(() => {
     // CRITICAL: Block auto-save during tutorial to prevent hasSavedGame conflicts
-    if (isMounted && !gameOver && !isDataCleared && !isTutorialActive) {
+    // Use both state and ref to prevent race conditions
+    if (isMounted && !gameOver && !isDataCleared && !isDataClearedRef.current && !isTutorialActive) {
       // Only save if there's actual game content (not just empty board)
       const hasGameContent = score > 0 || board.some(row => row.some(cell => cell > 0));
       
@@ -663,8 +678,8 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
       }
     } else {
       // CRITICAL: Block auto-save in these cases
-      if (isDataCleared) {
-        console.log('🚫 Auto-save blocked - data was cleared');
+      if (isDataCleared || isDataClearedRef.current) {
+        console.log('🚫 Auto-save blocked - data was cleared (state or ref)');
       } else if (isTutorialActive) {
         console.log('🚫 Auto-save blocked - tutorial is active');
       } else {
@@ -1228,9 +1243,10 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
                 // Complete the tutorial properly
                 completeTutorial();
                 
-                // CRITICAL: Reset data cleared flag so normal game flow can resume
-                setIsDataCleared(false);
-                console.log('✅ Tutorial completed - resetting data cleared flag');
+                          // CRITICAL: Reset data cleared flag so normal game flow can resume
+          setIsDataCleared(false);
+          isDataClearedRef.current = false;
+          console.log('✅ Tutorial completed - resetting data cleared flag and ref');
               }
             }, 1000); // Wait 1 second to show the success
           }

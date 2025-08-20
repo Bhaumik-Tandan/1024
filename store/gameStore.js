@@ -172,6 +172,44 @@ const createGameStore = () => {
     
     resetGame: () => storeData.currentScore = 0,
     
+    clearAllData: async () => {
+      try {
+        // Clear tutorial completion status
+        const { resetTutorialCompletion } = await import('../lib/storage/tutorial');
+        await resetTutorialCompletion();
+        
+        // Clear localStorage for web
+        if (Platform.OS === 'web') {
+          try {
+            localStorage.removeItem('game-state');
+            localStorage.removeItem('game_high_score');
+            localStorage.removeItem('game_saved_state');
+            localStorage.removeItem('game_total_sessions');
+            localStorage.removeItem('analytics_user_id');
+            localStorage.removeItem('analytics_first_launch');
+            localStorage.removeItem('comprehensive_analytics_state');
+          } catch (e) {
+            // Silent fail
+          }
+        }
+      } catch (error) {
+        // Failed to clear storage data
+      }
+      
+      // Reset all game data
+      storeData.highScore = null;
+      storeData.currentScore = 0;
+      storeData.highestBlock = 0;
+      storeData.savedGame = null;
+      storeData.hasSavedGame = false;
+      
+      // Reset tutorial state
+      storeData.isActive = false;
+      storeData.currentStep = 1;
+      storeData.allowedLaneIndex = 2;
+      storeData.isGameFrozen = false;
+    },
+    
     resetAllSettings: () => {
       storeData.vibrationEnabled = true;
       storeData.soundEnabled = true;
@@ -180,7 +218,7 @@ const createGameStore = () => {
       storeData.backgroundMusicVolume = 0.6;
       storeData.highScore = null;
       storeData.currentScore = 0;
-      storeData.highestBlock = null;
+      storeData.highestBlock = 0;
       storeData.savedGame = null;
       storeData.hasSavedGame = false;
       
@@ -400,7 +438,7 @@ if (Platform.OS === 'web') {
             // Failed to clear storage data
           }
           
-          set({
+          set((state) => ({
             // Reset all game data
             highScore: null,
             currentScore: 0,
@@ -408,12 +446,13 @@ if (Platform.OS === 'web') {
             savedGame: null,
             hasSavedGame: false,
             
-            // Reset tutorial state
+            // Reset tutorial state using the tutorial slice
+            ...state,
             isActive: false,
             currentStep: 1,
             allowedLaneIndex: 2,
             isGameFrozen: false,
-          });
+          }));
         },
 
         resetOnboarding: async () => {

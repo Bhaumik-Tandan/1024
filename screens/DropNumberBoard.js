@@ -304,7 +304,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         }
       }, 500); // Increased delay for smoother transition
     }
-  }, [currentStep, isTutorialActive, isResettingTutorial]);
+  }, [currentStep, isTutorialActive, isResettingTutorial, tutorialController]);
 
   // Tutorial initialization
   useEffect(() => {
@@ -334,7 +334,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       // Update store with TutorialController's allowed lane
       setAllowedLane(stepSetup.allowedLaneIndex);
     }
-  }, [isTutorialActive, currentStep, hasCompletedOnboarding, isResettingTutorial]);
+  }, [isTutorialActive, currentStep, isResettingTutorial, tutorialController]);
 
   // Board safety check for tutorial
   useEffect(() => {

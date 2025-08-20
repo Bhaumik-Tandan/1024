@@ -190,6 +190,21 @@ const createGameStore = () => {
       storeData.allowedLaneIndex = 2;
       storeData.isGameFrozen = false;
     },
+    
+    clearAllData: () => {
+      // Reset all game data
+      storeData.highScore = null;
+      storeData.currentScore = 0;
+      storeData.highestBlock = null;
+      storeData.savedGame = null;
+      storeData.hasSavedGame = false;
+      
+      // Reset tutorial state
+      storeData.isActive = false;
+      storeData.currentStep = 1;
+      storeData.allowedLaneIndex = 2;
+      storeData.isGameFrozen = false;
+    },
   };
   
   return storeData;
@@ -318,6 +333,21 @@ if (Platform.OS === 'web') {
           soundVolume: 0.7,
           backgroundMusicEnabled: true,
           backgroundMusicVolume: 0.6,
+          highScore: null,
+          currentScore: 0,
+          highestBlock: null,
+          savedGame: null,
+          hasSavedGame: false,
+          
+          // Reset tutorial state
+          isActive: false,
+          currentStep: 1,
+          allowedLaneIndex: 2,
+          isGameFrozen: false,
+        }),
+        
+        clearAllData: () => set({
+          // Reset all game data
           highScore: null,
           currentScore: 0,
           highestBlock: null,

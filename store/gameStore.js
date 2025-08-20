@@ -16,7 +16,7 @@ const createGameStore = () => {
     // Game state - don't show 0 as default
     highScore: null,
     currentScore: 0,
-    highestBlock: 0,
+    highestBlock: null,
     
     // Tutorial state
     isActive: false,

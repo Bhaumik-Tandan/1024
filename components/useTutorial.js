@@ -30,16 +30,12 @@ export const useTutorial = () => {
         // Simple check: if there's a high score, don't show tutorial
         const hasHighScore = highScore && highScore > 0;
         
-        console.log('🔍 Tutorial Init - highScore:', highScore, 'hasHighScore:', hasHighScore, 'isTutorialActive:', isTutorialActive);
-        
         if (hasHighScore && !isTutorialActive) {
           // User has played before and tutorial is not active - no tutorial needed
-          console.log('🚫 User has high score and tutorial not active - no tutorial needed');
           setHasCompletedOnboardingState(true);
           clearTutorialState();
         } else if (!hasHighScore) {
           // No high score - always show tutorial
-          console.log('✅ No high score - starting tutorial');
           setHasCompletedOnboardingState(false);
           if (!isTutorialActive) {
             startTutorial();

@@ -245,14 +245,11 @@ const DropNumberBoard = ({ navigation, route }) => {
       // For step 1: if we have a "4" (merged 2+2), advance
       if (currentStep === 1 && !completedSteps.has(1)) {
         const hasMerged = board.some(row => row.some(cell => cell === 4));
-        console.log('🔍 Step 1 check - hasMerged:', hasMerged, 'currentStep:', currentStep, 'completedSteps:', Array.from(completedSteps));
         
         if (hasMerged) {
-          console.log('✅ Step 1 completed - advancing to step 2');
           setCompletedSteps(prev => new Set([...prev, 1])); // Mark step 1 as completed
           setTimeout(() => {
             if (isTutorialActive && currentStep === 1 && !isResettingTutorial) { // Double check current step and reset flag
-              console.log('🎯 Calling nextStep() for step 1');
               nextStep(); // Advance to next step
             }
           }, 200); // Wait 200ms for merge animation
@@ -263,14 +260,11 @@ const DropNumberBoard = ({ navigation, route }) => {
       if (currentStep === 2 && !completedSteps.has(2)) {
         // Check for the combo: "2" + "2" = "4", then "4" + "4" = "8"
         const hasCombo = board.some(row => row.some(cell => cell === 8));
-        console.log('🔍 Step 2 check - hasCombo:', hasCombo, 'currentStep:', currentStep, 'completedSteps:', Array.from(completedSteps));
         
         if (hasCombo) {
-          console.log('✅ Step 2 completed - advancing to step 3');
           setCompletedSteps(prev => new Set([...prev, 2])); // Mark step 2 as completed
           setTimeout(() => {
             if (isTutorialActive && currentStep === 2 && !isResettingTutorial) { // Double check current step and reset flag
-              console.log('🎯 Calling nextStep() for step 2');
               nextStep(); // Advance to next step
             }
           }, 200); // Wait 200ms for merge animation
@@ -284,8 +278,6 @@ const DropNumberBoard = ({ navigation, route }) => {
   // Tutorial step change handler
   useEffect(() => {
     if (isTutorialActive && currentStep >= 1 && !isResettingTutorial) {
-      console.log('🔄 Tutorial step change handler - currentStep:', currentStep);
-      
       // Record setup time for Step 3 to prevent immediate completion
       if (currentStep === 3) {
         setStep3SetupTime(Date.now());
@@ -294,8 +286,6 @@ const DropNumberBoard = ({ navigation, route }) => {
       // Small delay to ensure smooth transition
       setTimeout(() => {
         if (isTutorialActive && !isResettingTutorial) { // Double check tutorial is still active and not resetting
-          console.log('🎯 Setting up board for step:', currentStep);
-          
           // Set up the board for the new step
           const stepBoard = tutorialController.getStepBoard(currentStep);
           setBoard(stepBoard);
@@ -313,8 +303,6 @@ const DropNumberBoard = ({ navigation, route }) => {
           
           // Update store with TutorialController's allowed lane
           setAllowedLane(stepSetup.allowedLaneIndex);
-          
-          console.log('✅ Step', currentStep, 'setup complete');
         }
       }, 500); // Increased delay for smoother transition
     }
@@ -651,9 +639,7 @@ const DropNumberBoard = ({ navigation, route }) => {
 
   // Update store's highestBlock whenever maxTileAchieved changes
   useEffect(() => {
-    console.log('🔍 maxTileAchieved effect triggered - value:', maxTileAchieved, 'isMounted:', isMounted);
     if (maxTileAchieved > 0 && isMounted) {
-      console.log('🔄 Updating store highestBlock:', maxTileAchieved);
       updateHighestBlock(maxTileAchieved);
     }
   }, [maxTileAchieved, isMounted, updateHighestBlock]);
@@ -1242,9 +1228,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         }));
         
         // Update max tile achieved immediately
-        console.log('🔍 Tile landed - newHighestTile:', newHighestTile, 'current maxTileAchieved:', maxTileAchieved);
         if (newHighestTile > maxTileAchieved) {
-          console.log('✅ Updating maxTileAchieved from', maxTileAchieved, 'to', newHighestTile);
           setMaxTileAchieved(newHighestTile);
         }
         

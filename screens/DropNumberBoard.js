@@ -237,7 +237,7 @@ const DropNumberBoard = ({ navigation, route }) => {
 
   // Tutorial board change watcher
   useEffect(() => {
-    if (isTutorialActive && board && board.length > 0 && !isResettingTutorial) {
+    if (isTutorialActive && board && board.length > 0 && !isResettingTutorial && hasCompletedOnboarding === false) {
       // Check if we should advance the tutorial based on board state
       const stepSetup = tutorialController.getStepSetup(currentStep);
       
@@ -260,11 +260,9 @@ const DropNumberBoard = ({ navigation, route }) => {
         const hasCombo = board.some(row => row.some(cell => cell === 8));
         
         if (hasCombo) {
-          console.log('🎯 Step 2: 8 detected, completing step...');
           setCompletedSteps(prev => new Set([...prev, 2])); // Mark step 2 as completed
           setTimeout(() => {
             if (isTutorialActive && currentStep === 2 && !isResettingTutorial) { // Double check current step and reset flag
-              console.log('🎯 Step 2: Calling nextStep() to advance to step 3');
               nextStep(); // Advance to next step
             }
           }, 200); // Wait 200ms for merge animation
@@ -277,30 +275,21 @@ const DropNumberBoard = ({ navigation, route }) => {
 
   // Tutorial step change handler
   useEffect(() => {
-    console.log('🎯 Step change handler triggered: currentStep =', currentStep, 'isTutorialActive =', isTutorialActive, 'isResettingTutorial =', isResettingTutorial);
-    
     if (isTutorialActive && currentStep > 1 && !isResettingTutorial) {
-      console.log('🎯 Setting up step', currentStep);
-      
       // Record setup time for Step 3 to prevent immediate completion
       if (currentStep === 3) {
         setStep3SetupTime(Date.now());
-        console.log('🎯 Step 3 setup time recorded');
       }
       
       // Small delay to ensure smooth transition
       setTimeout(() => {
         if (isTutorialActive && !isResettingTutorial) { // Double check tutorial is still active and not resetting
-          console.log('🎯 Setting up board for step', currentStep);
-          
           // Set up the board for the new step
           const stepBoard = tutorialController.getStepBoard(currentStep);
-          console.log('🎯 Step', currentStep, 'board:', stepBoard);
           setBoard(stepBoard);
           
           // Get step setup for shooter value
           const stepSetup = tutorialController.getStepSetup(currentStep);
-          console.log('🎯 Step', currentStep, 'setup:', stepSetup);
           setNextBlock(stepSetup.shooterValue);
           setPreviewBlock(stepSetup.shooterValue);
           
@@ -312,12 +301,8 @@ const DropNumberBoard = ({ navigation, route }) => {
           
           // Update store with TutorialController's allowed lane
           setAllowedLane(stepSetup.allowedLaneIndex);
-          
-          console.log('🎯 Step', currentStep, 'setup complete');
         }
       }, 500); // Increased delay for smoother transition
-    } else {
-      console.log('🎯 Step change handler: conditions not met');
     }
   }, [currentStep, isTutorialActive, isResettingTutorial]);
 
@@ -1561,7 +1546,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         */}
 
             {/* Tutorial Overlay */}
-      {isTutorialActive && tutorialOverlayVisible && (
+      {isTutorialActive && tutorialOverlayVisible && hasCompletedOnboarding === false && (
         <TutorialOverlay
           isVisible={isTutorialActive}
           currentStep={currentStep}

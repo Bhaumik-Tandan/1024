@@ -34,10 +34,6 @@ const createGameStore = () => {
     },
     
     nextStep: function() {
-      console.log('🎯 Store: nextStep called');
-      console.log('🎯 Store: Current step before nextStep:', storeData.currentStep);
-      console.log('🎯 Store: isActive before nextStep:', storeData.isActive);
-      
       if (storeData.currentStep < 3) {
         const newStep = storeData.currentStep + 1;
         
@@ -45,23 +41,16 @@ const createGameStore = () => {
         
         // Don't override allowedLaneIndex here - let TutorialController set it
         // The TutorialController will call setAllowedLane with the correct value
-        
-        console.log(`🎯 Tutorial advanced to step ${newStep}, keeping current allowed lane: ${storeData.allowedLaneIndex}`);
-        console.log('🎯 Store: Step updated to:', storeData.currentStep);
-        console.log('🎯 Store: isActive after step update:', storeData.isActive);
       } else {
-        console.log('🎯 Store: Tutorial completed, calling endTutorial');
         storeData.endTutorial();
       }
     },
     
     endTutorial: function() {
-      console.log('🎯 Store: endTutorial called from:', new Error().stack);
       storeData.isActive = false;
       storeData.currentStep = 1;
       storeData.allowedLaneIndex = 2;
       storeData.isGameFrozen = false;
-      console.log('🎯 Store: Tutorial ended - isActive:', storeData.isActive, 'currentStep:', storeData.currentStep);
     },
     
     setAllowedLane: function(laneIndex) {

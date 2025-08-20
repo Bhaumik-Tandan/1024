@@ -18,10 +18,7 @@ export const useTutorial = () => {
     clearTutorialState,
   } = useGameStore();
   
-  // Debug: Log whenever these values change
-  useEffect(() => {
-    console.log('🎯 useTutorial: State updated - currentStep:', currentStep, 'isActive:', isTutorialActive);
-  }, [currentStep, isTutorialActive]);
+
 
   const [hasCompletedOnboarding, setHasCompletedOnboardingState] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -33,23 +30,26 @@ export const useTutorial = () => {
         const completed = await getHasCompletedOnboarding();
         const hasExistingData = await hasExistingUserData();
         
-        console.log('🎯 Tutorial init: completed =', completed, 'hasExistingData =', hasExistingData);
-        
         // If user has existing data but no tutorial completion flag,
         // they're updating from old version - mark tutorial as completed
         if (hasExistingData && !completed) {
-          console.log('🎯 Tutorial init: Existing user detected, marking tutorial as completed');
           await setHasCompletedOnboarding();
           setHasCompletedOnboardingState(true);
           // Clear any existing tutorial state for existing users
           clearTutorialState();
+          // Ensure tutorial is NOT active for existing users
+          if (isTutorialActive) {
+            endTutorial();
+          }
         } else if (completed) {
-          console.log('🎯 Tutorial init: Tutorial already completed');
           setHasCompletedOnboardingState(true);
           // Clear any existing tutorial state for completed users
           clearTutorialState();
+          // Ensure tutorial is NOT active for completed users
+          if (isTutorialActive) {
+            endTutorial();
+          }
         } else {
-          console.log('🎯 Tutorial init: New user, starting tutorial');
           setHasCompletedOnboardingState(false);
           // Only start tutorial for truly new users
           if (!isTutorialActive) {
@@ -59,7 +59,6 @@ export const useTutorial = () => {
         
         setIsInitialized(true);
       } catch (error) {
-        console.log('🎯 Tutorial init: Error, assuming new user');
         // Failed to initialize tutorial - assume user is new (safer)
         setHasCompletedOnboardingState(false);
         setIsInitialized(true);
@@ -70,7 +69,7 @@ export const useTutorial = () => {
     };
 
     initializeTutorial();
-  }, []);
+  }, [isTutorialActive, clearTutorialState, startTutorial]);
 
   // Handle tutorial completion
   const completeTutorial = async () => {

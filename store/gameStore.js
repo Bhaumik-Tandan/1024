@@ -172,11 +172,11 @@ const createGameStore = () => {
     
     resetGame: () => storeData.currentScore = 0,
     
-    clearAllData: async () => {
+    clearAllData: () => {
       try {
-        // Clear tutorial completion status
-        const { resetTutorialCompletion } = await import('../lib/storage/tutorial');
-        await resetTutorialCompletion();
+        // Clear tutorial completion status synchronously
+        const { resetTutorialCompletion } = require('../lib/storage/tutorial');
+        resetTutorialCompletion();
         
         // Clear localStorage for web
         if (Platform.OS === 'web') {
@@ -186,7 +186,7 @@ const createGameStore = () => {
             localStorage.removeItem('game_saved_state');
             localStorage.removeItem('game_total_sessions');
             localStorage.removeItem('analytics_user_id');
-            localStorage.removeItem('analytics_first_launch');
+            localStorage.removeItem('game_first_launch');
             localStorage.removeItem('comprehensive_analytics_state');
           } catch (e) {
             // Silent fail
@@ -418,15 +418,15 @@ if (Platform.OS === 'web') {
           isGameFrozen: false,
         }),
 
-        clearAllData: async () => {
+        clearAllData: () => {
           try {
-            // Clear tutorial completion status
-            const { resetTutorialCompletion } = await import('../lib/storage/tutorial');
-            await resetTutorialCompletion();
+            // Clear tutorial completion status synchronously
+            const { resetTutorialCompletion } = require('../lib/storage/tutorial');
+            resetTutorialCompletion();
             
-            // Clear other AsyncStorage data
-            const AsyncStorage = await import('@react-native-async-storage/async-storage');
-            await AsyncStorage.default.multiRemove([
+            // Clear other AsyncStorage data synchronously
+            const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+            AsyncStorage.multiRemove([
               'game_high_score',
               'game_saved_state',
               'game_total_sessions',

@@ -245,7 +245,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       // For step 1: if we have a "4" (merged 2+2), advance
       if (currentStep === 1 && !completedSteps.has(1)) {
         const hasMerged = board.some(row => row.some(cell => cell === 4));
-        console.log('🔍 Step 1 check - hasMerged:', hasMerged, 'currentStep:', currentStep);
+        console.log('🔍 Step 1 check - hasMerged:', hasMerged, 'currentStep:', currentStep, 'completedSteps:', Array.from(completedSteps));
         
         if (hasMerged) {
           console.log('✅ Step 1 completed - advancing to step 2');
@@ -263,7 +263,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       if (currentStep === 2 && !completedSteps.has(2)) {
         // Check for the combo: "2" + "2" = "4", then "4" + "4" = "8"
         const hasCombo = board.some(row => row.some(cell => cell === 8));
-        console.log('🔍 Step 2 check - hasCombo:', hasCombo, 'currentStep:', currentStep);
+        console.log('🔍 Step 2 check - hasCombo:', hasCombo, 'currentStep:', currentStep, 'completedSteps:', Array.from(completedSteps));
         
         if (hasCombo) {
           console.log('✅ Step 2 completed - advancing to step 3');
@@ -348,7 +348,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       // Update store with TutorialController's allowed lane
       setAllowedLane(stepSetup.allowedLaneIndex);
     }
-  }, [isTutorialActive, currentStep, isResettingTutorial, tutorialController, setAllowedLane]);
+  }, [isTutorialActive, currentStep, isResettingTutorial, tutorialController, setAllowedLane, setCompletedSteps]);
 
   // Board safety check for tutorial
   useEffect(() => {

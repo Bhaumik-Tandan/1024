@@ -110,7 +110,13 @@ const HomeScreen = ({ navigation }) => {
     console.log('  - highestBlock:', highestBlock);
     console.log('  - hasSavedGame:', hasSavedGame);
     console.log('  - Button should show:', hasSavedGame ? 'RESUME JOURNEY' : 'ENTER COSMOS');
-  }, [highScore, highestBlock, hasSavedGame]);
+    
+    // If data was cleared but hasSavedGame is still true, force clear it
+    if (highScore === null && highestBlock === null && hasSavedGame === true) {
+      console.log('🚨 Inconsistent state detected - forcing hasSavedGame to false');
+      clearSavedGame();
+    }
+  }, [highScore, highestBlock, hasSavedGame, clearSavedGame]);
 
   // Refined entrance animations
   const fadeAnim = useRef(new Animated.Value(0)).current;

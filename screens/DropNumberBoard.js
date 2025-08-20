@@ -157,6 +157,9 @@ const DropNumberBoard = ({ navigation, route }) => {
 
   // Add mounted state tracking to prevent state updates after unmount
   const [isMounted, setIsMounted] = useState(true);
+  
+  // Flag to prevent auto-save after data clearing
+  const [isDataCleared, setIsDataCleared] = useState(false);
 
   const boardRef = useRef(null);
   const [boardLeft, setBoardLeft] = useState(0);
@@ -595,9 +598,19 @@ const DropNumberBoard = ({ navigation, route }) => {
 
   // Auto-save functionality - save game state whenever it changes
   useEffect(() => {
-    if (isMounted && !gameOver) {
+    if (isMounted && !gameOver && !isDataCleared) {
       // Only save if there's actual game content (not just empty board)
       const hasGameContent = score > 0 || board.some(row => row.some(cell => cell > 0));
+      
+      // Debug logging for auto-save
+      console.log('🔍 Auto-save check:', {
+        hasGameContent,
+        score,
+        boardHasContent: board.some(row => row.some(cell => cell > 0)),
+        isMounted,
+        gameOver,
+        isDataCleared
+      });
       
       if (hasGameContent) {
         const gameState = {
@@ -613,6 +626,7 @@ const DropNumberBoard = ({ navigation, route }) => {
         };
         
         try {
+          console.log('💾 Auto-saving game state');
           saveGame(gameState);
           // Only update store score when game is active and score is meaningful
           // Never update store with score 0 to prevent interference
@@ -629,13 +643,16 @@ const DropNumberBoard = ({ navigation, route }) => {
       } else {
         // No game content - clear any existing saved game
         try {
+          console.log('🗑️ No game content - clearing saved game');
           clearSavedGame();
         } catch (error) {
           // Failed to clear saved game
         }
       }
+    } else if (isDataCleared) {
+      console.log('🚫 Auto-save blocked - data was cleared');
     }
-  }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame, updateScore, clearSavedGame]);
+  }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, isDataCleared, saveGame, updateScore, clearSavedGame]);
 
   // Update store's highestBlock whenever maxTileAchieved changes
   useEffect(() => {

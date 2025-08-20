@@ -199,7 +199,7 @@ const createGameStore = () => {
       // Reset all game data
       storeData.highScore = null;
       storeData.currentScore = 0;
-      storeData.highestBlock = 0;
+      storeData.highestBlock = null;
       storeData.savedGame = null;
       storeData.hasSavedGame = false;
       
@@ -218,7 +218,7 @@ const createGameStore = () => {
       storeData.backgroundMusicVolume = 0.6;
       storeData.highScore = null;
       storeData.currentScore = 0;
-      storeData.highestBlock = 0;
+      storeData.highestBlock = null;
       storeData.savedGame = null;
       storeData.hasSavedGame = false;
       
@@ -260,7 +260,7 @@ if (Platform.OS === 'web') {
         // Game state
         highScore: null,
         currentScore: 0,
-        highestBlock: 0,
+        highestBlock: null,
         
         // Tutorial state
         ...createTutorialSlice(set, get),
@@ -442,7 +442,7 @@ if (Platform.OS === 'web') {
             // Reset all game data
             highScore: null,
             currentScore: 0,
-            highestBlock: 0, // Reset to 0 to start fresh
+            highestBlock: null, // Reset to null like 40 commits back
             savedGame: null,
             hasSavedGame: false,
             

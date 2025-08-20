@@ -195,6 +195,15 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
       isDataClearedRef.current = false;
     }
   }, [highScore, isDataCleared]);
+  
+  // CRITICAL: Auto-reset data cleared flag when tutorial ends
+  useEffect(() => {
+    if (!isTutorialActive && isDataCleared) {
+      console.log('✅ Tutorial ended - auto-resetting data cleared flag');
+      setIsDataCleared(false);
+      isDataClearedRef.current = false;
+    }
+  }, [isTutorialActive, isDataCleared]);
 
   // Tutorial state
   const [tutorialOverlayVisible, setTutorialOverlayVisible] = useState(true);
@@ -1243,10 +1252,10 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
                 // Complete the tutorial properly
                 completeTutorial();
                 
-                          // CRITICAL: Reset data cleared flag so normal game flow can resume
-          setIsDataCleared(false);
-          isDataClearedRef.current = false;
-          console.log('✅ Tutorial completed - resetting data cleared flag and ref');
+                // CRITICAL: Reset data cleared flag so normal game flow can resume
+                setIsDataCleared(false);
+                isDataClearedRef.current = false;
+                console.log('✅ Tutorial completed - resetting data cleared flag and ref');
               }
             }, 1000); // Wait 1 second to show the success
           }
@@ -1665,6 +1674,10 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
             // Special case: Continue Playing button was pressed
             if (laneIndex === -1) {
               endTutorial(); // End the tutorial
+              // CRITICAL: Reset data cleared flag so normal game flow can resume
+              setIsDataCleared(false);
+              isDataClearedRef.current = false;
+              console.log('✅ Tutorial ended manually - resetting data cleared flag and ref');
               return;
             }
             

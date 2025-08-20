@@ -32,24 +32,20 @@ export const useTutorial = () => {
         
         console.log('🔍 Tutorial Init - highScore:', highScore, 'hasHighScore:', hasHighScore, 'isTutorialActive:', isTutorialActive);
         
-        if (hasHighScore) {
-          // User has played before - no tutorial
-          console.log('🚫 User has high score - no tutorial needed');
+        if (hasHighScore && !isTutorialActive) {
+          // User has played before and tutorial is not active - no tutorial needed
+          console.log('🚫 User has high score and tutorial not active - no tutorial needed');
           setHasCompletedOnboardingState(true);
           clearTutorialState();
-          if (isTutorialActive) {
-            endTutorial();
-          }
-        } else {
-          // No high score - show tutorial
-          console.log('✅ No high score - starting tutorial');
+        } else if (!hasHighScore && !isTutorialActive) {
+          // No high score and tutorial not active - start tutorial
+          console.log('✅ No high score and tutorial not active - starting tutorial');
           setHasCompletedOnboardingState(false);
-          if (!isTutorialActive) {
-            console.log('🎯 Calling startTutorial()');
-            startTutorial();
-          } else {
-            console.log('🎯 Tutorial already active');
-          }
+          startTutorial();
+        } else if (isTutorialActive) {
+          // Tutorial is active - keep it running regardless of high score
+          console.log('🎯 Tutorial is active - keeping it running');
+          setHasCompletedOnboardingState(false);
         }
         
         setIsInitialized(true);

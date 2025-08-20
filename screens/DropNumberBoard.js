@@ -543,6 +543,41 @@ const DropNumberBoard = ({ navigation, route }) => {
       return () => {
         // Save game state when leaving the screen
         if (isMounted && !gameOver) {
+          // Only save if there's actual game content
+          const hasGameContent = score > 0 || board.some(row => row.some(cell => cell > 0));
+          
+          if (hasGameContent) {
+            const gameState = {
+              board,
+              score,
+              nextBlock,
+              previewBlock,
+              gameStats,
+              maxTileAchieved,
+              floorLevel,
+              currentMinSpawn,
+              timestamp: Date.now()
+            };
+            
+            try {
+              saveGame(gameState);
+            } catch (error) {
+              // Failed to save game on screen leave
+            }
+          }
+        }
+      };
+    }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame])
+  );
+
+  // Save game when app goes to background
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState) => {
+      if (nextAppState === 'background' && isMounted && !gameOver) {
+        // Only save if there's actual game content
+        const hasGameContent = score > 0 || board.some(row => row.some(cell => cell > 0));
+        
+        if (hasGameContent) {
           const gameState = {
             board,
             score,
@@ -558,18 +593,25 @@ const DropNumberBoard = ({ navigation, route }) => {
           try {
             saveGame(gameState);
           } catch (error) {
-            // Failed to save game on screen leave
+            // Failed to save game on app background
           }
         }
-      };
-    }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame])
-  );
+      }
+    };
 
-  // Save game when app goes to background
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame]);
+
+
+
+  // Auto-save functionality - save game state whenever it changes
   useEffect(() => {
-    const handleAppStateChange = (nextAppState) => {
-      if (nextAppState === 'background' && isMounted && !gameOver) {
-        // Save game state when app goes to background
+    if (isMounted && !gameOver) {
+      // Only save if there's actual game content (not just empty board)
+      const hasGameContent = score > 0 || board.some(row => row.some(cell => cell > 0));
+      
+      if (hasGameContent) {
         const gameState = {
           board,
           score,
@@ -584,49 +626,28 @@ const DropNumberBoard = ({ navigation, route }) => {
         
         try {
           saveGame(gameState);
+          // Only update store score when game is active and score is meaningful
+          // Never update store with score 0 to prevent interference
+          if (score > 0 && !gameOver && isMounted) {
+            updateScore(score);
+          }
+          // Update highest block achieved
+          if (maxTileAchieved > 0) {
+            updateHighestBlock(maxTileAchieved);
+          }
         } catch (error) {
-          // Failed to save game on app background
+          // Auto-save failed
         }
-      }
-    };
-
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => subscription?.remove();
-  }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame]);
-
-
-
-  // Auto-save functionality - save game state whenever it changes
-  useEffect(() => {
-    if (isMounted && !gameOver) {
-      const gameState = {
-        board,
-        score,
-        nextBlock,
-        previewBlock,
-        gameStats,
-        maxTileAchieved,
-        floorLevel,
-        currentMinSpawn,
-        timestamp: Date.now()
-      };
-      
-      try {
-        saveGame(gameState);
-        // Only update store score when game is active and score is meaningful
-        // Never update store with score 0 to prevent interference
-        if (score > 0 && !gameOver && isMounted) {
-          updateScore(score);
+      } else {
+        // No game content - clear any existing saved game
+        try {
+          clearSavedGame();
+        } catch (error) {
+          // Failed to clear saved game
         }
-        // Update highest block achieved
-        if (maxTileAchieved > 0) {
-          updateHighestBlock(maxTileAchieved);
-        }
-      } catch (error) {
-        // Auto-save failed
       }
     }
-  }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame, updateScore, updateHighestBlock]);
+  }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame, updateScore, updateHighestBlock, clearSavedGame]);
 
   // Pause modal handlers
   const handlePause = () => {
@@ -1256,7 +1277,11 @@ const DropNumberBoard = ({ navigation, route }) => {
             currentMinSpawn,
             timestamp: Date.now()
           };
-          saveGame(finalGameState);
+          
+          // Only save if there's actual game content
+          if (newScore > 0 || newBoard.some(row => row.some(cell => cell > 0))) {
+            saveGame(finalGameState);
+          }
           
           try {
             soundManager.playSoundIfEnabled('gameOver');
@@ -1358,7 +1383,11 @@ const DropNumberBoard = ({ navigation, route }) => {
             currentMinSpawn,
             timestamp: Date.now()
           };
-          saveGame(finalGameState);
+          
+          // Only save if there's actual game content
+          if (newScore > 0 || newBoard.some(row => row.some(cell => cell > 0))) {
+            saveGame(finalGameState);
+          }
           
           try {
             soundManager.playSoundIfEnabled('gameOver');

@@ -575,7 +575,7 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
             };
             
             try {
-              saveGame(gameState);
+              saveGame(gameState, { isDataCleared, isTutorialActive });
             } catch (error) {
               // Failed to save game on screen leave
             }
@@ -606,7 +606,7 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
           };
           
           try {
-            saveGame(gameState);
+            saveGame(gameState, { isDataCleared, isTutorialActive });
           } catch (error) {
             // Failed to save game on app background
           }
@@ -654,7 +654,7 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
         
         try {
           console.log('💾 Auto-saving game state');
-          saveGame(gameState);
+          saveGame(gameState, { isDataCleared, isTutorialActive });
           // Only update store score when game is active and score is meaningful
           // Never update store with score 0 to prevent interference
           if (score > 0 && !gameOver && isMounted) {
@@ -1336,7 +1336,7 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
           
           // Only save if there's actual game content
           if (newScore > 0 || newBoard.some(row => row.some(cell => cell > 0))) {
-            saveGame(finalGameState);
+            saveGame(finalGameState, { isDataCleared, isTutorialActive });
           }
           
           try {
@@ -1442,7 +1442,7 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
           
           // Only save if there's actual game content
           if (newScore > 0 || newBoard.some(row => row.some(cell => cell > 0))) {
-            saveGame(finalGameState);
+            saveGame(finalGameState, { isDataCleared, isTutorialActive });
           }
           
           try {

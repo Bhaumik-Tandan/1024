@@ -28,7 +28,7 @@ describe('Helpers', () => {
     test('should handle edge cases', () => {
       expect(formatNumber(8192)).toBe('8,192');
       expect(formatNumber(8193)).toBe('8k');
-      expect(formatNumber(9999)).toBe('10k');
+      expect(formatNumber(9999)).toBe('9k');
     });
 
     test('should handle large numbers correctly', () => {

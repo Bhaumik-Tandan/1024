@@ -101,8 +101,14 @@ const createGameStore = () => {
     },
     
     // Save game state (simplified for web)
-    saveGame: (gameState) => {
+    saveGame: (gameState, options = {}) => {
       try {
+        // CRITICAL: Check if data was cleared or tutorial is active
+        if (options.isDataCleared || options.isTutorialActive) {
+          console.log('🚫 Store saveGame blocked - data cleared or tutorial active');
+          return; // Don't save if data was cleared or tutorial is active
+        }
+        
         const savedGameData = {
           board: gameState.board || [],
           score: gameState.score || 0,
@@ -307,8 +313,14 @@ if (Platform.OS === 'web') {
           }
         },
         
-        saveGame: (gameState) => {
+        saveGame: (gameState, options = {}) => {
           try {
+            // CRITICAL: Check if data was cleared or tutorial is active
+            if (options.isDataCleared || options.isTutorialActive) {
+              console.log('🚫 Web store saveGame blocked - data cleared or tutorial active');
+              return; // Don't save if data was cleared or tutorial is active
+            }
+            
             const savedGameData = {
               board: gameState.board || [],
               score: gameState.score || 0,

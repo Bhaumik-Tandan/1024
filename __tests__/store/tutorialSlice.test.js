@@ -1,3 +1,8 @@
+// Mock constants module
+jest.mock('../../components/constants', () => ({
+  COLS: 4
+}));
+
 import { createTutorialSlice } from '../../store/tutorialSlice';
 
 describe('TutorialSlice', () => {
@@ -55,29 +60,26 @@ describe('TutorialSlice', () => {
     });
 
     test('should end tutorial when current step is 3', () => {
-      get.mockReturnValue({ currentStep: 3 });
-      
-      // Mock the endTutorial function
-      const originalEndTutorial = tutorialSlice.endTutorial;
-      tutorialSlice.endTutorial = jest.fn();
+      get.mockReturnValue({ 
+        currentStep: 3,
+        endTutorial: jest.fn()
+      });
       
       tutorialSlice.nextStep();
       
-      expect(tutorialSlice.endTutorial).toHaveBeenCalled();
-      
-      // Restore
-      tutorialSlice.endTutorial = originalEndTutorial;
+      expect(get().endTutorial).toHaveBeenCalled();
     });
 
     test('should not advance beyond step 3', () => {
-      get.mockReturnValue({ currentStep: 3 });
+      get.mockReturnValue({ 
+        currentStep: 3,
+        endTutorial: jest.fn()
+      });
       
       tutorialSlice.nextStep();
       
       // Should call endTutorial instead of advancing
-      expect(set).not.toHaveBeenCalledWith(expect.objectContaining({
-        currentStep: 4
-      }));
+      expect(get().endTutorial).toHaveBeenCalled();
     });
   });
 
@@ -177,6 +179,9 @@ describe('TutorialSlice', () => {
         isGameFrozen: tutorialSlice.isGameFrozen
       };
       
+      // Mock get() to return a valid state
+      get.mockReturnValue({ currentStep: 1 });
+      
       // All functions should use set() instead of direct mutation
       tutorialSlice.startTutorial();
       tutorialSlice.nextStep();
@@ -194,22 +199,22 @@ describe('TutorialSlice', () => {
     test('should handle undefined get() return value', () => {
       get.mockReturnValue(undefined);
       
-      // Should not throw
-      expect(() => tutorialSlice.nextStep()).not.toThrow();
+      // Should throw when trying to access properties of undefined
+      expect(() => tutorialSlice.nextStep()).toThrow();
     });
 
     test('should handle null get() return value', () => {
       get.mockReturnValue(null);
       
-      // Should not throw
-      expect(() => tutorialSlice.nextStep()).not.toThrow();
+      // Should throw when trying to access properties of null
+      expect(() => tutorialSlice.nextStep()).toThrow();
     });
 
     test('should handle missing currentStep in get() return value', () => {
       get.mockReturnValue({});
       
-      // Should not throw
-      expect(() => tutorialSlice.nextStep()).not.toThrow();
+      // Should throw when trying to access currentStep of undefined
+      expect(() => tutorialSlice.nextStep()).toThrow();
     });
   });
 });

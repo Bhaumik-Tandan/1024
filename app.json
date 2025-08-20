@@ -61,7 +61,14 @@
           "organization": "amigo-o4"
         }
       ],
-
+      [
+        "@react-native-firebase/app",
+        {
+          "ios": {
+            "googleServicesFile": "./GoogleService-Info.plist"
+          }
+        }
+      ]
     ]
   }
 }

@@ -18,22 +18,23 @@ export const createTutorialSlice = (set, get) => ({
     });
   },
   
-      nextStep: () => {
-      const { currentStep } = get();
-      if (currentStep < 3) {
-        const newStep = currentStep + 1;
-        
-        set({
-          currentStep: newStep
-          // Don't override allowedLaneIndex here - let TutorialController set it
-          // The TutorialController will call setAllowedLane with the correct value
-        });
-        
-        console.log(`🎯 Tutorial advanced to step ${newStep}, keeping current allowed lane: ${get().allowedLaneIndex}`);
-      } else {
-        get().endTutorial();
-      }
-    },
+  nextStep: () => {
+    const { currentStep } = get();
+    if (currentStep < 3) {
+      const newStep = currentStep + 1;
+      
+      set({
+        currentStep: newStep
+        // Don't override allowedLaneIndex here - let TutorialController set it
+        // The TutorialController will call setAllowedLane with the correct value
+      });
+      
+      // Don't end tutorial when advancing to step 3 - let step 3 complete naturally
+      // Only end tutorial when step 3 is actually completed
+    } else {
+      get().endTutorial();
+    }
+  },
   
   endTutorial: () => set({
     isActive: false,
@@ -48,6 +49,14 @@ export const createTutorialSlice = (set, get) => ({
   setGameFrozen: (frozen) => set({ isGameFrozen: frozen }),
   
   resetTutorial: () => set({
+    isActive: true, // Keep tutorial active but reset to step 1
+    currentStep: 1,
+    allowedLaneIndex: 2,
+    isGameFrozen: false
+  }),
+  
+  // Clear tutorial state completely (for new games)
+  clearTutorialState: () => set({
     isActive: false,
     currentStep: 1,
     allowedLaneIndex: 2,

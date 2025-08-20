@@ -29,6 +29,8 @@ const GameHeader = ({ score, record, onPause }) => {
           color="#E6F3FF" 
         />
       </TouchableOpacity>
+
+
     </View>
   );
 };
@@ -140,6 +142,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(74, 144, 226, 0.1)',
     borderRadius: isTablet ? 20 : 16,
   },
+
+
 });
 
 export default GameHeader; 

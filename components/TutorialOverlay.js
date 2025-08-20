@@ -30,13 +30,13 @@ export const TutorialOverlay = ({
       Animated.sequence([
         Animated.timing(successTextAnim, {
           toValue: 1,
-          duration: 300,
+          duration: 400, // Slightly longer for smoother feel
           useNativeDriver: true,
         }),
-        Animated.delay(900), // Show for 900ms
+        Animated.delay(1000), // Show for 1 second
         Animated.timing(successTextAnim, {
           toValue: 0,
-          duration: 300,
+          duration: 400, // Slightly longer for smoother feel
           useNativeDriver: true,
         }),
       ]).start();
@@ -68,7 +68,8 @@ export const TutorialOverlay = ({
             styles.laneSeparator,
             {
               left: gameAreaLeft + (index + 1) * (CELL_SIZE + CELL_MARGIN) - 1,
-              height: gameAreaHeight,
+              top: screenHeight * 0.15, // Start from higher up (below header)
+              height: screenHeight * 0.45, // Stop before the bottom "Next" section
             },
           ]}
           testID={`lane-separator-${index}`}
@@ -107,36 +108,33 @@ export const TutorialOverlay = ({
       {Array.from({ length: COLS }).map((_, laneIndex) => (
         <TouchableOpacity
           key={`lane-${laneIndex}`}
-          style={[
-            styles.laneTouchArea,
-            {
-              left: gameAreaLeft + laneIndex * (CELL_SIZE + CELL_MARGIN),
-              width: CELL_SIZE,
-              height: gameAreaHeight,
-              // Ultra-premium and subtle highlighting for allowed lane
-              backgroundColor: laneIndex === allowedLaneIndex ? 'rgba(76, 175, 80, 0.04)' : 'transparent',
-              borderWidth: laneIndex === allowedLaneIndex ? 1 : 0,
-              borderColor: laneIndex === allowedLaneIndex ? 'rgba(76, 175, 80, 0.2)' : 'transparent',
-              borderRadius: laneIndex === allowedLaneIndex ? 2 : 0,
-            },
-          ]}
+                      style={[
+              styles.laneTouchArea,
+              {
+                left: gameAreaLeft + laneIndex * (CELL_SIZE + CELL_MARGIN),
+                top: screenHeight * 0.15, // Start from higher up (below header)
+                width: CELL_SIZE,
+                height: screenHeight * 0.45, // Stop before the bottom "Next" section
+                // Sophisticated blue highlighting - minimal and professional
+                backgroundColor: laneIndex === allowedLaneIndex ? 'rgba(64, 156, 255, 0.06)' : 'transparent',
+                borderWidth: laneIndex === allowedLaneIndex ? 1 : 0,
+                borderColor: laneIndex === allowedLaneIndex ? '#409CFF' : 'transparent',
+                borderRadius: laneIndex === allowedLaneIndex ? 0 : 0,
+              },
+            ]}
           testID={`lane-touch-${laneIndex}`}
           onPress={() => {
-            console.log(`🎯 Tutorial lane ${laneIndex} tapped`);
             onLaneTap(laneIndex);
           }}
           activeOpacity={laneIndex === allowedLaneIndex ? 0.3 : 1}
         />
       ))}
 
-      {/* Dynamic Tutorial Progress Text - Ultra Minimalistic */}
-      {currentStep === 3 && (
-        <View style={styles.progressTextContainer}>
-          <Text style={styles.progressText}>
-            Keep going...
-          </Text>
-        </View>
-      )}
+
+
+
+      
+
     </View>
   );
 };
@@ -154,67 +152,83 @@ const styles = StyleSheet.create({
   
   laneSeparator: {
     position: 'absolute',
-    width: 1, // Very thin line
-    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Very subtle, almost invisible
-    top: screenHeight * 0.2, // Start below header
+    width: 1, // Thinner for minimalist look
+    backgroundColor: 'rgba(64, 156, 255, 0.15)', // Subtle blue
+    // Top and height will be set dynamically per separator
+    shadowColor: '#409CFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
+    // Cleaner appearance
+    borderLeftWidth: 0,
   },
   
   stepText: {
     position: 'absolute',
-    top: '50%',
+    top: '50%', // Center of screen to avoid planet overlap
     left: '50%',
-    transform: [{ translateX: -100 }, { translateY: -20 }],
-    fontSize: 18, // Smaller text
-    fontWeight: 'normal', // Not bold
-    color: 'rgba(255, 255, 255, 0.9)', // Slightly transparent white
+    transform: [{ translateX: -140 }, { translateY: -30 }],
+    fontSize: 19, // Slightly larger for better readability
+    fontWeight: '600', // Better weight for hierarchy
+    color: '#FFFFFF', // Simple white text
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.6)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
+    textShadowColor: '#000000',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 1,
     zIndex: 1001,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)', // Slightly more opaque for better contrast
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderWidth: 0, // No border for minimal look
+    letterSpacing: 0.5,
+    minWidth: 250,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
   },
   
   successText: {
     position: 'absolute',
-    top: '50%',
+    top: '62%', // Slightly higher to avoid overlap
     left: '50%',
-    transform: [{ translateX: -100 }, { translateY: -20 }],
-    fontSize: 16, // Smaller text
-    fontWeight: 'normal', // Not bold
-    color: 'rgba(76, 175, 80, 0.8)', // Subtle green
+    transform: [{ translateX: -140 }, { translateY: -30 }],
+    fontSize: 18, // Slightly smaller for better hierarchy
+    fontWeight: '600', // Lighter weight for secondary text
+    color: '#409CFF', // Sophisticated blue
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.6)',
-    textShadowOffset: { width: 1, height: 1 },
+    textShadowColor: '#409CFF',
+    textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 2,
     zIndex: 1001,
+    backgroundColor: 'rgba(0, 0, 0, 0.85)', // Better contrast
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#409CFF',
+    letterSpacing: 0.6,
+    minWidth: 250,
+    shadowColor: '#409CFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   
   laneTouchArea: {
     position: 'absolute',
-    top: screenHeight * 0.2,
     backgroundColor: 'transparent',
+    // Top and height are now calculated dynamically per lane
   },
   
 
 
-  progressTextContainer: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -100 }, { translateY: -50 }],
-    backgroundColor: 'rgba(255, 255, 255, 0.02)', // Almost invisible
-    padding: 6, // Minimal padding
-    borderRadius: 3, // Minimal radius
-    borderWidth: 0, // No border
-    zIndex: 1001,
-  },
 
-  progressText: {
-    fontSize: 12, // Very small font
-    color: 'rgba(255, 255, 255, 0.3)', // Almost invisible
-    textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.2)', // Very subtle shadow
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 0.5, // Minimal shadow
-  },
+
+
+  
+
 });

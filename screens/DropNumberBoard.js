@@ -186,6 +186,7 @@ const DropNumberBoard = ({ navigation, route }) => {
   const [tutorialOverlayVisible, setTutorialOverlayVisible] = useState(true);
   const [completedSteps, setCompletedSteps] = useState(new Set()); // Track completed steps
   const [step3SetupTime, setStep3SetupTime] = useState(0); // Track when Step 3 was set up
+  const [isResettingTutorial, setIsResettingTutorial] = useState(false);
   
   // Handle orientation changes and dynamic grid resizing
   useEffect(() => {
@@ -236,7 +237,7 @@ const DropNumberBoard = ({ navigation, route }) => {
 
   // Tutorial board change watcher
   useEffect(() => {
-    if (isTutorialActive && board && board.length > 0) {
+    if (isTutorialActive && board && board.length > 0 && !isResettingTutorial) {
       // Check if we should advance the tutorial based on board state
       const stepSetup = tutorialController.getStepSetup(currentStep);
       
@@ -246,7 +247,7 @@ const DropNumberBoard = ({ navigation, route }) => {
                   if (hasMerged) {
             setCompletedSteps(prev => new Set([...prev, 1])); // Mark step 1 as completed
           setTimeout(() => {
-            if (isTutorialActive && currentStep === 1) { // Double check current step
+            if (isTutorialActive && currentStep === 1 && !isResettingTutorial) { // Double check current step and reset flag
               nextStep(); // Advance to next step
             }
           }, 200); // Wait 200ms for merge animation
@@ -259,9 +260,11 @@ const DropNumberBoard = ({ navigation, route }) => {
         const hasCombo = board.some(row => row.some(cell => cell === 8));
         
         if (hasCombo) {
+          console.log('🎯 Step 2: 8 detected, completing step...');
           setCompletedSteps(prev => new Set([...prev, 2])); // Mark step 2 as completed
           setTimeout(() => {
-            if (isTutorialActive && currentStep === 2) { // Double check current step
+            if (isTutorialActive && currentStep === 2 && !isResettingTutorial) { // Double check current step and reset flag
+              console.log('🎯 Step 2: Calling nextStep() to advance to step 3');
               nextStep(); // Advance to next step
             }
           }, 200); // Wait 200ms for merge animation
@@ -270,25 +273,34 @@ const DropNumberBoard = ({ navigation, route }) => {
       
       // Step 3 completion is now handled in handleTileLanded when actual merges happen
     }
-  }, [board, currentStep, isTutorialActive, completedSteps]);
+  }, [board, currentStep, isTutorialActive, completedSteps, isResettingTutorial]);
 
   // Tutorial step change handler
   useEffect(() => {
-          if (isTutorialActive && currentStep > 1) {
-        // Record setup time for Step 3 to prevent immediate completion
-        if (currentStep === 3) {
-          setStep3SetupTime(Date.now());
-        }
+    console.log('🎯 Step change handler triggered: currentStep =', currentStep, 'isTutorialActive =', isTutorialActive, 'isResettingTutorial =', isResettingTutorial);
+    
+    if (isTutorialActive && currentStep > 1 && !isResettingTutorial) {
+      console.log('🎯 Setting up step', currentStep);
       
-              // Small delay to ensure smooth transition
-        setTimeout(() => {
-          if (isTutorialActive) { // Double check tutorial is still active
-            // Set up the board for the new step
+      // Record setup time for Step 3 to prevent immediate completion
+      if (currentStep === 3) {
+        setStep3SetupTime(Date.now());
+        console.log('🎯 Step 3 setup time recorded');
+      }
+      
+      // Small delay to ensure smooth transition
+      setTimeout(() => {
+        if (isTutorialActive && !isResettingTutorial) { // Double check tutorial is still active and not resetting
+          console.log('🎯 Setting up board for step', currentStep);
+          
+          // Set up the board for the new step
           const stepBoard = tutorialController.getStepBoard(currentStep);
+          console.log('🎯 Step', currentStep, 'board:', stepBoard);
           setBoard(stepBoard);
           
           // Get step setup for shooter value
           const stepSetup = tutorialController.getStepSetup(currentStep);
+          console.log('🎯 Step', currentStep, 'setup:', stepSetup);
           setNextBlock(stepSetup.shooterValue);
           setPreviewBlock(stepSetup.shooterValue);
           
@@ -300,14 +312,18 @@ const DropNumberBoard = ({ navigation, route }) => {
           
           // Update store with TutorialController's allowed lane
           setAllowedLane(stepSetup.allowedLaneIndex);
+          
+          console.log('🎯 Step', currentStep, 'setup complete');
         }
       }, 500); // Increased delay for smoother transition
+    } else {
+      console.log('🎯 Step change handler: conditions not met');
     }
-  }, [currentStep, isTutorialActive]);
+  }, [currentStep, isTutorialActive, isResettingTutorial]);
 
   // Tutorial initialization
   useEffect(() => {
-    if (isTutorialActive && !hasCompletedOnboarding) {
+    if (isTutorialActive && !hasCompletedOnboarding && !isResettingTutorial) {
       // Reset completed steps for new tutorial run
       setCompletedSteps(new Set());
       
@@ -325,15 +341,15 @@ const DropNumberBoard = ({ navigation, route }) => {
       setScore(0);
       
       // Hide guide text during tutorial
-      setShowGuide(false);
+      setTutorialOverlayVisible(true);
       
-      // Show tutorial overlay
+      // Update tutorial overlay visibility
       setTutorialOverlayVisible(true);
       
       // Update store with TutorialController's allowed lane
       setAllowedLane(stepSetup.allowedLaneIndex);
     }
-  }, [isTutorialActive, currentStep, hasCompletedOnboarding]);
+  }, [isTutorialActive, currentStep, hasCompletedOnboarding, isResettingTutorial]);
 
   // Board safety check for tutorial
   useEffect(() => {
@@ -343,6 +359,28 @@ const DropNumberBoard = ({ navigation, route }) => {
       setBoard(defaultBoard);
     }
   }, [isTutorialActive, board, gridConfig.ROWS, gridConfig.COLS]);
+
+  // Handle transition to unified 5x4 grid for all devices
+  useEffect(() => {
+    if (board && board.length > 0 && (board.length !== 5 || board[0].length !== 4)) {
+      // We're transitioning to the unified 5x4 grid
+      // Create new 5x4 board and preserve existing tiles
+      const newBoard = Array.from({ length: 5 }, () => Array(4).fill(0));
+      
+      // Copy existing tiles to their current positions (left-aligned)
+      for (let row = 0; row < Math.min(board.length, 5); row++) {
+        for (let col = 0; col < Math.min(board[row].length, 4); col++) {
+          newBoard[row][col] = board[row][col];
+        }
+      }
+      
+      // Update the board with the new 5x4 size
+      setBoard(newBoard);
+      
+      // Update grid config to match
+      setGridConfig({ ROWS: 5, COLS: 4 });
+    }
+  }, [board]);
 
   // Use the animation manager
   const {
@@ -1131,12 +1169,10 @@ const DropNumberBoard = ({ navigation, route }) => {
           const hasNewBigMerge = totalScore > 0 && newBoard.some(row => row.some(cell => cell === 16));
           
           if (hasNewBigMerge) {
-            console.log('🎯 Step 3 complete: Found new big merge (16) after chain merge action');
             setCompletedSteps(prev => new Set([...prev, 3])); // Mark step 3 as completed
             
             // Instead of clearing board, keep it and let user continue playing!
             // This creates a continuous, addictive experience
-            console.log('🎯 Tutorial Step 3 completed! User can now continue playing with chain merges...');
             
             // Show success message but don't end tutorial
             // User can keep playing and doing more chain merges
@@ -1154,15 +1190,15 @@ const DropNumberBoard = ({ navigation, route }) => {
           const has512 = newBoard.some(row => row.some(cell => cell === 512));
           
           if (has512) {
-            console.log('🎯 LEGENDARY! User achieved 512! This is INSANE chain merging!');
+            // LEGENDARY! User achieved 512! This is INSANE chain merging!
           } else if (has256) {
-            console.log('🎯 PHENOMENAL! User achieved 256! The chain merging is LEGENDARY!');
+            // PHENOMENAL! User achieved 256! The chain merging is LEGENDARY!
           } else if (has128) {
-            console.log('🎯 INCREDIBLE! User achieved 128! This is amazing chain merging!');
+            // INCREDIBLE! User achieved 128! This is amazing chain merging!
           } else if (has64) {
-            console.log('🎯 AMAZING! User achieved 64! Keep going for more chain merges!');
+            // AMAZING! User achieved 64! Keep going for more chain merges!
           } else if (has32) {
-            console.log('🎯 GREAT! User achieved 32! The chain merging is working perfectly!');
+            // GREAT! User achieved 32! The chain merging is working perfectly!
           }
         }
         
@@ -1442,7 +1478,7 @@ const DropNumberBoard = ({ navigation, route }) => {
           onRowTap={handleRowTap}
           onScreenTap={handleScreenTap}
           gameOver={gameOver}
-          showGuide={showGuide}
+          showGuide={showGuide && !isTutorialActive} // Hide guide during tutorial
           panHandlers={panResponder.panHandlers}
           isTouchEnabled={isTouchEnabled}
           isTutorialCompleted={!isTutorialActive} // Show completion message when tutorial is not active
@@ -1515,8 +1551,6 @@ const DropNumberBoard = ({ navigation, route }) => {
               
               // Show tutorial overlay
               setTutorialOverlayVisible(true);
-              
-              console.log('🔧 Tutorial reset and started for testing');
             }}
             activeOpacity={0.8}
           >
@@ -1536,11 +1570,8 @@ const DropNumberBoard = ({ navigation, route }) => {
           successText={tutorialController.getStepSetup(currentStep).successText}
           showSuccessText={false} // Will be controlled by tutorial logic
           onLaneTap={(laneIndex) => {
-            console.log(`🎯 TutorialOverlay: Lane ${laneIndex} tapped, allowedLaneIndex: ${allowedLaneIndex}, currentStep: ${currentStep}`);
-            
             // Special case: Continue Playing button was pressed
             if (laneIndex === -1) {
-              console.log('🎯 User clicked Continue Playing - ending tutorial and starting normal game');
               endTutorial(); // End the tutorial
               return;
             }
@@ -1549,11 +1580,16 @@ const DropNumberBoard = ({ navigation, route }) => {
               // Handle tutorial lane tap
               handleTutorialLaneTap(laneIndex);
             } else {
-              console.log(`🎯 TutorialOverlay: Lane ${laneIndex} not allowed, expected ${allowedLaneIndex}`);
+              // Lane not allowed for current step
             }
           }}
+
         />
       )}
+      
+      
+      
+
 
 
 
@@ -1654,18 +1690,18 @@ const styles = StyleSheet.create({
     left: '50%',
     transform: [{ translateX: screenWidth >= 768 ? -120 : -80 }], // Larger transform for iPad
     alignItems: 'center',
-    backgroundColor: 'rgba(26, 42, 78, 0.9)',
+    backgroundColor: 'rgba(26, 42, 78, 0.95)',
     borderRadius: screenWidth >= 768 ? 25 : 20, // Larger border radius for iPad
     paddingVertical: screenWidth >= 768 ? 20 : 12, // Even more padding for iPad
     paddingHorizontal: screenWidth >= 768 ? 30 : 20, // Larger horizontal padding for iPad
     width: screenWidth >= 768 ? 240 : 160, // Much wider for iPad
     shadowColor: '#4A90E2',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.7,
     shadowRadius: screenWidth >= 768 ? 20 : 15, // Larger shadow for iPad
-    elevation: 12,
+    elevation: 15,
     borderWidth: screenWidth >= 768 ? 2 : 1, // Thicker border for iPad
-    borderColor: 'rgba(74, 144, 226, 0.4)',
+    borderColor: 'rgba(74, 144, 226, 0.6)',
     zIndex: 100,
   },
   nextBlockLabel: {
@@ -1678,6 +1714,79 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(74, 144, 226, 0.5)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 6,
+  },
+  
+  // Enhanced header styling
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 15,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 15,
+    marginHorizontal: 20,
+    marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  
+  scoreSection: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(74, 144, 226, 0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(74, 144, 226, 0.4)',
+  },
+  
+  recordSection: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(156, 39, 176, 0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(156, 39, 176, 0.4)',
+  },
+  
+  scoreLabel: {
+    color: '#B0C4DE',
+    fontSize: 12,
+    fontWeight: '500',
+    marginBottom: 4,
+    letterSpacing: 0.5,
+  },
+  
+  scoreValue: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: '700',
+    textShadowColor: 'rgba(74, 144, 226, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  
+  recordLabel: {
+    color: '#E1BEE7',
+    fontSize: 12,
+    fontWeight: '500',
+    marginBottom: 4,
+    letterSpacing: 0.5,
+  },
+  
+  recordValue: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: '700',
+    textShadowColor: 'rgba(156, 39, 176, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   nextBlockContainer: {
     alignItems: 'center',
@@ -1959,7 +2068,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  
+
 
 });
 

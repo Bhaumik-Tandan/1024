@@ -6,6 +6,7 @@ import Navigator from './navigator';
 import soundManager from './utils/soundManager';
 import backgroundMusicManager from './utils/backgroundMusicManager';
 import envConfig from './env.config';
+import AnalyticsTester from './utils/analyticsTest';
 // Conditional Firebase import - only in production
 let firebaseAnalytics = null;
 let gameMetricsAnalytics = null;
@@ -127,6 +128,10 @@ const AppComponent = function App() {
           app_version: '1.0.2',
           platform: Platform.OS,
         });
+        
+        // Test analytics health
+        const analyticsHealth = await firebaseAnalytics.checkAnalyticsHealth();
+        
       } catch (error) {
         // Firebase Analytics initialization failed
       }
@@ -195,6 +200,7 @@ const AppComponent = function App() {
       global.forcePlayMusic = forcePlayMusic;
       global.backgroundMusicManager = backgroundMusicManager;
       global.soundManager = soundManager;
+      global.AnalyticsTester = AnalyticsTester;
     }
   }, []);
 

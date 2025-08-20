@@ -4,21 +4,29 @@ class FirebaseAnalyticsService {
     this.isInitialized = false;
     this.analytics = null;
     this.crashlytics = null;
+    
+    // Initialize Firebase app first
+    if (!__DEV__) {
+      try {
+        require('@react-native-firebase/app').default();
+      } catch (error) {
+        // Firebase app already initialized
+      }
+    }
+    
     this.init();
   }
 
   async init() {
     try {
       // Only initialize Firebase Analytics in production mode
-          if (__DEV__) {
-      // Firebase Analytics disabled in development mode
-      return;
-    }
+      if (__DEV__) {
+        return;
+      }
 
       // Check if we're on iOS (since we only want iOS for now)
       const { Platform } = require('react-native');
       if (Platform.OS !== 'ios') {
-        // Firebase Analytics only enabled for iOS
         return;
       }
 
@@ -61,7 +69,6 @@ class FirebaseAnalyticsService {
   // Track game events without personal data
   async trackGameEvent(eventName, parameters = {}) {
     if (!this.isInitialized || !this.analytics) {
-      // Firebase Analytics not initialized yet
       return;
     }
 
@@ -77,6 +84,7 @@ class FirebaseAnalyticsService {
 
     } catch (error) {
       // Failed to log analytics event
+      
       // Log error to Crashlytics if available
       if (this.crashlytics) {
         try {
@@ -170,6 +178,51 @@ class FirebaseAnalyticsService {
   // Get crashlytics instance for advanced usage
   getCrashlyticsInstance() {
     return this.crashlytics();
+  }
+
+  // Health check method to verify analytics are working
+  async checkAnalyticsHealth() {
+    try {
+      if (!this.isInitialized) {
+        return { 
+          status: 'not_initialized', 
+          reason: 'Firebase not initialized',
+          isDev: __DEV__,
+          platform: require('react-native').Platform.OS
+        };
+      }
+      
+      if (!this.analytics) {
+        return { 
+          status: 'no_analytics', 
+          reason: 'Analytics module not available',
+          isInitialized: this.isInitialized
+        };
+      }
+      
+      // Test event
+      await this.trackGameEvent('health_check', { 
+        timestamp: Date.now(),
+        test: true,
+        version: '1.0.2'
+      });
+      
+      return { 
+        status: 'healthy', 
+        timestamp: Date.now(),
+        isInitialized: this.isInitialized,
+        hasAnalytics: !!this.analytics,
+        hasCrashlytics: !!this.crashlytics
+      };
+    } catch (error) {
+      return { 
+        status: 'failed', 
+        error: error.message, 
+        timestamp: Date.now(),
+        isInitialized: this.isInitialized,
+        hasAnalytics: !!this.analytics
+      };
+    }
   }
 }
 

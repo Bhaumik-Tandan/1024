@@ -15,7 +15,13 @@ export const useTutorial = () => {
     setAllowedLane,
     setGameFrozen,
     resetTutorial,
+    clearTutorialState,
   } = useGameStore();
+  
+  // Debug: Log whenever these values change
+  useEffect(() => {
+    console.log('🎯 useTutorial: State updated - currentStep:', currentStep, 'isActive:', isTutorialActive);
+  }, [currentStep, isTutorialActive]);
 
   const [hasCompletedOnboarding, setHasCompletedOnboardingState] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -27,25 +33,39 @@ export const useTutorial = () => {
         const completed = await getHasCompletedOnboarding();
         const hasExistingData = await hasExistingUserData();
         
-        // If user has no tutorial completion flag but has existing data,
+        console.log('🎯 Tutorial init: completed =', completed, 'hasExistingData =', hasExistingData);
+        
+        // If user has existing data but no tutorial completion flag,
         // they're updating from old version - mark tutorial as completed
-        if (completed === null && hasExistingData) {
+        if (hasExistingData && !completed) {
+          console.log('🎯 Tutorial init: Existing user detected, marking tutorial as completed');
           await setHasCompletedOnboarding();
           setHasCompletedOnboardingState(true);
+          // Clear any existing tutorial state for existing users
+          clearTutorialState();
+        } else if (completed) {
+          console.log('🎯 Tutorial init: Tutorial already completed');
+          setHasCompletedOnboardingState(true);
+          // Clear any existing tutorial state for completed users
+          clearTutorialState();
         } else {
-          setHasCompletedOnboardingState(completed);
-        }
-        
-        // If tutorial hasn't been completed and isn't already active, start it automatically
-        if (!completed && !isTutorialActive) {
-          startTutorial();
+          console.log('🎯 Tutorial init: New user, starting tutorial');
+          setHasCompletedOnboardingState(false);
+          // Only start tutorial for truly new users
+          if (!isTutorialActive) {
+            startTutorial();
+          }
         }
         
         setIsInitialized(true);
       } catch (error) {
-        // Failed to initialize tutorial - assume user is new
+        console.log('🎯 Tutorial init: Error, assuming new user');
+        // Failed to initialize tutorial - assume user is new (safer)
         setHasCompletedOnboardingState(false);
         setIsInitialized(true);
+        if (!isTutorialActive) {
+          startTutorial();
+        }
       }
     };
 
@@ -119,6 +139,7 @@ export const useTutorial = () => {
     setGameFrozen,
     resetTutorial,
     resetTutorialCompletion,
+    clearTutorialState,
     
     // Controller instance
     tutorialController: TutorialController.getInstance(),

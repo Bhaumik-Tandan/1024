@@ -7,7 +7,7 @@
  * Featuring real planets ordered by size - NO ELEMENTS, ONLY PLANETS
  */
 
-import { Dimensions, Platform } from 'react-native';
+import { Dimensions, Platform, PixelRatio } from 'react-native';
 import { GAME_CONFIG } from './GameRules';
 
 /**
@@ -113,22 +113,22 @@ export const JUPITER_LIGHTING = {
   }
 };
 
-// Get current device dimensions and calculate grid config once
-const { width, height } = Dimensions.get('window');
-const isTablet = width >= 768;
-const isLandscape = width > height;
+// Responsive device dimensions
+export const deviceWidth = Dimensions.get('window').width;
+export const deviceHeight = Dimensions.get('window').height;
+export const getOrientation = () => {
+    return deviceWidth < deviceHeight ? 'portrait' : 'portrait'; // Force portrait mode
+};
 
-// Calculate static grid configuration to avoid render-time updates
+export const calcHeight = (x) =>
+    PixelRatio.roundToNearestPixel((deviceHeight * x) / 100);
+
+export const calcWidth = (x) =>
+    PixelRatio.roundToNearestPixel((deviceWidth * x) / 100);
+
+// Unified grid configuration - 5x4 grid for all devices
 const getStaticGridConfig = () => {
-  if (isTablet) {
-    if (isLandscape) {
-      return { ROWS: 5, COLS: 7 }; // Reduced rows for landscape iPad
-    } else {
-      return { ROWS: 5, COLS: 5 }; // Reduced rows for portrait iPad
-    }
-  } else {
-    return { ROWS: 5, COLS: 4 }; // Keep original for phones
-  }
+  return { ROWS: 5, COLS: 4 }; // Always 5x4 grid for all devices
 };
 
 // Static grid configuration
@@ -140,19 +140,7 @@ export const COLS = STATIC_GRID_CONFIG.COLS;
 
 // Export function for dynamic updates (used only in orientation change handlers)
 export const getCurrentGridConfig = () => {
-  const { width, height } = Dimensions.get('window');
-  const isTablet = width >= 768;
-  const isLandscape = width > height;
-  
-  if (isTablet) {
-    if (isLandscape) {
-      return { ROWS: 5, COLS: 7 }; // Reduced rows for landscape iPad
-    } else {
-      return { ROWS: 5, COLS: 5 }; // Reduced rows for portrait iPad
-    }
-  } else {
-    return { ROWS: 5, COLS: 4 }; // Keep original for phones
-  }
+  return { ROWS: 5, COLS: 4 }; // Always return 5x4
 };
 
 // UI Layout Constants - with web fallbacks
@@ -177,59 +165,29 @@ export const { width: screenWidth, height: screenHeight } = getDimensions();
 // Web-responsive sizing
 const getResponsiveSizing = () => {
   if (Platform.OS === 'web') {
-    // For web, use smaller fixed sizes for better desktop experience
-    const maxGameWidth = 480; // Maximum game width on web
-    const cellMargin = 6;
-    const cellSize = Math.floor((maxGameWidth - 40 - (COLS - 1) * cellMargin) / COLS);
+    // For web, use responsive sizing based on screen width
+    const maxGameWidth = calcWidth(90); // Use 90% of screen width
+    const cellMargin = calcWidth(1); // 1% of screen width for margins
+    const cellSize = Math.floor((maxGameWidth - (COLS - 1) * cellMargin) / COLS);
     return {
-      cellSize: Math.min(cellSize, 70), // Cap cell size at 70px for web
+      cellSize: Math.min(cellSize, calcWidth(20)), // Increased from 15% to 20% for bigger planets
       cellMargin: cellMargin
     };
   } else {
-    // Enhanced mobile/tablet sizing with iPad-specific optimizations
-    const isTablet = screenWidth >= 768; // iPad and larger tablets
-    const isLargeTablet = screenWidth >= 1024; // iPad Pro and larger
-    const isLandscape = screenWidth > screenHeight;
+    // Mobile-first responsive sizing using full screen width
+    const maxGameWidth = calcWidth(95); // Use 95% of screen width
+    const cellMargin = calcWidth(1); // Reduced margin from 1.5% to 1% for more space
     
-    let maxGameWidth;
-    let cellMargin;
-    
-    if (isTablet) {
-      if (isLandscape) {
-        // iPad landscape: Use most of the screen width for larger grid
-        maxGameWidth = Math.min(1200, screenWidth * 0.95); // Much larger game area
-        cellMargin = 8; // Adequate spacing for larger grid
-      } else {
-        // iPad portrait: Much larger game area for better utilization
-        maxGameWidth = Math.min(800, screenWidth * 0.95); // Significantly increased
-        cellMargin = 10; // More spacing for larger cells
-      }
-    } else {
-      // Phones - use most of screen width
-      maxGameWidth = screenWidth - 40;
-      cellMargin = Math.max(2, Math.floor(screenWidth * 0.008));
-    }
-    
-    // Calculate cell size based on grid dimensions
+    // Calculate cell size based on 5x4 grid dimensions
     const availableWidth = maxGameWidth - (COLS - 1) * cellMargin;
     let cellSize = Math.floor(availableWidth / COLS);
     
-    // Set much larger min/max cell sizes for iPad
-    if (isTablet) {
-      if (isLandscape) {
-        // Landscape iPad: Larger cells even for bigger grid
-        cellSize = Math.min(cellSize, 130); // Increased max for more vertical space
-        cellSize = Math.max(cellSize, 90);  // Increased min
-      } else {
-        // Portrait iPad: Much larger cells for excellent visibility
-        cellSize = Math.min(cellSize, 160); // Increased max for more vertical space
-        cellSize = Math.max(cellSize, 120); // Increased min
-      }
-    } else {
-      // Phone: Ensure good touch targets
-      cellSize = Math.min(cellSize, 120);
-      cellSize = Math.max(cellSize, 60);
-    }
+    // Ensure minimum and maximum cell sizes - much larger planets
+    const minCellSize = calcWidth(18); // Increased from 12% to 18% for bigger planets
+    const maxCellSize = calcWidth(25); // Increased from 18% to 25% for bigger planets
+    
+    cellSize = Math.min(cellSize, maxCellSize);
+    cellSize = Math.max(cellSize, minCellSize);
     
     return { 
       cellSize: cellSize, 
@@ -247,6 +205,26 @@ export const CELL_SIZE = cellSize;
  */
 export const getCellLeft = (col) => col * (CELL_SIZE + CELL_MARGIN);
 export const getCellTop = (row) => row * (CELL_SIZE + CELL_MARGIN);
+
+/**
+ * Get grid bounds and starting positions for perfect centering
+ */
+export const getGridBounds = () => {
+  const totalGridWidth = COLS * CELL_SIZE + (COLS - 1) * CELL_MARGIN;
+  const totalGridHeight = ROWS * CELL_SIZE + (ROWS - 1) * CELL_MARGIN;
+  
+  const startLeft = (screenWidth - totalGridWidth) / 2;
+  const startTop = (screenHeight - totalGridHeight) / 2;
+  
+  return {
+    startLeft,
+    startTop,
+    totalWidth: totalGridWidth,
+    totalHeight: totalGridHeight,
+    endLeft: startLeft + totalGridWidth,
+    endTop: startTop + totalGridHeight
+  };
+};
 
 /**
  * ===========================
@@ -802,25 +780,24 @@ export const getResponsiveValue = (phone, tablet, desktop) => {
 };
 
 /**
- * UI Layout Dimensions - enhanced for tablets and adaptive grids
+ * UI Layout Dimensions - mobile-first responsive design with bigger planets
  */
 export const UI_CONFIG = {
-  // Spacing
-  BOARD_PADDING: 8,
-  HEADER_HEIGHT: getResponsiveValue(80, 100, 120),
-  FOOTER_HEIGHT: getResponsiveValue(40, 50, 60),
+  // Spacing - responsive to screen size, reduced for bigger planets
+  BOARD_PADDING: calcWidth(1), // Reduced from 2% to 1% for bigger planets
+  HEADER_HEIGHT: calcHeight(10), // 10% of screen height
+  FOOTER_HEIGHT: calcHeight(5), // 5% of screen height
   
-  // Board dimensions - much larger for iPad to utilize screen space
-  BOARD_WIDTH: screenWidth >= 768 ? 
-    Math.min(1200, screenWidth * 0.95) : screenWidth - 20, // Significantly increased for iPad
+  // Board dimensions - use full screen width
+  BOARD_WIDTH: calcWidth(95), // 95% of screen width
   GRID_WIDTH: COLS * CELL_SIZE + (COLS - 1) * CELL_MARGIN,
   GRID_HEIGHT: ROWS * CELL_SIZE + (ROWS - 1) * CELL_MARGIN,
   
   // Animation settings
   BORDER_RADIUS: {
-    SMALL: 4,
-    MEDIUM: 8,
-    LARGE: 12,
+    SMALL: calcWidth(1),
+    MEDIUM: calcWidth(2),
+    LARGE: calcWidth(3),
   },
   
   // Z-index layers
@@ -1142,7 +1119,6 @@ export const isPlanet = (value) => value >= 2; // All values 2+ are planets now
 export const getStartingPlanetValues = () => {
   return [2, 4]; // Mercury and Mars - the two smallest planets
 };
-
 
 
 export default {

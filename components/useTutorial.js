@@ -100,6 +100,7 @@ export const useTutorial = () => {
     advanceStep,
     nextStep,
     endTutorial,
+    completeTutorial,
     skipTutorial,
     setAllowedLane,
     setGameFrozen,

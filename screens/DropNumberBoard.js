@@ -118,7 +118,7 @@ const OptimizedNextBlock = React.memo(({ nextBlock }) => (
  * Main game component with enhanced architecture
  * Uses centralized game rules and improved state management
  */
-const DropNumberBoard = ({ navigation, route }) => {
+const DropNumberBoard = React.memo(({ navigation, route }) => {
   // Get initial grid configuration more safely
   const initialGridConfig = getCurrentGridConfig();
   const [gridConfig, setGridConfig] = useState(initialGridConfig);
@@ -420,86 +420,84 @@ const DropNumberBoard = ({ navigation, route }) => {
   const [lastScore, setLastScore] = useState(0);
   const [lastHighestBlock, setLastHighestBlock] = useState(0);
 
-  // Initialize background music manager for continuous playback
-  // Background music will play continuously in the background regardless of game state
+  // Initialize background music manager - OPTIMIZED: No delay, runs in background
   useEffect(() => {
-    const initBackgroundMusic = async () => {
+    // Run background music initialization in background without blocking UI
+    const initBackgroundMusic = () => {
       try {
-
-        
-        // Create and initialize background music manager
         if (!global.backgroundMusicManager) {
           global.backgroundMusicManager = new BackgroundMusicManager();
-
-          
-          await global.backgroundMusicManager.initialize();
-
-          
-          // Get settings from gameStore
-          const { backgroundMusicEnabled } = useGameStore.getState();
-          
-          // Start playing background music if enabled - it will continue playing continuously
-          if (backgroundMusicEnabled) {
-            await global.backgroundMusicManager.play();
-          } else {
-            // Background music is disabled in settings
-          }
-        } else {
-          // Background music manager already exists
+          // Initialize without await to prevent blocking
+          global.backgroundMusicManager.initialize().then(() => {
+            const { backgroundMusicEnabled } = useGameStore.getState();
+            if (backgroundMusicEnabled) {
+              global.backgroundMusicManager.play();
+            }
+          });
         }
       } catch (error) {
-        // Background music initialization failed
+        // Background music initialization failed silently
       }
     };
     
-    // Add a small delay to ensure component is fully mounted
-    const timer = setTimeout(() => {
-      initBackgroundMusic();
-    }, 1000);
-    
-    return () => clearTimeout(timer);
+    // Run immediately without delay
+    initBackgroundMusic();
   }, []);
 
-  // Sync background music with settings changes (volume, enable/disable)
-  // Note: When enabled, music plays continuously regardless of game state
+  // Sync background music with settings changes - OPTIMIZED: Non-blocking
   useEffect(() => {
-    const syncBackgroundMusic = async () => {
+    // Run music sync in background without blocking UI
+    const syncBackgroundMusic = () => {
       try {
         if (global.backgroundMusicManager) {
           const { backgroundMusicEnabled, backgroundMusicVolume } = useGameStore.getState();
           
-          // Update volume if changed
-          await global.backgroundMusicManager.setVolume(backgroundMusicVolume);
+          // Update volume without await
+          global.backgroundMusicManager.setVolume(backgroundMusicVolume);
           
-          // Start/stop music based on setting - when enabled, it plays continuously
+          // Start/stop music without await
           if (backgroundMusicEnabled) {
             if (!global.backgroundMusicManager.isPlaying) {
-              await global.backgroundMusicManager.play();
+              global.backgroundMusicManager.play();
             }
           } else {
             if (global.backgroundMusicManager.isPlaying) {
-              await global.backgroundMusicManager.pause();
+              global.backgroundMusicManager.pause();
             }
           }
         }
       } catch (error) {
-        // Background music sync failed
+        // Background music sync failed silently
       }
     };
     
-    // Sync when component mounts and when settings might change
+    // Run in background without blocking
     syncBackgroundMusic();
   }, []);
 
-  // Load saved game functionality - restore game state on mount
+  // Load saved game functionality - OPTIMIZED: Instant UI, background loading
   useEffect(() => {
-    const loadGame = async () => {
+    // OPTIMISTIC UI: Set initial state immediately
+    const initialBoard = Array.from({ length: gridConfig.ROWS }, () => Array(gridConfig.COLS).fill(0));
+    setBoard(initialBoard);
+    setScore(0);
+    setNextBlock(getRandomBlockValue());
+    setPreviewBlock(getRandomBlockValue());
+    setGameStats({
+      tilesPlaced: 0,
+      mergesPerformed: 0,
+      chainReactions: 0,
+      highestTile: 0,
+      startTime: Date.now(),
+    });
+    
+    // Load saved game in background without blocking UI
+    const loadGame = () => {
       try {
         const savedGame = loadSavedGame();
         if (savedGame && savedGame.board && savedGame.board.length > 0) {
           // Restore game state
           setBoard(savedGame.board);
-          // Only restore score if it's a valid number greater than 0
           const savedScore = typeof savedGame.score === 'number' && savedGame.score > 0 ? savedGame.score : 0;
           setScore(savedScore);
           setNextBlock(savedGame.nextBlock || getRandomBlockValue());
@@ -515,7 +513,6 @@ const DropNumberBoard = ({ navigation, route }) => {
           setFloorLevel(savedGame.floorLevel || 1);
           setCurrentMinSpawn(savedGame.currentMinSpawn || 2);
           
-          // Check if game was over
           if (GameValidator.isGameOver(savedGame.board)) {
             setGameOver(true);
           }
@@ -525,6 +522,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       }
     };
     
+    // Run load game in background
     loadGame();
     
     // Check if tutorial should start (if no high score and no saved game)
@@ -533,7 +531,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       console.log('🎯 Starting tutorial - no high score and no saved game');
       startTutorial();
     }
-  }, [loadSavedGame, highScore, isTutorialActive, startTutorial]);
+  }, [loadSavedGame, highScore, isTutorialActive, startTutorial, gridConfig.ROWS, gridConfig.COLS]);
 
   // Save game when user leaves the screen
   useFocusEffect(
@@ -1720,7 +1718,7 @@ const DropNumberBoard = ({ navigation, route }) => {
 
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

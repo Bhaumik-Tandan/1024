@@ -107,16 +107,20 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     console.log('🔍 HomeScreen State Debug:');
     console.log('  - highScore:', highScore);
-    console.log('  - highestBlock:', highestBlock);
-    console.log('  - hasSavedGame:', hasSavedGame);
     console.log('  - Button should show:', hasSavedGame ? 'RESUME JOURNEY' : 'ENTER COSMOS');
     
-    // If data was cleared but hasSavedGame is still true, force clear it
-    if (highScore === null && highestBlock === null && hasSavedGame === true) {
+    // CRITICAL: State consistency check - if data was cleared, hasSavedGame should be false
+    if (highScore === null && hasSavedGame === true) {
       console.log('🚨 Inconsistent state detected - forcing hasSavedGame to false');
       clearSavedGame();
     }
-  }, [highScore, highestBlock, hasSavedGame, clearSavedGame]);
+    
+    // Additional check: if tutorial is active, don't show RESUME button
+    if (hasSavedGame === true && highScore === null) {
+      console.log('🚨 Tutorial active but hasSavedGame is true - clearing');
+      clearSavedGame();
+    }
+  }, [highScore, hasSavedGame, clearSavedGame]);
 
   // Refined entrance animations
   const fadeAnim = useRef(new Animated.Value(0)).current;

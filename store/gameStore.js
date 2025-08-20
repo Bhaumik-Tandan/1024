@@ -261,6 +261,7 @@ if (Platform.OS === 'web') {
         highScore: null,
         currentScore: 0,
         highestBlock: null,
+        isDataCleared: false,
         
         // Tutorial state
         ...createTutorialSlice(set, get),
@@ -384,6 +385,9 @@ if (Platform.OS === 'web') {
             currentStep: 1,
             allowedLaneIndex: 2,
             isGameFrozen: false,
+            
+            // Flag to prevent auto-save after data clearing
+            isDataCleared: true,
           });
         },
 

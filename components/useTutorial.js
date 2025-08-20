@@ -30,15 +30,29 @@ export const useTutorial = () => {
         // Simple check: if there's a high score, don't show tutorial
         const hasHighScore = highScore && highScore > 0;
         
+        console.log('🔍 Tutorial Init Check:', {
+          hasHighScore,
+          isTutorialActive,
+          highScore
+        });
+        
         if (hasHighScore && !isTutorialActive) {
           // User has played before and tutorial is not active - no tutorial needed
+          console.log('✅ User has high score - no tutorial needed');
           setHasCompletedOnboardingState(true);
           clearTutorialState();
         } else if (!hasHighScore) {
-          // No high score - always show tutorial
-          setHasCompletedOnboardingState(false);
+          // No high score - but check if this is after data clearing
+          console.log('🔍 No high score detected - checking if data was cleared');
+          
+          // If we're on Home screen and no tutorial is active, don't auto-start tutorial
+          // This prevents tutorial from starting after data clearing
           if (!isTutorialActive) {
-            startTutorial();
+            console.log('🚫 Not auto-starting tutorial after data clearing');
+            setHasCompletedOnboardingState(false);
+          } else {
+            console.log('✅ Starting tutorial (was already active)');
+            setHasCompletedOnboardingState(false);
           }
         }
         

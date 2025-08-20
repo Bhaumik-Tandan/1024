@@ -8,6 +8,7 @@ export const useTutorial = () => {
     currentStep,
     allowedLaneIndex,
     isGameFrozen,
+    highScore,
     startTutorial,
     nextStep,
     endTutorial,
@@ -26,10 +27,10 @@ export const useTutorial = () => {
   useEffect(() => {
     const initializeTutorial = async () => {
       try {
-        // Simple check: if there's a record, don't show tutorial
-        const hasRecord = record && record > 0;
+        // Simple check: if there's a high score, don't show tutorial
+        const hasHighScore = highScore && highScore > 0;
         
-        if (hasRecord) {
+        if (hasHighScore) {
           // User has played before - no tutorial
           setHasCompletedOnboardingState(true);
           clearTutorialState();
@@ -37,7 +38,7 @@ export const useTutorial = () => {
             endTutorial();
           }
         } else {
-          // No record - show tutorial
+          // No high score - show tutorial
           setHasCompletedOnboardingState(false);
           if (!isTutorialActive) {
             startTutorial();
@@ -56,7 +57,7 @@ export const useTutorial = () => {
     };
 
     initializeTutorial();
-  }, [isTutorialActive, clearTutorialState, startTutorial, record]);
+  }, [isTutorialActive, clearTutorialState, startTutorial, highScore]);
 
   // Handle tutorial completion - simple: just end tutorial
   const completeTutorial = async () => {

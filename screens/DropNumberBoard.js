@@ -651,6 +651,7 @@ const DropNumberBoard = ({ navigation, route }) => {
 
   // Update store's highestBlock whenever maxTileAchieved changes
   useEffect(() => {
+    console.log('🔍 maxTileAchieved effect triggered - value:', maxTileAchieved, 'isMounted:', isMounted);
     if (maxTileAchieved > 0 && isMounted) {
       console.log('🔄 Updating store highestBlock:', maxTileAchieved);
       updateHighestBlock(maxTileAchieved);
@@ -1239,6 +1240,13 @@ const DropNumberBoard = ({ navigation, route }) => {
           chainReactions: prevStats.chainReactions + chainReactionCount,
           highestTile: newHighestTile,
         }));
+        
+        // Update max tile achieved immediately
+        console.log('🔍 Tile landed - newHighestTile:', newHighestTile, 'current maxTileAchieved:', maxTileAchieved);
+        if (newHighestTile > maxTileAchieved) {
+          console.log('✅ Updating maxTileAchieved from', maxTileAchieved, 'to', newHighestTile);
+          setMaxTileAchieved(newHighestTile);
+        }
         
         // Update score
         if (totalScore > 0) {

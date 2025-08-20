@@ -176,6 +176,7 @@ const DropNumberBoard = ({ navigation, route }) => {
     advanceStep,
     nextStep,
     endTutorial,
+    completeTutorial,
     setAllowedLane,
     resetTutorial,
     resetTutorialCompletion,
@@ -244,10 +245,14 @@ const DropNumberBoard = ({ navigation, route }) => {
       // For step 1: if we have a "4" (merged 2+2), advance
       if (currentStep === 1 && !completedSteps.has(1)) {
         const hasMerged = board.some(row => row.some(cell => cell === 4));
-                  if (hasMerged) {
-            setCompletedSteps(prev => new Set([...prev, 1])); // Mark step 1 as completed
+        console.log('🔍 Step 1 check - hasMerged:', hasMerged, 'currentStep:', currentStep);
+        
+        if (hasMerged) {
+          console.log('✅ Step 1 completed - advancing to step 2');
+          setCompletedSteps(prev => new Set([...prev, 1])); // Mark step 1 as completed
           setTimeout(() => {
             if (isTutorialActive && currentStep === 1 && !isResettingTutorial) { // Double check current step and reset flag
+              console.log('🎯 Calling nextStep() for step 1');
               nextStep(); // Advance to next step
             }
           }, 200); // Wait 200ms for merge animation
@@ -258,11 +263,14 @@ const DropNumberBoard = ({ navigation, route }) => {
       if (currentStep === 2 && !completedSteps.has(2)) {
         // Check for the combo: "2" + "2" = "4", then "4" + "4" = "8"
         const hasCombo = board.some(row => row.some(cell => cell === 8));
+        console.log('🔍 Step 2 check - hasCombo:', hasCombo, 'currentStep:', currentStep);
         
         if (hasCombo) {
+          console.log('✅ Step 2 completed - advancing to step 3');
           setCompletedSteps(prev => new Set([...prev, 2])); // Mark step 2 as completed
           setTimeout(() => {
             if (isTutorialActive && currentStep === 2 && !isResettingTutorial) { // Double check current step and reset flag
+              console.log('🎯 Calling nextStep() for step 2');
               nextStep(); // Advance to next step
             }
           }, 200); // Wait 200ms for merge animation
@@ -271,11 +279,13 @@ const DropNumberBoard = ({ navigation, route }) => {
       
       // Step 3 completion is now handled in handleTileLanded when actual merges happen
     }
-  }, [board, currentStep, isTutorialActive, completedSteps, isResettingTutorial]);
+  }, [board, currentStep, isTutorialActive, completedSteps, isResettingTutorial, nextStep]);
 
   // Tutorial step change handler
   useEffect(() => {
     if (isTutorialActive && currentStep >= 1 && !isResettingTutorial) {
+      console.log('🔄 Tutorial step change handler - currentStep:', currentStep);
+      
       // Record setup time for Step 3 to prevent immediate completion
       if (currentStep === 3) {
         setStep3SetupTime(Date.now());
@@ -284,6 +294,8 @@ const DropNumberBoard = ({ navigation, route }) => {
       // Small delay to ensure smooth transition
       setTimeout(() => {
         if (isTutorialActive && !isResettingTutorial) { // Double check tutorial is still active and not resetting
+          console.log('🎯 Setting up board for step:', currentStep);
+          
           // Set up the board for the new step
           const stepBoard = tutorialController.getStepBoard(currentStep);
           setBoard(stepBoard);
@@ -301,10 +313,12 @@ const DropNumberBoard = ({ navigation, route }) => {
           
           // Update store with TutorialController's allowed lane
           setAllowedLane(stepSetup.allowedLaneIndex);
+          
+          console.log('✅ Step', currentStep, 'setup complete');
         }
       }, 500); // Increased delay for smoother transition
     }
-  }, [currentStep, isTutorialActive, isResettingTutorial, tutorialController]);
+  }, [currentStep, isTutorialActive, isResettingTutorial, tutorialController, setAllowedLane]);
 
   // Tutorial initialization
   useEffect(() => {
@@ -334,7 +348,7 @@ const DropNumberBoard = ({ navigation, route }) => {
       // Update store with TutorialController's allowed lane
       setAllowedLane(stepSetup.allowedLaneIndex);
     }
-  }, [isTutorialActive, currentStep, isResettingTutorial, tutorialController]);
+  }, [isTutorialActive, currentStep, isResettingTutorial, tutorialController, setAllowedLane]);
 
   // Board safety check for tutorial
   useEffect(() => {
@@ -1382,16 +1396,16 @@ const DropNumberBoard = ({ navigation, route }) => {
         startTime: Date.now(),
       });
     
-          // Clear all animations
+      // Clear all animations
       clearFallingRef.current();
       clearMergeAnimationsRef.current();
     
-    // Floor system reset
-    setCurrentMinSpawn(2);
-    setFloorLevel(1);
-    setMaxTileAchieved(0);
+      // Floor system reset
+      setCurrentMinSpawn(2);
+      setFloorLevel(1);
+      setMaxTileAchieved(0);
     
-          // Clear saved game when resetting
+      // Clear saved game when resetting
       try {
         // Clear the saved game state
         clearSavedGame();
@@ -1399,8 +1413,15 @@ const DropNumberBoard = ({ navigation, route }) => {
         // Failed to clear saved game
       }
     
-    // Enable touch
-    setIsTouchEnabled(true);
+      // Reset tutorial state for new game
+      if (isTutorialActive) {
+        resetTutorial();
+        setCompletedSteps(new Set());
+        setTutorialOverlayVisible(true);
+      }
+    
+      // Enable touch
+      setIsTouchEnabled(true);
     } catch (error) {
       // Error in resetGame - recover gracefully
       // Try to reset to a safe state

@@ -23,15 +23,18 @@ export const useTutorial = () => {
   const [hasCompletedOnboarding, setHasCompletedOnboardingState] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize tutorial state - simple logic: if no record, show tutorial
+  // Initialize tutorial state - simple logic: if no high score, show tutorial
   useEffect(() => {
     const initializeTutorial = async () => {
       try {
         // Simple check: if there's a high score, don't show tutorial
         const hasHighScore = highScore && highScore > 0;
         
+        console.log('🔍 Tutorial Init - highScore:', highScore, 'hasHighScore:', hasHighScore, 'isTutorialActive:', isTutorialActive);
+        
         if (hasHighScore) {
           // User has played before - no tutorial
+          console.log('🚫 User has high score - no tutorial needed');
           setHasCompletedOnboardingState(true);
           clearTutorialState();
           if (isTutorialActive) {
@@ -39,14 +42,19 @@ export const useTutorial = () => {
           }
         } else {
           // No high score - show tutorial
+          console.log('✅ No high score - starting tutorial');
           setHasCompletedOnboardingState(false);
           if (!isTutorialActive) {
+            console.log('🎯 Calling startTutorial()');
             startTutorial();
+          } else {
+            console.log('🎯 Tutorial already active');
           }
         }
         
         setIsInitialized(true);
       } catch (error) {
+        console.error('❌ Tutorial init error:', error);
         // Error - assume new user and show tutorial
         setHasCompletedOnboardingState(false);
         setIsInitialized(true);
@@ -57,7 +65,7 @@ export const useTutorial = () => {
     };
 
     initializeTutorial();
-  }, [isTutorialActive, clearTutorialState, startTutorial, highScore]);
+  }, [isTutorialActive, clearTutorialState, startTutorial, highScore, endTutorial]);
 
   // Handle tutorial completion - simple: just end tutorial
   const completeTutorial = async () => {

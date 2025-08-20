@@ -438,21 +438,20 @@ if (Platform.OS === 'web') {
             // Failed to clear storage data
           }
           
-          set((state) => ({
+          set({
             // Reset all game data
             highScore: null,
             currentScore: 0,
-            highestBlock: 0,
+            highestBlock: null,
             savedGame: null,
             hasSavedGame: false,
             
-            // Reset tutorial state using the tutorial slice
-            ...state,
+            // Reset tutorial state
             isActive: false,
             currentStep: 1,
             allowedLaneIndex: 2,
             isGameFrozen: false,
-          }));
+          });
         },
 
         resetOnboarding: async () => {

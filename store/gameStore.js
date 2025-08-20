@@ -442,7 +442,7 @@ if (Platform.OS === 'web') {
             // Reset all game data
             highScore: null,
             currentScore: 0,
-            highestBlock: null,
+            highestBlock: 0, // Reset to 0 to start fresh
             savedGame: null,
             hasSavedGame: false,
             

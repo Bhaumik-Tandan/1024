@@ -647,7 +647,15 @@ const DropNumberBoard = ({ navigation, route }) => {
         }
       }
     }
-  }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame, updateScore, updateHighestBlock, clearSavedGame]);
+  }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, saveGame, updateScore, clearSavedGame]);
+
+  // Update store's highestBlock whenever maxTileAchieved changes
+  useEffect(() => {
+    if (maxTileAchieved > 0 && isMounted) {
+      console.log('🔄 Updating store highestBlock:', maxTileAchieved);
+      updateHighestBlock(maxTileAchieved);
+    }
+  }, [maxTileAchieved, isMounted, updateHighestBlock]);
 
   // Pause modal handlers
   const handlePause = () => {

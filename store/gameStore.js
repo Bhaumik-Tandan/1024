@@ -356,9 +356,10 @@ if (Platform.OS === 'web') {
             const { resetTutorialCompletion } = await import('../lib/storage/tutorial');
             await resetTutorialCompletion();
             
-            // Clear other AsyncStorage data
+            // Clear Zustand persistence storage - this is the key issue!
             const AsyncStorage = await import('@react-native-async-storage/async-storage');
             await AsyncStorage.default.multiRemove([
+              'game-settings', // Clear the Zustand persistence key
               'game_high_score',
               'game_saved_state',
               'game_total_sessions',
@@ -427,9 +428,10 @@ if (Platform.OS === 'web') {
             const { resetTutorialCompletion } = require('../lib/storage/tutorial');
             resetTutorialCompletion();
             
-            // Clear other AsyncStorage data synchronously
+            // Clear Zustand persistence storage - this is the key issue!
             const AsyncStorage = require('@react-native-async-storage/async-storage').default;
             AsyncStorage.multiRemove([
+              'game-settings', // Clear the Zustand persistence key
               'game_high_score',
               'game_saved_state',
               'game_total_sessions',

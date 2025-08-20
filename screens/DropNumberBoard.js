@@ -529,11 +529,12 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
   const shouldStartTutorial = !highScore && !loadSavedGame();
   if (shouldStartTutorial && !isTutorialActive) {
     console.log('🎯 Starting tutorial - no high score and no saved game');
-    startTutorial();
     
-    // CRITICAL: Prevent auto-save from setting hasSavedGame: true during tutorial
-    // Set flag to block auto-save while tutorial is active
+    // CRITICAL: Set flag BEFORE starting tutorial to prevent auto-save
     setIsDataCleared(true);
+    console.log('🚫 Setting isDataCleared = true to block auto-save');
+    
+    startTutorial();
   }
   }, [loadSavedGame, highScore, isTutorialActive, startTutorial, gridConfig.ROWS, gridConfig.COLS]);
 
@@ -660,8 +661,15 @@ const DropNumberBoard = React.memo(({ navigation, route }) => {
           // Failed to clear saved game
         }
       }
-    } else if (isDataCleared || isTutorialActive) {
-      console.log('🚫 Auto-save blocked - data was cleared or tutorial is active');
+    } else {
+      // CRITICAL: Block auto-save in these cases
+      if (isDataCleared) {
+        console.log('🚫 Auto-save blocked - data was cleared');
+      } else if (isTutorialActive) {
+        console.log('🚫 Auto-save blocked - tutorial is active');
+      } else {
+        console.log('🚫 Auto-save blocked - other conditions not met');
+      }
     }
   }, [board, score, nextBlock, previewBlock, gameStats, maxTileAchieved, floorLevel, currentMinSpawn, isMounted, gameOver, isDataCleared, isTutorialActive, saveGame, updateScore, clearSavedGame]);
 

@@ -64,7 +64,7 @@ global.performance = {
 
 // Suppress specific warnings during tests
 const originalWarn = console.warn;
-beforeAll(() => {
+global.beforeAll = () => {
   console.warn = (...args) => {
     if (
       typeof args[0] === 'string' &&
@@ -74,4 +74,4 @@ beforeAll(() => {
     }
     originalWarn.call(console, ...args);
   };
-});
+};

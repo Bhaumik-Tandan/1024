@@ -444,5 +444,269 @@ describe('GameStore (Web Version)', () => {
       gameStore.loadSavedGame = originalLoadSavedGame;
       console.error = originalConsoleError;
     });
+
+    test('should handle errors in clearAllData gracefully', () => {
+      const originalConsoleError = console.error;
+      console.error = jest.fn();
+      
+      // Mock a function that throws
+      const originalClearAllData = gameStore.clearAllData;
+      gameStore.clearAllData = () => {
+        throw new Error('Clear error');
+      };
+      
+      expect(() => gameStore.clearAllData()).not.toThrow();
+      
+      // Restore
+      gameStore.clearAllData = originalClearAllData;
+      console.error = originalConsoleError;
+    });
+  });
+
+  describe('Edge Cases and Boundary Testing', () => {
+    test('should handle extremely large scores', () => {
+      gameStore.updateScore(Number.MAX_SAFE_INTEGER);
+      expect(gameStore.currentScore).toBe(Number.MAX_SAFE_INTEGER);
+      expect(gameStore.highScore).toBe(Number.MAX_SAFE_INTEGER);
+    });
+
+    test('should handle negative scores gracefully', () => {
+      gameStore.updateScore(-100);
+      expect(gameStore.currentScore).toBe(-100);
+      // High score should not be updated with negative value
+      expect(gameStore.highScore).toBe(null);
+    });
+
+    test('should handle zero scores', () => {
+      gameStore.updateScore(0);
+      expect(gameStore.currentScore).toBe(0);
+      expect(gameStore.highScore).toBe(null);
+    });
+
+    test('should handle decimal scores by truncating', () => {
+      gameStore.updateScore(100.7);
+      expect(gameStore.currentScore).toBe(100.7);
+    });
+
+    test('should handle string scores by parsing', () => {
+      gameStore.updateScore('200');
+      expect(gameStore.currentScore).toBe(200);
+    });
+  });
+
+  describe('Volume Boundary Testing', () => {
+    test('should handle volume at exact boundaries', () => {
+      gameStore.setSoundVolume(0);
+      expect(gameStore.soundVolume).toBe(0);
+      
+      gameStore.setSoundVolume(1);
+      expect(gameStore.soundVolume).toBe(1);
+    });
+
+    test('should handle volume just outside boundaries', () => {
+      gameStore.setSoundVolume(-0.0001);
+      expect(gameStore.soundVolume).toBe(0);
+      
+      gameStore.setSoundVolume(1.0001);
+      expect(gameStore.soundVolume).toBe(1);
+    });
+
+    test('should handle NaN and invalid volume values', () => {
+      gameStore.setSoundVolume(NaN);
+      expect(gameStore.soundVolume).toBe(0.7); // Default value
+      
+      gameStore.setSoundVolume('invalid');
+      expect(gameStore.soundVolume).toBe(0.7); // Default value
+    });
+
+    test('should handle background music volume boundaries', () => {
+      gameStore.setBackgroundMusicVolume(0);
+      expect(gameStore.backgroundMusicVolume).toBe(0);
+      
+      gameStore.setBackgroundMusicVolume(1);
+      expect(gameStore.backgroundMusicVolume).toBe(1);
+    });
+  });
+
+  describe('Tutorial State Transitions', () => {
+    test('should handle rapid tutorial step changes', () => {
+      gameStore.startTutorial();
+      expect(gameStore.currentStep).toBe(1);
+      
+      gameStore.nextStep();
+      expect(gameStore.currentStep).toBe(2);
+      
+      gameStore.nextStep();
+      expect(gameStore.currentStep).toBe(3);
+      
+      gameStore.nextStep(); // Should end tutorial
+      expect(gameStore.isActive).toBe(false);
+    });
+
+    test('should handle tutorial reset during active tutorial', () => {
+      gameStore.startTutorial();
+      gameStore.nextStep(); // Go to step 2
+      
+      gameStore.resetTutorial();
+      expect(gameStore.isActive).toBe(true);
+      expect(gameStore.currentStep).toBe(1);
+    });
+
+    test('should handle multiple tutorial starts', () => {
+      gameStore.startTutorial();
+      expect(gameStore.isActive).toBe(true);
+      
+      gameStore.startTutorial(); // Start again
+      expect(gameStore.isActive).toBe(true);
+      expect(gameStore.currentStep).toBe(1);
+    });
+  });
+
+  describe('Game State Persistence', () => {
+    test('should handle complex game state objects', () => {
+      const complexGameState = {
+        board: [
+          [2, 4, 8, 16],
+          [4, 8, 16, 32],
+          [8, 16, 32, 64],
+          [16, 32, 64, 128],
+          [32, 64, 128, 256]
+        ],
+        score: 10000,
+        record: 15000,
+        nextBlock: 512,
+        previewBlock: 1024,
+        gameStats: {
+          moves: 150,
+          merges: 45,
+          chains: 12,
+          timePlayed: 3600000
+        }
+      };
+      
+      gameStore.saveGame(complexGameState);
+      
+      expect(gameStore.savedGame.board).toEqual(complexGameState.board);
+      expect(gameStore.savedGame.score).toBe(10000);
+      expect(gameStore.savedGame.gameStats.moves).toBe(150);
+    });
+
+    test('should handle empty game state', () => {
+      gameStore.saveGame({});
+      
+      expect(gameStore.savedGame.board).toEqual([]);
+      expect(gameStore.savedGame.score).toBe(0);
+      expect(gameStore.savedGame.gameStats).toEqual({});
+    });
+
+    test('should handle null game state', () => {
+      gameStore.saveGame(null);
+      
+      expect(gameStore.savedGame.board).toEqual([]);
+      expect(gameStore.savedGame.score).toBe(0);
+    });
+  });
+
+  describe('Performance and Memory', () => {
+    test('should handle large board states efficiently', () => {
+      const largeBoard = Array.from({ length: 100 }, () => 
+        Array.from({ length: 100 }, () => Math.floor(Math.random() * 1024))
+      );
+      
+      const startTime = performance.now();
+      
+      gameStore.saveGame({ board: largeBoard, score: 1000 });
+      
+      const endTime = performance.now();
+      const saveTime = endTime - startTime;
+      
+      expect(saveTime).toBeLessThan(100); // Should save in under 100ms
+      expect(gameStore.savedGame.board).toEqual(largeBoard);
+    });
+
+    test('should handle rapid state updates', () => {
+      const startTime = performance.now();
+      
+      for (let i = 0; i < 1000; i++) {
+        gameStore.updateScore(i);
+        gameStore.toggleVibration();
+        gameStore.toggleSound();
+      }
+      
+      const endTime = performance.now();
+      const updateTime = endTime - startTime;
+      
+      expect(updateTime).toBeLessThan(500); // Should handle 1000 updates in under 500ms
+    });
+  });
+
+  describe('Data Integrity', () => {
+    test('should maintain data consistency across operations', () => {
+      const initialState = {
+        highScore: gameStore.highScore,
+        currentScore: gameStore.currentScore,
+        highestBlock: gameStore.highestBlock
+      };
+      
+      // Perform operations
+      gameStore.updateScore(500);
+      gameStore.updateHighestBlock(128);
+      gameStore.toggleVibration();
+      
+      // Verify state is consistent
+      expect(gameStore.currentScore).toBe(500);
+      expect(gameStore.highestBlock).toBe(128);
+      expect(typeof gameStore.vibrationEnabled).toBe('boolean');
+    });
+
+    test('should handle concurrent state modifications', () => {
+      // Simulate concurrent access
+      const operations = [
+        () => gameStore.updateScore(100),
+        () => gameStore.updateScore(200),
+        () => gameStore.updateScore(300),
+        () => gameStore.toggleVibration(),
+        () => gameStore.toggleSound()
+      ];
+      
+      // Execute all operations
+      operations.forEach(op => op());
+      
+      // Final state should be consistent
+      expect(gameStore.currentScore).toBe(300);
+      expect(typeof gameStore.vibrationEnabled).toBe('boolean');
+      expect(typeof gameStore.soundEnabled).toBe('boolean');
+    });
+  });
+
+  describe('Cross-Platform Compatibility', () => {
+    test('should handle web platform localStorage operations', () => {
+      // Mock web platform
+      Object.defineProperty(Platform, 'OS', { value: 'web' });
+      
+      gameStore.saveGame({ score: 100 });
+      
+      expect(localStorageMock.setItem).toHaveBeenCalled();
+      expect(gameStore.hasSavedGame).toBe(true);
+    });
+
+    test('should handle localStorage errors gracefully', () => {
+      localStorageMock.setItem.mockImplementation(() => {
+        throw new Error('QuotaExceededError');
+      });
+      
+      expect(() => gameStore.saveGame({ score: 100 })).not.toThrow();
+      expect(gameStore.hasSavedGame).toBe(true); // Should still save to memory
+    });
+
+    test('should handle localStorage quota exceeded', () => {
+      localStorageMock.setItem.mockImplementation(() => {
+        const error = new Error('QuotaExceededError');
+        error.name = 'QuotaExceededError';
+        throw error;
+      });
+      
+      expect(() => gameStore.saveGame({ score: 100 })).not.toThrow();
+    });
   });
 });

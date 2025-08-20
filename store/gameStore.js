@@ -16,7 +16,7 @@ const createGameStore = () => {
     // Game state - don't show 0 as default
     highScore: null,
     currentScore: 0,
-    highestBlock: null,
+    highestBlock: 0,
     
     // Tutorial state
     isActive: false,
@@ -222,7 +222,7 @@ if (Platform.OS === 'web') {
         // Game state
         highScore: null,
         currentScore: 0,
-        highestBlock: null,
+        highestBlock: 0,
         
         // Tutorial state
         ...createTutorialSlice(set, get),
@@ -369,7 +369,7 @@ if (Platform.OS === 'web') {
           backgroundMusicVolume: 0.6,
           highScore: null,
           currentScore: 0,
-          highestBlock: null,
+          highestBlock: 0,
           savedGame: null,
           hasSavedGame: false,
           
@@ -404,7 +404,7 @@ if (Platform.OS === 'web') {
             // Reset all game data
             highScore: null,
             currentScore: 0,
-            highestBlock: null,
+            highestBlock: 0,
             savedGame: null,
             hasSavedGame: false,
             

@@ -275,7 +275,7 @@ const DropNumberBoard = ({ navigation, route }) => {
 
   // Tutorial step change handler
   useEffect(() => {
-    if (isTutorialActive && currentStep > 1 && !isResettingTutorial) {
+    if (isTutorialActive && currentStep >= 1 && !isResettingTutorial) {
       // Record setup time for Step 3 to prevent immediate completion
       if (currentStep === 3) {
         setStep3SetupTime(Date.now());

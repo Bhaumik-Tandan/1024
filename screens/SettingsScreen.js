@@ -100,7 +100,7 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   const formatBlock = (block) => {
-    if (block === null || block === 0) return 'None';
+    if (block === null || block === 0) return 'No celestial bodies yet';
     const planet = getPlanetType(block);
     return `${planet.name} (${block.toLocaleString()})`;
   };
